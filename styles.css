@@ -600,8 +600,8 @@ body:has(#modal[data-kind=task]) #ov.on~#toast{left:calc(50% - 270px)}
 
 
 /* ===== v4: refinamento profissional ===== */
-:root,[data-theme=light],[data-theme=dark]{--serif:var(--sans)}
-:root,[data-theme=light]{--ac:#0e7a6e;--ac2:#e3f4f1}
+html{--serif:var(--sans)}
+:root:not([data-theme=dark]){--ac:#0e7a6e;--ac2:#e3f4f1}
 h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#login h2,#login .lside h1,#login .lbrand b,.brand b,.empty b{font-family:var(--sans)}
 .psw h2{font-weight:650;font-size:23px;letter-spacing:-.5px}
 .brand b{font-size:15px;font-weight:650;letter-spacing:-.2px}
@@ -675,3 +675,21 @@ h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#logi
   body.sc .pal,body.sc #newTask{height:40px;width:40px;margin:0 16px 6px}
 }
 body[data-view=settings] .t3{display:none}body[data-view=settings] #top{border-bottom:1px solid var(--bd)}
+
+/* ===== logo CS Infra ===== */
+.lgo{width:38px;height:38px;object-fit:contain;flex-shrink:0;display:block;user-select:none;-webkit-user-drag:none}
+.brand .lgo{filter:drop-shadow(0 4px 8px rgba(16,24,40,.12))}
+#login .lbrand .lgo{width:46px;height:46px;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 24px -10px #000a}
+#login .lmob img{height:40px;width:auto}
+body.sc .brand .lgo{width:36px;height:36px}
+
+#login .lfull{display:block;height:44px;width:auto;margin:0 0 36px;max-width:100%}
+@media(max-width:900px){#login .lfull{display:none}}
+
+.ptr{display:flex;align-items:center;gap:2px}
+#pedit{opacity:0;transition:opacity .12s;width:28px;height:28px}
+.ptr:hover #pedit,#pedit:focus-visible{opacity:1}
+.pi .pe{display:none;width:24px;height:24px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--mu);border-radius:7px;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+.pi:hover .pe{display:inline-flex}.pi .pe:hover{background:var(--hov2);color:var(--tx)}
+.pi:hover small{margin-left:0}
+body.sc .pi .pe{display:none!important}

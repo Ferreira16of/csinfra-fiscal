@@ -1,6 +1,6 @@
 const $=s=>document.querySelector(s);
 /* ----- ícones (traço, 24x24) ----- */
-const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
+const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
 const ic=(n,s)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"${s?` style="width:${s}px;height:${s}px"`:''}><path d="${ICO[n]||''}"/></svg>`;
 function hydrateIcons(root){(root||document).querySelectorAll('i[data-i]').forEach(e=>{e.outerHTML=ic(e.dataset.i,e.dataset.s)})}
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -446,6 +446,7 @@ function csv(){
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
   const g=s=>e.target.closest(s);let el;
+  if(el=g('[data-pren]')){e.stopImmediatePropagation();e.preventDefault();renameProj(el.dataset.pren);return}
   if(el=g('[data-qdel]')){e.stopImmediatePropagation();e.preventDefault();quickDelete(el.dataset.qdel);return}
   if(!g('#pop')&&!g('[data-pop]'))closePop();
   const rw=g('[data-row],.card');
@@ -556,6 +557,7 @@ $('#addProj').onclick=()=>ask('Nome do novo projeto','',v=>{if(!v.trim())return 
 $('#pswitch').onclick=()=>openPalette('proj');
 $('#pname').ondblclick=e=>{e.stopPropagation();if(!['smart','settings'].includes(S.view))renameProj()};
 $('#bPal').onclick=()=>openPalette();
+$('#pedit').onclick=()=>renameProj();
 $('#delProj').onclick=()=>{
   if(S.projects.length<2){ask('Mantenha ao menos um projeto.','',()=>{},{confirm:1,noCancel:1});return}
   ask('Excluir o projeto "'+proj().name+'" e todas as suas tarefas?','',()=>{const id=proj().id;S.tasks=S.tasks.filter(t=>t.pid!==id);S.projects=S.projects.filter(p=>p.id!==id);S.cur=S.projects[0].id;render()},{confirm:1,ok:'Excluir'})};
@@ -791,7 +793,7 @@ function openPalette(mode){
   $('#pl_l').onclick=e=>{const el=e.target.closest('.pk-i');if(el)run(+el.dataset.i)};
   draw();q.focus();
 }
-function renameProj(){const P=proj();if(P.virtual)return;ask('Renomear projeto',P.name,v=>{if(!v.trim())return false;P.name=v.trim();render()})}
+function renameProj(id){if(!can('project')){deny('project');return}const P=(id&&S.projects.find(p=>p.id===id))||proj();if(!P||P.virtual)return;ask('Renomear projeto',P.name,v=>{if(!v.trim())return false;P.name=v.trim();render()})}
 
 /* ----- desfazer (Ctrl+Z) ----- */
 const snapJSON=()=>JSON.stringify({members:S.members,tags:S.tags,projects:S.projects,link:S.link,me:S.me,tasks:S.tasks},(k,v)=>k==='open'?undefined:v);
@@ -1061,13 +1063,14 @@ function render(){
   const sm=SMARTS.find(s=>s[0]===S.smart)||SMARTS[0];
   $('#pname').textContent=smart?sm[1].replace(/^\S+\s/,''):P.name;
   $('#pname').title=smart?'Visão inteligente: reúne tarefas de todos os projetos':'Duplo clique para renomear';
+  $('#pedit').style.display=(smart||V==='settings'||P.virtual)?'none':'';
   const pd=$('#pdot');pd.style.display=(smart||V==='settings')?'none':'';pd.style.background=pcol(P);
   $('#subline').innerHTML=smart?'<span>Reúne as tarefas de todos os projetos</span>':`<b>${pct}%</b> concluído <span class="pbar"><i style="width:${pct}%"></i></span> <span>${op} abertas</span>${lt?`<span class="late">· ${lt} atrasada(s)</span>`:''}`;
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
   $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span><small class="${k==='late'&&n?'bad':''}">${n}</small></div>`}).join('');
-  $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><small>${S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length}</small></div>`).join('');
+  $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button><small>${S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length}</small></div>`).join('');
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
@@ -2247,7 +2250,7 @@ function loginView(mode,msg,pre){
   else if(mode==='reset')b=`<h2>Redefinir senha</h2>${inp('lg_email','E-mail','email','voce@empresa.com.br',pre.email,'username')}${inp('lg_code','Código recebido por e-mail','text','código do e-mail','','one-time-code')}${inp('lg_pw','Nova senha (mín. 8 caracteres)','password','','','new-password')}${inp('lg_pw2','Repita a senha','password','','','new-password')}<button class="pri lbtn" id="lg_reset">Salvar e entrar</button>${back}`;
   else if(mode==='noaccess')b=`<h2>Sem acesso</h2><div class="hint">Sua conta existe, mas não está autorizada neste sistema (ou foi bloqueada). Fale com o administrador.</div><button class="lbtn" data-cloud="out">Sair</button>`;
   else b=`<h2>Carregando…</h2><div class="hint">Conectando ao banco de dados.</div>`;
-  $('#login .lbox').innerHTML=`<div class="lmob"><div class="lg">CS</div><b>Controle de Tarefas</b></div>${b}<div id="lmsg" class="lmsg" role="alert">${msg?esc(msg):''}</div><div class="lfoot">🔒 Acesso restrito a pessoas convidadas · CS Infra</div>`;
+  $('#login .lbox').innerHTML=`<img class="lfull" src="assets/logo-full.png" alt="CS Infra"><div class="lmob"><img src="assets/logo-full.png" alt="CS Infra" height="40"></div>${b}<div id="lmsg" class="lmsg" role="alert">${msg?esc(msg):''}</div><div class="lfoot">🔒 Acesso restrito a pessoas convidadas · CS Infra</div>`;
   loginShow(true);
   const f=$('#login input');if(f)setTimeout(()=>{const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#login .lbox input')))f.focus()},30);
 }
