@@ -872,3 +872,25 @@ body:is(.sc,.sca) #toast{left:calc(50% + 36px)}
   .op::before{content:"⤢";font-size:13px;line-height:22px}
   .row.root .pg{display:none}
 }
+
+/* ===== v6: menu lateral calmo ===== */
+@media(min-width:901px){#side{width:248px}}
+#side .foot{padding:8px 10px 10px;gap:4px}
+#syncst{display:block;margin:0;padding:6px 10px;font-size:12px;color:var(--red);background:color-mix(in srgb,var(--red) 9%,transparent);border-radius:9px}
+#syncst:empty{display:none}
+#bUser .av{position:relative;overflow:visible}
+#bUser .av::after{content:"";position:absolute;right:-3px;bottom:-3px;width:10px;height:10px;border-radius:50%;background:var(--ok);border:2px solid var(--row);box-sizing:border-box}
+body[data-sync=busy] #bUser .av::after{background:var(--amb)}
+body[data-sync=err] #bUser .av::after{background:var(--red)}
+[data-theme=cs] #bUser .av::after{border-color:#2b327f}
+#bUser{position:relative}
+#bUser::after{content:"";width:7px;height:7px;border-right:1.6px solid var(--mu);border-bottom:1.6px solid var(--mu);transform:rotate(-45deg);margin-left:auto;flex-shrink:0}
+.pi{gap:11px}
+.pi .pd{width:10px;height:10px;border-radius:3px}
+.pi small,.pi .pe{display:none!important}
+.snav .lbl{padding:20px 10px 6px}
+#menu .mit:disabled{opacity:1;cursor:default;color:var(--mu)}
+#menu .mit:disabled:first-child{color:var(--tx);font-weight:650}
+#menu .mit:disabled:hover{background:transparent}
+body:is(.sc,.sca) #bUser::after{display:none}
+body:is(.sc,.sca) #syncst{display:none}

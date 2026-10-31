@@ -161,6 +161,8 @@ function repLabel(t){if(!hasRep(t))return'';const n=+t.repeat.every||1;return n=
 /* ---------- render ---------- */
 let adding=null;
 function fillFilters(){
+  const key=S.members.map(m=>m.id+m.name).join('|')+'#'+S.tags.map(g=>g.id+g.name).join('|');
+  if(fillFilters.k===key)return;fillFilters.k=key;
   const a=$('#fm').value,b=$('#ft').value,c=$('#fs').value;
   $('#fm').innerHTML='<option value="">Responsável: todos</option><option value="none">Sem responsável</option>'+S.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   $('#ft').innerHTML='<option value="">Etiqueta: todas</option>'+S.tags.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
@@ -448,7 +450,7 @@ function csv(){
 function closeMenu(){const m=$('#menu');if(m)m.remove()}
 function openMenu(anchor,items,o={}){
   closeMenu();const m=document.createElement('div');m.id='menu';
-  m.innerHTML=items.map((it,i)=>it==='-'?'<div class="msep"></div>':`<button type="button" class="mit ${it.on?'on':''}" data-mi2="${i}">${it.sw?`<i class="msw" style="background:${it.sw}"></i>`:it.ic?ic(it.ic):''}<span>${esc(it.l)}</span>${it.h?`<small>${esc(it.h)}</small>`:''}${it.on?ic('check',16):''}</button>`).join('');
+  m.innerHTML=items.map((it,i)=>it==='-'?'<div class="msep"></div>':`<button type="button" class="mit ${it.on?'on':''}" data-mi2="${i}" ${it.dis?'disabled':''}>${it.sw?`<i class="msw" style="background:${it.sw}"></i>`:it.ic?ic(it.ic):''}<span>${esc(it.l)}</span>${it.h?`<small>${esc(it.h)}</small>`:''}${it.on?ic('check',16):''}</button>`).join('');
   document.body.appendChild(m);
   const r=anchor.getBoundingClientRect(),w=m.offsetWidth,h=m.offsetHeight;
   let x,y;
@@ -457,6 +459,21 @@ function openMenu(anchor,items,o={}){
   m.style.left=x+'px';m.style.top=y+'px';
   m.onclick=e=>{const b=e.target.closest('[data-mi2]');if(!b)return;const it=items[+b.dataset.mi2];closeMenu();if(it&&it.f)setTimeout(()=>it.f(),0)};
   setTimeout(()=>{const off=e=>{if(!e.target.closest('#menu')){closeMenu();document.removeEventListener('mousedown',off,true)}};document.addEventListener('mousedown',off,true);document.addEventListener('keydown',function k(e){if(e.key==='Escape'){closeMenu();document.removeEventListener('keydown',k,true)}},true)},0);
+}
+function userMenu(){
+  const m=mem(S.me),email=(sess&&sess.user&&sess.user.email)||(m&&m.email)||'';
+  const B=id=>()=>{const b=$(id);if(b)b.click()};
+  openMenu($('#bUser'),[
+    {l:m?m.name:'Conta',h:ROLES[role()].n,dis:true},{l:email,dis:true},'-',
+    {l:'Configurações',ic:'sliders',f:B('#bSet')},
+    ...(can('members')?[{l:'Equipe e convites',ic:'people',f:B('#bTeam')}]:[]),
+    ...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),
+    ...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),'-',
+    {l:'Exportar Excel',ic:'download',f:B('#bXls')},{l:'Exportar PDF',ic:'file',f:B('#bPdf')},
+    ...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Importar / exportar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',
+    {l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()},
+    {l:'Alterar senha',ic:'lock',f:()=>changePwDialog()},{l:'Sair da conta',ic:'x',f:()=>cloudLogout()}
+  ],{side:'right'});
 }
 const setTheme=k=>{S.theme=k;save();render()};
 const themeItems=()=>THEMES.map(([k,n,d,c])=>({l:n,sw:c[2],on:S.theme===k,f:()=>setTheme(k)}));
@@ -1071,6 +1088,7 @@ const EMPTY={today:'Nenhuma tarefa vence hoje nem está atrasada.',week:'Nada ve
 const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 
 /* ----- renderização principal ----- */
+const setHTML=(sel,h)=>{const e=$(sel);if(e&&e.__h!==h){e.__h=h;e.innerHTML=h}};
 function render(){
   if(S.projects.length>1&&S.projects.some(p=>p.virtual))S.projects=S.projects.filter(p=>!p.virtual);
   const P=proj();S.cur=P.id;
@@ -1091,8 +1109,8 @@ function render(){
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
-  $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="${k==='late'?'bad':''}">${n}</small>`:''}</div>`}).join('');
-  $('#projs').innerHTML=S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}<button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button>${(()=>{const n=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length;return n?`<small>${n}</small>`:''})()}</div>`).join('');
+  setHTML('#smarts',SMARTS.filter(s=>['today','week','late','mine'].includes(s[0])).map(([k,l,i])=>{const n=k==='late'?all.filter(qfPred(k)).length:0;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="bad">${n}</small>`:''}</div>`}).join(''));
+  setHTML('#projs',S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}</div>`).join(''));
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
@@ -1564,6 +1582,7 @@ document.addEventListener('click',e=>{
   if(g('#bTheme')){openMenu($('#bTheme'),themeItems());return}
   if(el=g('[data-gth]')){setTheme(el.dataset.gth);return}
   if(g('#addProj2')){$('#addProj').click();return}
+  if(CLOUD&&g('#bUser')){e.stopImmediatePropagation();userMenu();return}
   if(g('#bMore')){const B=id=>()=>{const b=$(id);if(b)b.click()};openMenu($('#bMore'),[...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),...(can('tags')||can('rules')?['-']:[]),{l:'Exportar Excel',ic:'download',f:B('#bXls')},...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')}]:[]),{l:'Exportar PDF',ic:'file',f:B('#bPdf')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},'-',{l:'Exportar JSON / CSV',ic:'download',f:B('#bExp')},...(can('import')?[{l:'Importar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',{l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()}],{side:'right'});return}
   if(g('#bRules')){openRules();return}
   if(g('#newTask')){$('#qa').focus();return}
@@ -1996,7 +2015,7 @@ function applyRoleUI(){
   const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?'Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta':noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
   const m=mem(S.me),u=$('#bUser');
   u.innerHTML=m?`<span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">${esc(m.name)}</b><small style="color:var(--mu);font-size:10.5px">${ROLES[role()].n}</small></span>`:`<span class="av" style="background:#667085;border-color:transparent">?</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">Quem é você?</b><small style="color:var(--mu);font-size:10.5px">Administrador (sem login)</small></span>`;
-  $('#brandSub').textContent=(S.org||'CS Infra');
+  $('#brandName').textContent=(S.org||'CS Infra');
 }
 
 /* ----- menus flutuantes: perfil do membro (r) e trocar de usuário (u) ----- */
@@ -2251,7 +2270,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   const tg=e.target,c=tg.dataset||{};
-  if(c.gorg!==undefined){S.org=tg.value;save();$('#brandSub').textContent=(S.org||'CS Infra')}
+  if(c.gorg!==undefined){S.org=tg.value;save();$('#brandName').textContent=(S.org||'CS Infra')}
   if(c.glink!==undefined){S.link=tg.value.trim();save()}
 });
 document.addEventListener('keydown',e=>{
@@ -2570,9 +2589,9 @@ async function pushNow(){
   }
 }
 function setSync(st){
+  document.body.dataset.sync=st||'ok';
   const e=$('#syncst');if(!e)return;
-  e.textContent=st==='busy'?'☁ salvando…':st==='err'?'⚠ erro ao sincronizar':'☁ sincronizado';
-  e.style.color=st==='err'?'var(--red)':'';
+  e.textContent=st==='err'?'Sem sincronizar — tentando de novo':'';
 }
 
 /* ----- migração dos dados locais (1ª vez) ----- */
@@ -2692,6 +2711,7 @@ window.addEventListener('beforeunload',e=>{if(typeof cloud!=='undefined'&&cloud.
 window.addEventListener('online',()=>{if(typeof cloud!=='undefined'&&cloud.on){cloudSchedule();pollPull()}});
 document.addEventListener('click',e=>{const t=e.target;if(t.closest&&t.closest('#bCollapse')){toggleSide();return}if(t.closest&&t.closest('#mnu')){document.body.classList.toggle('menu');return}if(t.id==='scrim'||(document.body.classList.contains('menu')&&t.closest&&t.closest('#side .si,#side .pi,#side .fi')))document.body.classList.remove('menu')});
 hydrateIcons();
+if(CLOUD){const bu=$('#bUser');if(bu)bu.removeAttribute('data-pop')}
 toggleSide(document.body.classList.contains('sc'));
 render();
 if(CLOUD){loginShow(true);cloudBoot()}else{loginShow(false);if(!S.seen)setTimeout(openWelcome,350)}

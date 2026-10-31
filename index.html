@@ -15,7 +15,7 @@
 <button id="mnu" class="mnu" aria-label="Menu"><i data-i="menu"></i></button>
 <div id="scrim"></div>
 <aside id="side">
-  <div class="brand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div class="bt"><b>Controle de Tarefas</b><small id="brandSub">CS Infra</small></div><button id="bCollapse" class="ibn" title="Recolher menu ([)"></button></div>
+  <div class="brand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div class="bt"><b id="brandName">CS Infra</b><small>Controle de Tarefas</small></div><button id="bCollapse" class="ibn" title="Recolher menu ([)"></button></div>
   <button id="bPal" class="pal" title="Buscar projetos, tarefas e comandos (Ctrl+K)"><i data-i="search"></i><span>Buscar…</span><kbd>Ctrl K</kbd></button>
   <button id="newTask"><i data-i="plus"></i><span>Nova tarefa</span><kbd>Q</kbd></button>
   <nav class="snav">
@@ -25,16 +25,14 @@
     <div id="projs"></div>
   </nav>
   <div class="foot">
-    <div id="syncst"></div>
-    <button id="bTeam" class="fi" title="Membros e convites"><i data-i="people"></i><span>Equipe e convites</span></button>
     <button id="bSet" class="fi" title="Configurações"><i data-i="sliders"></i><span>Configurações</span></button>
-    <button id="bMore" class="fi" title="Etiquetas, automações, importar e exportar"><i data-i="dots"></i><span>Mais</span></button>
+    <div id="syncst"></div>
+    <button id="bUser" data-pop="u:me" title="Conta"></button>
     <div hidden>
-      <button id="bTags"></button><button id="bRules"></button>
+      <button id="bTeam"></button><button id="bTags"></button><button id="bRules"></button><button id="bMore"></button>
       <button id="bXls"></button><button id="bXlsIn"></button><button id="bPdf"></button><button id="bXlsTpl"></button>
       <button id="bExp"></button><button id="bCsv"></button><button id="bImp"></button>
     </div>
-    <button id="bUser" data-pop="u:me" title="Usuário atual"></button>
   </div>
 </aside>
 <div id="main">
