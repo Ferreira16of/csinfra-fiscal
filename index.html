@@ -15,7 +15,7 @@
 <div id="scrim"></div>
 <aside id="side">
   <div class="brand"><div class="lg">CS</div><div><b>Controle de Tarefas</b><small id="brandSub">CS Infra</small></div></div>
-  <button id="bUser" data-pop="u:me" title="Usuário atual — clique para entrar como outra pessoa"></button>
+  <button id="bPal" class="pal" title="Buscar projetos, tarefas e comandos (Ctrl+K)"><i data-i="search"></i><span>Buscar…</span><kbd>Ctrl K</kbd></button>
   <button id="newTask"><i data-i="plus"></i><span>Nova tarefa</span><kbd>Q</kbd></button>
   <nav class="snav">
     <div class="lbl">Visões</div>
@@ -25,45 +25,52 @@
   </nav>
   <div id="syncst"></div>
   <div class="foot">
-    <button id="bSet" class="fi"><i data-i="sliders"></i><span>Configurações</span></button>
-    <button id="bTeam" class="fi"><i data-i="people"></i><span>Membros</span></button>
-    <button id="bTags" class="fi"><i data-i="tag"></i><span>Etiquetas</span></button>
-    <button id="bRules" class="fi"><i data-i="zap"></i><span>Automações</span></button>
+    <div class="fgrid">
+      <button id="bSet" class="fi" title="Configurações"><i data-i="sliders"></i><span>Ajustes</span></button>
+      <button id="bTeam" class="fi" title="Membros e convites"><i data-i="people"></i><span>Equipe</span></button>
+      <button id="bTags" class="fi" title="Etiquetas"><i data-i="tag"></i><span>Etiquetas</span></button>
+      <button id="bRules" class="fi" title="Automações"><i data-i="zap"></i><span>Regras</span></button>
+    </div>
     <details><summary><i data-i="download"></i><span>Importar e exportar</span></summary><div>
       <button id="bXls">Exportar Excel</button><button id="bXlsIn">Importar Excel</button>
       <button id="bPdf">Exportar PDF</button><button id="bXlsTpl" title="Planilha modelo para incluir tarefas em massa">Modelo Excel</button>
       <button id="bExp">Exportar JSON</button><button id="bCsv">Exportar CSV</button>
       <button id="bImp" style="grid-column:1/3">Importar JSON</button>
     </div></details>
+    <button id="bUser" data-pop="u:me" title="Usuário atual"></button>
   </div>
 </aside>
 <div id="main">
   <header id="top">
     <div class="t1">
-      <div class="ttl"><h2 id="pname" title="Clique para renomear"></h2><div id="subline"></div></div>
+      <div class="ttl">
+        <button id="pswitch" class="psw" title="Trocar de projeto (Ctrl+K)"><i class="pd" id="pdot"></i><h2 id="pname"></h2><i data-i="down" data-s="18"></i></button>
+        <div id="subline"></div>
+      </div>
       <div class="tools">
-        <label class="sbox"><i data-i="search"></i><input id="q" placeholder="Buscar" aria-label="Buscar"><kbd>S</kbd></label>
-        <button id="bFilt" class="tb" title="Filtros avançados"></button>
+        <label class="sbox"><i data-i="search"></i><input id="q" placeholder="Filtrar nesta tela" aria-label="Filtrar"><kbd>S</kbd></label>
         <button id="bBell" class="tb ib" title="Alertas"></button>
         <button id="bTheme" class="tb ib" title="Tema claro / escuro"><i data-i="moon"></i></button>
         <button id="bHelp" class="tb ib" title="Ajuda e atalhos (F1)"><i data-i="help"></i></button>
-        <button id="delProj" class="tb ib" title="Excluir projeto"><i data-i="trash"></i></button>
+        <button id="delProj" hidden></button>
       </div>
     </div>
-    <nav class="tabs" aria-label="Visões do projeto">
-      <button id="vl" title="Lista em árvore (1)"><i data-i="list"></i><span>Lista</span></button>
-      <button id="vb" title="Quadro Kanban (2)"><i data-i="board"></i><span>Quadro</span></button>
-      <button id="vc" title="Calendário (3)"><i data-i="calendar"></i><span>Calendário</span></button>
-      <button id="vg" title="Cronograma / Gantt (4)"><i data-i="gantt"></i><span>Cronograma</span></button>
-      <button id="vp" title="Carga de trabalho (5)"><i data-i="people"></i><span>Pessoas</span></button>
-      <button id="vd" title="Painel executivo (6)"><i data-i="chart"></i><span>Painel</span></button>
-    </nav>
-    <div class="t2"><div class="qa"><i data-i="plus"></i><input id="qa" autocomplete="off" placeholder="Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div></div>
-    <div id="qaprev"></div>
-    <div id="chips"></div>
-    <div id="fbar"><select id="fm"></select><select id="ft"></select><select id="fs"></select>
-      <select id="fp"><option value="">Prioridade: todas</option><option value="3">Alta</option><option value="2">Média</option><option value="1">Baixa</option></select></div>
+    <div class="t3">
+      <nav class="tabs" aria-label="Visões do projeto">
+        <button id="vl" title="Lista em árvore (1)"><i data-i="list"></i><span>Lista</span></button>
+        <button id="vb" title="Quadro Kanban (2)"><i data-i="board"></i><span>Quadro</span></button>
+        <button id="vc" title="Calendário (3)"><i data-i="calendar"></i><span>Calendário</span></button>
+        <button id="vg" title="Cronograma / Gantt (4)"><i data-i="gantt"></i><span>Cronograma</span></button>
+        <button id="vp" title="Carga de trabalho (5)"><i data-i="people"></i><span>Pessoas</span></button>
+        <button id="vd" title="Painel executivo (6)"><i data-i="chart"></i><span>Painel</span></button>
+      </nav>
+      <button id="bFilt" class="tb" title="Filtros avançados"></button>
+    </div>
+    <div id="fpanel"><div id="chips"></div>
+      <div id="fbar"><select id="fm"></select><select id="ft"></select><select id="fs"></select>
+      <select id="fp"><option value="">Prioridade: todas</option><option value="3">Alta</option><option value="2">Média</option><option value="1">Baixa</option></select></div></div>
   </header>
+  <div class="t2"><div class="qa"><i data-i="plus"></i><input id="qa" autocomplete="off" placeholder="Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div><div id="qaprev"></div></div>
   <div id="view"></div>
 </div>
 <div id="ov"><div class="modal" id="modal"></div></div>

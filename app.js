@@ -91,7 +91,8 @@ function depthOf(t){let d=0;while(t.parent){t=byId(t.parent);d++}return d}
 const isLate=t=>t.status!=='done'&&t.due&&(t.due<today()||(t.due===today()&&t.dueTime&&t.dueTime<nowHM()));
 const hasRep=t=>t.repeat&&t.repeat.freq;
 function normDates(t){if(t.start&&t.due&&t.due<t.start)t.due=t.start}
-function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),3800)}
+function toast(m,act){const e=$('#toast');toast.act=act||null;if(act){e.innerHTML='<span></span><button class="tundo" type="button">Desfazer</button>';e.firstChild.textContent=m}else e.textContent=m;e.classList.toggle('act',!!act);e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>{e.classList.remove('on');toast.act=null},act?7000:3800)}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.tundo')){const a=toast.act;toast.act=null;$('#toast').classList.remove('on');if(a)a()}},true);
 function advance(t){
   const n=Math.max(1,+t.repeat.every||1),f=t.repeat.freq;
   if(t.start)t.start=addInt(t.start,f,n);
@@ -181,7 +182,7 @@ function board(){
     const ts=leaves.filter(t=>t.status===s.id&&match(t));
     h+=`<div class="col" data-st="${s.id}"><div class="ch"><i style="background:${s.c}"></i>${s.n}<span class="n">${ts.length}</span></div><div class="cb">`+
     ts.map(t=>{const par=t.parent?byId(t.parent):null,dt=dateTxt(t);
-      return `<div class="card p${t.prio}" draggable="true" data-t="${t.id}">${par?`<small>${esc(par.title)}</small>`:''}<div>${esc(t.title)}</div>
+      return `<div class="card p${t.prio}" draggable="true" data-t="${t.id}"><button class="cdel" data-qdel="${t.id}" title="Excluir tarefa">${ic('trash',14)}</button>${par?`<small>${esc(par.title)}</small>`:''}<div>${esc(t.title)}</div>
       <div class="cm">${avs(t)}${tagChips(t)}${dt?`<span class="${dueCls(t)}">📅 ${dt}</span>`:''}</div></div>`}).join('')+
     `</div></div>`;
   });
@@ -363,6 +364,14 @@ function collect(){
   setStatus(t,$('#m_st').value);
 }
 function closeModal(){$('#ov').classList.remove('on');editing=null;modalRO=false;const M=$('#modal');M.dataset.kind='';M.style.width=''}
+function quickDelete(id){
+  const t=byId(id);if(!t)return;
+  if(!can('del')||!canEdit(t)){deny('del');return}
+  const n=desc(id).length;
+  delTask(id);if(cur===id)cur=null;sel.delete(id);if(zoom===id)zoom=null;
+  save();render();
+  toast('Tarefa excluída'+(n?` (e ${n} subtarefa${n>1?'s':''})`:''),()=>{if(hist.length>1){restore(hist.length-1);save()}});
+}
 function delTask(id){const ids=[id,...desc(id).map(d=>d.id)];S.tasks=S.tasks.filter(t=>!ids.includes(t.id))}
 function addTask(title,parent){
   if(!can('add')){deny('add');return}
@@ -433,6 +442,7 @@ function csv(){
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
   const g=s=>e.target.closest(s);let el;
+  if(el=g('[data-qdel]')){e.stopImmediatePropagation();e.preventDefault();quickDelete(el.dataset.qdel);return}
   if(!g('#pop')&&!g('[data-pop]'))closePop();
   const rw=g('[data-row],.card');
   if(rw&&!g('#pop')&&S.view!=='dash'){
@@ -538,7 +548,9 @@ $('#vd').onclick=()=>{S.view='dash';render()};
 $('#bTeam').onclick=openTeam;
 $('#bTags').onclick=openTags;
 $('#addProj').onclick=()=>ask('Nome do novo projeto','',v=>{if(!v.trim())return false;const id=uid();S.projects.push({id,name:v.trim()});S.cur=id;adding=null;render()});
-$('#pname').onclick=()=>ask('Renomear projeto',proj().name,v=>{if(!v.trim())return false;proj().name=v.trim();render()});
+$('#pswitch').onclick=()=>openPalette('proj');
+$('#pname').ondblclick=e=>{e.stopPropagation();if(!['smart','settings'].includes(S.view))renameProj()};
+$('#bPal').onclick=()=>openPalette();
 $('#delProj').onclick=()=>{
   if(S.projects.length<2){ask('Mantenha ao menos um projeto.','',()=>{},{confirm:1,noCancel:1});return}
   ask('Excluir o projeto "'+proj().name+'" e todas as suas tarefas?','',()=>{const id=proj().id;S.tasks=S.tasks.filter(t=>t.pid!==id);S.projects=S.projects.filter(p=>p.id!==id);S.cur=S.projects[0].id;render()},{confirm:1,ok:'Excluir'})};
@@ -727,30 +739,54 @@ function goTask(id){
   let p=t.parent;while(p){const x=byId(p);x.open=true;p=x.parent}
   cur=id;anchor=id;sel=new Set([id]);render();markSel(true);
 }
-function openPalette(){
-  editing=null;closePop();const M=$('#modal');M.dataset.kind='pal';
-  M.innerHTML=`<h3>🔎 Pesquisa rápida</h3><input id="pl_q" placeholder="Projetos, pessoas, etiquetas, tarefas…" autocomplete="off"><div id="pl_l" style="margin-top:8px;max-height:50vh;overflow:auto"></div><div class="hint">↑ ↓ escolhe · Enter abre · Esc fecha</div>`;
+function openPalette(mode){
+  editing=null;closePop();const M=$('#modal');M.dataset.kind='pal';M.style.width='';
+  const ph=mode==='proj'?'Trocar de projeto…':'Buscar projetos, tarefas, pessoas ou comandos…';
+  M.innerHTML=`<div class="pk"><div class="pk-in">${ic('search')}<input id="pl_q" placeholder="${ph}" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div><div id="pl_l" class="pk-l"></div><div class="pk-f"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> fechar</span></div></div>`;
   $('#ov').classList.add('on');
   let items=[],idx=0;
+  const go=(v,extra)=>()=>{S.view=v;if(extra)extra();zoom=null;cur=null;sel=new Set()};
+  const btn=id=>()=>setTimeout(()=>{const b=$(id);if(b)b.click()},0);
+  const VIEWS=[['list','Lista','list'],['board','Quadro','board'],['cal','Calendário','calendar'],['gantt','Cronograma','gantt'],['people','Pessoas e carga','people'],['dash','Painel executivo','chart']];
+  const ACTS=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
+    ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
+    ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
+    ['Alternar tema claro/escuro','moon',btn('#bTheme')],['Exportar Excel','download',btn('#bXls')],['Exportar PDF','file',btn('#bPdf')],['Importar Excel','upload',btn('#bXlsIn')],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
+  if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
   const draw=()=>{
     const q=$('#pl_q').value.trim().toLowerCase(),has=s=>!q||s.toLowerCase().includes(q);items=[];
-    S.projects.filter(p=>has(p.name)).forEach(p=>items.push(['📁 Projeto',p.name,()=>{S.cur=p.id;zoom=null;cur=null;sel=new Set()}]));
-    S.members.filter(m=>has(m.name+' '+(m.email||''))).forEach(m=>items.push(['👤 Pessoa',m.name+(m.email?' · '+m.email:''),()=>{$('#fm').value=m.id;if(S.view==='dash')S.view='list'}]));
-    S.tags.filter(g=>has(g.name)).forEach(g=>items.push(['🏷 Etiqueta',g.name,()=>{$('#ft').value=g.id;if(S.view==='dash')S.view='list'}]));
-    if(q)S.tasks.filter(t=>has(t.title)||(t.comments||[]).some(c=>c.text.toLowerCase().includes(q))).slice(0,30).forEach(t=>items.push(['✔ Tarefa',t.title,()=>goTask(t.id)]));
-    items=items.slice(0,40);idx=Math.min(idx,Math.max(0,items.length-1));
-    $('#pl_l').innerHTML=items.map((it,i)=>`<div class="pall ${i===idx?'on':''}" data-i="${i}"><span style="color:var(--mu);width:100px;flex-shrink:0;font-size:12px">${it[0]}</span><span>${esc(it[1])}</span></div>`).join('')||'<div class="hint">Nada encontrado.</div>';
+    const nOpen=p=>S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length;
+    S.projects.filter(p=>!p.virtual&&has(p.name)).forEach(p=>items.push({g:'Projetos',ic:'dot',col:pcol(p),l:p.name,r:nOpen(p)+' abertas',cur:!['smart','settings'].includes(S.view)&&p.id===S.cur,f:()=>{S.cur=p.id;if(['smart','settings'].includes(S.view))S.view='list';zoom=null;cur=null;sel=new Set()}}));
+    if(mode==='proj'&&can('project')&&has('novo projeto'))items.push({g:'Projetos',ic:'plus',l:'Novo projeto',r:'',f:btn('#addProj')});
+    if(mode!=='proj'||q){
+      VIEWS.filter(v=>has(v[1])).forEach(v=>items.push({g:'Ir para',ic:v[2],l:v[1],r:'',f:go(v[0])}));
+      SMARTS.filter(s=>has(s[1].replace(/^\S+\s/,''))).forEach(s=>items.push({g:'Ir para',ic:s[2],l:s[1].replace(/^\S+\s/,''),r:'todos os projetos',f:()=>{S.view='smart';S.smart=s[0];cur=null;sel=new Set()}}));
+      ACTS.filter(a=>has(a[0])).forEach(a=>items.push({g:'Ações',ic:a[1],l:a[0],r:'',f:a[2]}));
+      S.members.filter(m=>q&&has(m.name+' '+(m.email||''))).forEach(m=>items.push({g:'Pessoas',ic:'user',l:m.name,r:m.email||'',f:()=>{$('#fm').value=m.id;if(['dash','settings','smart'].includes(S.view))S.view='list'}}));
+      S.tags.filter(g=>q&&has(g.name)).forEach(g=>items.push({g:'Etiquetas',ic:'tag',l:g.name,r:'',f:()=>{$('#ft').value=g.id;if(['dash','settings','smart'].includes(S.view))S.view='list'}}));
+      if(q)S.tasks.filter(t=>!t.sec&&(has(t.title)||(t.comments||[]).some(c=>c.text.toLowerCase().includes(q)))).slice(0,12).forEach(t=>{const p=S.projects.find(x=>x.id===t.pid);items.push({g:'Tarefas',ic:'check',l:t.title,r:p?p.name:'',f:()=>goTask(t.id)})});
+    }
+    items=items.slice(0,60);idx=Math.min(idx,Math.max(0,items.length-1));
+    let h='',last='';
+    items.forEach((it,i)=>{
+      if(it.g!==last){h+=`<div class="pk-g">${it.g}</div>`;last=it.g}
+      h+=`<div class="pk-i ${i===idx?'on':''}" data-i="${i}">${it.ic==='dot'?`<i class="pd" style="background:${it.col}"></i>`:ic(it.ic)}<span class="pk-t">${esc(it.l)}</span>${it.cur?'<em>atual</em>':''}<small>${esc(it.r||'')}</small></div>`;
+    });
+    $('#pl_l').innerHTML=h||'<div class="pk-e">Nada encontrado.</div>';
+    const a=document.querySelector('#pl_l .on');if(a)a.scrollIntoView({block:'nearest'});
   };
-  const run=i=>{const it=items[i];if(!it)return;closeModal();it[2]();render()};
+  const run=i=>{const it=items[i];if(!it)return;closeModal();it.f();render()};
   const q=$('#pl_q');q.oninput=()=>{idx=0;draw()};
   q.onkeydown=e=>{
-    if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(items.length-1,idx+1);draw();const a=document.querySelector('#pl_l .on');if(a)a.scrollIntoView({block:'nearest'})}
-    else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(0,idx-1);draw();const a=document.querySelector('#pl_l .on');if(a)a.scrollIntoView({block:'nearest'})}
+    if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(items.length-1,idx+1);draw()}
+    else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(0,idx-1);draw()}
     else if(e.key==='Enter'){e.preventDefault();run(idx)}
   };
-  $('#pl_l').onclick=e=>{const el=e.target.closest('.pall');if(el)run(+el.dataset.i)};
+  $('#pl_l').onmousemove=e=>{const el=e.target.closest('.pk-i');if(el&&+el.dataset.i!==idx){idx=+el.dataset.i;document.querySelectorAll('#pl_l .pk-i').forEach(x=>x.classList.toggle('on',+x.dataset.i===idx))}};
+  $('#pl_l').onclick=e=>{const el=e.target.closest('.pk-i');if(el)run(+el.dataset.i)};
   draw();q.focus();
 }
+function renameProj(){const P=proj();if(P.virtual)return;ask('Renomear projeto',P.name,v=>{if(!v.trim())return false;P.name=v.trim();render()})}
 
 /* ----- desfazer (Ctrl+Z) ----- */
 const snapJSON=()=>JSON.stringify({members:S.members,tags:S.tags,projects:S.projects,link:S.link,me:S.me,tasks:S.tasks},(k,v)=>k==='open'?undefined:v);
@@ -847,7 +883,7 @@ function kbd(e){
       case 'd':eat();act('desc');return;
       case 'm':eat();act('self');return;
       case 's':eat();act('section');return;
-      case 'b':eat();openPalette();return;
+      case 'b':case 'k':eat();openPalette();return;
       case 'x':if(hasTextSel())return;eat();act('cut');return;
       case 'c':if(hasTextSel())return;eat();act('copy');return;
       case 'v':eat();act('paste');return;
@@ -1018,7 +1054,8 @@ function render(){
   const lf=ptasks().filter(isLeaf),dn=lf.filter(t=>t.status==='done').length,lt=lf.filter(isLate).length,op=lf.length-dn,pct=lf.length?Math.round(dn/lf.length*100):0;
   const sm=SMARTS.find(s=>s[0]===S.smart)||SMARTS[0];
   $('#pname').textContent=smart?sm[1].replace(/^\S+\s/,''):P.name;
-  $('#pname').title=smart?'Visão inteligente: reúne tarefas de todos os projetos':'Clique para renomear o projeto';
+  $('#pname').title=smart?'Visão inteligente: reúne tarefas de todos os projetos':'Duplo clique para renomear';
+  const pd=$('#pdot');pd.style.display=(smart||V==='settings')?'none':'';pd.style.background=pcol(P);
   $('#subline').innerHTML=smart?'<span>Reúne as tarefas de todos os projetos</span>':`<b>${pct}%</b> concluído <span class="pbar"><i style="width:${pct}%"></i></span> <span>${op} abertas</span>${lt?`<span class="late">· ${lt} atrasada(s)</span>`:''}`;
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
@@ -1027,7 +1064,7 @@ function render(){
   $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><small>${S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length}</small></div>`).join('');
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
-  const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length;
+  const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
   $('#bFilt').innerHTML=ic('filter')+'<span class="bl">Filtros</span>'+(nf?` <span class="badge" style="position:static;margin-left:4px">${nf}</span>`:'');
   $('#bTheme').innerHTML=ic(S.theme==='dark'?'sun':'moon');
   const al=alertCount();$('#bBell').innerHTML=ic('bell')+(al?`<span class="badge">${al}</span>`:'');
@@ -1062,7 +1099,7 @@ function rowHTML(t,depth,flat){
     ${t.star?`<span class="star" data-star="${t.id}" title="Favorita">★</span>`:''}${blocked?`<span class="lk" title="Aguardando: ${esc(wait)}">🔒</span>`:''}${t.timerStart?'<span class="tim" title="Cronômetro em andamento">⏱</span>':''}${t.comments.length?`<span class="pg" title="Comentários">💬${t.comments.length}</span>`:''}
     ${pr?`<span class="pg">${pr[0]}/${pr[1]}</span><span class="bar"><i style="width:${pr[1]?pr[0]/pr[1]*100:0}%"></i></span>`:''}${path}
     <button class="op" data-t="${t.id}" title="Abrir painel de edição (Espaço)">⤢ abrir</button>
-    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button>${flat?'':`<button data-add="${t.id}" title="Nova subtarefa">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
+    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button><button class="hdel" data-qdel="${t.id}" title="Excluir tarefa">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subtarefa">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
    </div>
    <div class="rt">
     <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
@@ -1491,7 +1528,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-smart]')){S.view='smart';S.smart=el.dataset.smart;adding=null;cur=null;sel=new Set();render();return}
   if(el=g('[data-qf]')){S.qf=el.dataset.qf;render();return}
   if(g('[data-hd]')){S.hideDone=!S.hideDone;render();toast(S.hideDone?'🙈 Tarefas concluídas ocultas':'👁 Tarefas concluídas visíveis');return}
-  if(g('#bFilt')){$('#fbar').classList.toggle('open');return}
+  if(g('#bFilt')){$('#fpanel').classList.toggle('open');return}
   if(g('#bBell')){openAlerts();return}
   if(g('#bTheme')){S.theme=S.theme==='dark'?'light':'dark';render();return}
   if(g('#bRules')){openRules();return}
@@ -2206,7 +2243,7 @@ function loginView(mode,msg,pre){
   else b=`<h2>Carregando…</h2><div class="hint">Conectando ao banco de dados.</div>`;
   $('#login .lbox').innerHTML=`<div class="lmob"><div class="lg">CS</div><b>Controle de Tarefas</b></div>${b}<div id="lmsg" class="lmsg" role="alert">${msg?esc(msg):''}</div><div class="lfoot">🔒 Acesso restrito a pessoas convidadas · CS Infra</div>`;
   loginShow(true);
-  const f=$('#login input');if(f)setTimeout(()=>f.focus(),30);
+  const f=$('#login input');if(f)setTimeout(()=>{const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#login .lbox input')))f.focus()},30);
 }
 const lmsg=(m,ok)=>{const e=$('#lmsg');if(e){e.textContent=m||'';e.className='lmsg'+(ok?' ok':'')}};
 const lval=id=>($('#'+id)||{value:''}).value.trim();
