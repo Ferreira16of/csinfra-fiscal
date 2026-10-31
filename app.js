@@ -558,7 +558,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(el=g('[data-pop]')){const[ty,id]=el.dataset.pop.split(':');if(pop&&pop.type===ty&&pop.id===id)closePop();else openPop(ty,id,el);return}
-  if(el=g('[data-ie]')){startEdit(el);return}
+  if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
   if(el=g('[data-ds]')){S.dash=el.dataset.ds;render();return}
   if(el=g('.pi')){S.cur=el.dataset.id;adding=null;zoom=null;cur=null;sel=new Set();if(S.view==='smart')S.view='list';render();if(CLOUD&&Date.now()-(cloud.last||0)>4000)pollPull(true);return}
@@ -2995,7 +2995,7 @@ pushHist();
 
 window.addEventListener('beforeunload',e=>{if(typeof cloud!=='undefined'&&cloud.on&&(cloud.timer||cloud.pushing)){e.preventDefault();e.returnValue=''}});
 window.addEventListener('online',()=>{if(typeof cloud!=='undefined'&&cloud.on){cloudSchedule();pollPull()}});
-document.addEventListener('click',e=>{const t=e.target;if(t.closest&&t.closest('#bCollapse')){toggleSide();return}if(t.closest&&t.closest('#mnu')){document.body.classList.toggle('menu');return}if(t.id==='scrim'||(document.body.classList.contains('menu')&&t.closest&&t.closest('#side .si,#side .pi,#side .fi')))document.body.classList.remove('menu')});
+document.addEventListener('click',e=>{const t=e.target;if(t.closest&&t.closest('#bCollapse')){toggleSide();return}if(t.closest&&t.closest('#mnu')){document.body.classList.toggle('menu');return}if(t.id==='scrim'||(document.body.classList.contains('menu')&&t.closest&&t.closest('#side .si,#side .pi,#side .fi,#side #newTask,#side #bPal,#side #addProj,#side #bUser')))document.body.classList.remove('menu')});
 hydrateIcons();
 (()=>{const fix=r=>r.querySelectorAll('input:not([autocomplete]),textarea:not([autocomplete])').forEach(i=>{i.setAttribute('autocomplete',i.type==='password'?'new-password':'off')});
   ['#view','#modal','#pop'].forEach(s=>{const e=$(s);if(e){fix(e);new MutationObserver(()=>fix(e)).observe(e,{childList:true,subtree:true})}})})();
