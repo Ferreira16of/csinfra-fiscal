@@ -519,8 +519,8 @@ function userMenu(){
     ...(can('members')?[{l:'Equipe e convites',ic:'people',f:B('#bTeam')}]:[]),
     ...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),
     ...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),'-',
-    {l:'Exportar Excel',ic:'download',f:B('#bXls')},{l:'Exportar PDF',ic:'file',f:B('#bPdf')},
-    ...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},{l:'Importar / exportar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',
+    {l:'Importar e exportar',ic:'download',f:()=>openDataHub()},
+'-',
     {l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()},
     {l:'Alterar senha',ic:'lock',f:()=>changePwDialog()},{l:'Sair da conta',ic:'x',f:()=>cloudLogout()}
   ],{side:'right'});
@@ -843,8 +843,8 @@ function openPalette(mode){
   const ACTS0=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
-    ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Exportar Excel','download',btn('#bXls')],['Exportar PDF','file',btn('#bPdf')],['Importar Excel','upload',btn('#bXlsIn')],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
-  const PK={'Nova tarefa':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules','Importar Excel':'import'};
+    ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Importar e exportar (Excel, PDF, CSV…)','download',()=>setTimeout(openDataHub,0)],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
+  const PK={'Nova tarefa':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules'};
   const ACTS=ACTS0.filter(a=>!PK[a[0]]||can(PK[a[0]]));
   if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
   const draw=()=>{
@@ -1219,6 +1219,8 @@ document.addEventListener('paste',e=>{
   if(ev==='drop'){m.classList.remove('dropping');addFiles(e.dataTransfer.files)}
 }));
 document.addEventListener('dragleave',e=>{if(e.target.id==='modal')e.target.classList.remove('dropping')});
+document.addEventListener('mousedown',e=>{const f=$('#fpanel');if(f&&f.classList.contains('open')&&!e.target.closest('#fpanel,#bFilt,#menu'))f.classList.remove('open')},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const f=$('#fpanel');if(f&&f.classList.contains('open')&&!$('#menu')&&!$('#ov').classList.contains('on')){f.classList.remove('open');e.stopImmediatePropagation()}}},true);
 /* ----- filtros em "pílulas" (substituem os selects nativos) ----- */
 const FDEFS=[
   ['fm','Responsável',()=>[{v:'',l:'Todos'},{v:'none',l:'Sem responsável'},...S.members.map(m=>({v:m.id,l:m.name,sw:m.color}))]],
@@ -1738,6 +1740,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-gth]')){setTheme(el.dataset.gth);return}
   if(g('#addProj2')){$('#addProj').click();return}
   if(CLOUD&&g('#bUser')){e.stopImmediatePropagation();userMenu();return}
+  if(g('#bData')){openDataHub();return}
   if(g('#bMore')){const B=id=>()=>{const b=$(id);if(b)b.click()};openMenu($('#bMore'),[...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),...(can('tags')||can('rules')?['-']:[]),{l:'Exportar Excel',ic:'download',f:B('#bXls')},...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')}]:[]),{l:'Exportar PDF',ic:'file',f:B('#bPdf')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},'-',{l:'Exportar JSON / CSV',ic:'download',f:B('#bExp')},...(can('import')?[{l:'Importar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',{l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()}],{side:'right'});return}
   if(g('#bRules')){openRules();return}
   if(g('#newTask')){$('#qa').focus();return}
@@ -1808,7 +1811,7 @@ const HOWTO=[['Como importar tarefas pelo Excel'],[''],
  ['6. Repete: Diariamente, Dias úteis, Semanalmente, Mensalmente, Anualmente ou “A cada 2 semanas”, “A cada 3 meses”…'],
  ['7. Marco e Favorita: escreva Sim para marcar.'],
  ['8. Coluna ID preenchida (arquivo exportado pelo sistema) = a tarefa é ATUALIZADA. ID vazio = tarefa NOVA (ou atualizada, se já existir uma com o mesmo título e caminho).'],
- ['9. No sistema: barra lateral → menu da sua conta (rodapé do menu lateral) → Importar Excel. Você vê uma prévia antes de confirmar.']];
+ ['9. No sistema: botão “Importar / Exportar” (acima da lista) → arraste o arquivo ou clique para escolher. Você vê uma prévia antes de confirmar.']];
 function sheetFrom(rows,widths,dateCols){
   const ws=XLSX.utils.aoa_to_sheet(rows,{cellDates:true});
   if(widths)ws['!cols']=widths.map(w=>({wch:w}));
@@ -1819,10 +1822,11 @@ function saveWb(wb,name){
   const out=XLSX.write(wb,{bookType:'xlsx',type:'array',cellDates:true});
   dlBlob(name,new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
 }
-function exportXlsx(){
+function exportXlsx(scope){
   if(!haveXLSX())return;
+  const PS=scope==='cur'?[proj()]:S.projects.filter(p=>!p.virtual);
   const wb=XLSX.utils.book_new(),rows=[XLS_COLS];
-  S.projects.forEach(p=>treeOrder(p.id).forEach(id=>{
+  PS.forEach(p=>treeOrder(p.id).forEach(id=>{
     const t=byId(id),path=[];let x=t;while(x.parent){x=byId(x.parent);path.unshift(x.title)}
     rows.push([t.id,p.name,path.join(' > '),t.title,stOf(t.status).n,PR[t.prio],t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join('; '),t.tags.map(a=>(tagOf(a)||{}).name).filter(Boolean).join('; '),xd(t.start),t.startTime,xd(t.due),t.dueTime,repText(t),t.est||'',Math.round((t.spent||0)*100)/100||'',t.ms?'Sim':'',t.star?'Sim':'',t.doneAt?new Date(t.doneAt):'',t.desc||'']);
   }));
@@ -1831,7 +1835,7 @@ function exportXlsx(){
   XLSX.utils.book_append_sheet(wb,ws,'Tarefas');
   const res=[['Projeto','Tarefas','Concluídas','% concluído','Em andamento','Impedidas','Atrasadas','Horas estimadas','Horas registradas']];
   let tt=[0,0,0,0,0,0,0];
-  S.projects.forEach(p=>{const l=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)),d=l.filter(t=>t.status==='done').length,ip=l.filter(t=>t.status==='doing').length,bl=l.filter(t=>t.status==='blocked').length,lt=l.filter(isLate).length,he=l.filter(t=>t.status!=='done').reduce((a,t)=>a+(t.est||0),0),hs=l.reduce((a,t)=>a+(t.spent||0),0);
+  PS.forEach(p=>{const l=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)),d=l.filter(t=>t.status==='done').length,ip=l.filter(t=>t.status==='doing').length,bl=l.filter(t=>t.status==='blocked').length,lt=l.filter(isLate).length,he=l.filter(t=>t.status!=='done').reduce((a,t)=>a+(t.est||0),0),hs=l.reduce((a,t)=>a+(t.spent||0),0);
     res.push([p.name,l.length,d,l.length?d/l.length:0,ip,bl,lt,Math.round(he*10)/10,Math.round(hs*10)/10]);tt[0]+=l.length;tt[1]+=d;tt[2]+=ip;tt[3]+=bl;tt[4]+=lt;tt[5]+=he;tt[6]+=hs});
   res.push(['TOTAL',tt[0],tt[1],tt[0]?tt[1]/tt[0]:0,tt[2],tt[3],tt[4],Math.round(tt[5]*10)/10,Math.round(tt[6]*10)/10]);
   const wr=sheetFrom(res,[28,10,12,13,14,11,11,15,17]);
@@ -1840,7 +1844,8 @@ function exportXlsx(){
   XLSX.utils.book_append_sheet(wb,sheetFrom([['Nome','E-mail','Perfil','Status','Capacidade (h/semana)'],...S.members.map(m=>[m.name,m.email||'',ROLES[roleOfM(m)].n,m.status==='invited'?'Convidado':'Ativo',m.cap||40])],[24,32,16,12,20]),'Equipe');
   XLSX.utils.book_append_sheet(wb,sheetFrom([['Etiqueta'],...S.tags.map(g=>[g.name])],[24]),'Etiquetas');
   XLSX.utils.book_append_sheet(wb,sheetFrom(HOWTO,[140]),'Como importar');
-  saveWb(wb,'tarefas_'+today()+'.xlsx');
+  const slug=scope==='cur'?'_'+proj().name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').slice(0,30):'';
+  saveWb(wb,'tarefas'+slug+'_'+today()+'.xlsx');
   toast('📊 Excel gerado — veja a pasta Downloads');
 }
 function exportTemplate(){
@@ -1976,20 +1981,77 @@ function importPreview(plan,fname,sheet){
   $('#ov').classList.add('on');
   window._plan=plan;
 }
-async function onXlsFile(e){
-  const f=e.target.files[0];e.target.value='';if(!f||!haveXLSX())return;
+async function onXlsFile(e){const f=e.target.files[0];e.target.value='';if(f)importFile(f)}
+async function importFile(f){
+  if(!f||!haveXLSX())return;
   if(!can('import')){deny('import');return}
+  if(/\.json$/i.test(f.name)){restoreJson(f);return}
+  if(!/\.(xlsx|xls|csv|txt)$/i.test(f.name)){toast('Use um arquivo Excel (.xlsx) ou CSV.');return}
   try{
-    const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array',codepage:65001});
     const order=[...wb.SheetNames.filter(n=>/tarefa/i.test(n)),...wb.SheetNames.filter(n=>!/tarefa/i.test(n))];
     let grid=null,sheet='';
     for(const n of order){const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''});if(g.some(r=>r.some(c=>ALIAS.titulo.includes(nh(c))))){grid=g;sheet=n;break}}
-    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Tarefa”). Baixe o modelo no menu da sua conta (rodapé do menu lateral) → Modelo de planilha.','',()=>{},{confirm:1,noCancel:1});return}
+    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Tarefa”). Use o botão “Importar / Exportar” → Baixar modelo de planilha.','',()=>{},{confirm:1,noCancel:1});return}
     const plan=planImport(grid);
     if(plan.error){ask(plan.error,'',()=>{},{confirm:1,noCancel:1});return}
     importPreview(plan,f.name,sheet);
   }catch(err){ask('Não consegui ler o arquivo: '+(err&&err.message||err),'',()=>{},{confirm:1,noCancel:1})}
 }
+
+/* ----- central de importar / exportar ----- */
+function jsonBackup(){return JSON.stringify({exportedAt:new Date().toISOString(),org:S.org,members:S.members,tags:S.tags,projects:S.projects,tasks:S.tasks},null,1)}
+function restoreJson(f){
+  if(CLOUD){ask('Backups .json servem para guardar uma cópia dos dados. Para trazer tarefas de volta ao sistema online, use a planilha Excel (a prévia mostra o que será criado ou atualizado).','',()=>{},{confirm:1,noCancel:1});return}
+  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.projects||!d.tasks)throw 0;
+    ask('Restaurar este backup? Os dados atuais serão substituídos ('+d.tasks.length+' tarefas no arquivo).','',()=>{S=migrate(d);adding=null;render();toast('Backup restaurado')},{confirm:1,ok:'Restaurar'})}
+    catch(x){ask('Arquivo inválido. Nada foi alterado.','',()=>{},{confirm:1,noCancel:1})}};r.readAsText(f);
+}
+function openDataHub(){
+  editing=null;closePop();const M=$('#modal');M.dataset.kind='hub';M.style.width='min(860px,100%)';
+  const imp=can('import'),n=S.tasks.filter(t=>t.pid===proj().id).length,np=S.projects.filter(p=>!p.virtual).length;
+  const card=(k,icn,t,d)=>`<button type="button" class="dcard" data-dx="${k}"><span class="dic">${ic(icn,20)}</span><span class="dtx"><b>${t}</b><small>${d}</small></span>${ic('chevR',16)}</button>`;
+  M.innerHTML=`<h3>Importar e exportar</h3>
+  <div class="dhub">
+   <section><h4>${ic('download',16)} Exportar</h4>
+    ${card('xlsx-cur','file','Excel — este projeto',esc(proj().name)+' · '+n+' item(ns)')}
+    ${card('xlsx-all','file','Excel — todos os projetos',np+' projeto(s) · com resumo, membros e etiquetas')}
+    ${card('pdf','file','PDF — relatório executivo','Indicadores, gráficos e listas de atenção')}
+    ${card('csv','download','CSV','Planilha simples (abre no Excel)')}
+    ${card('json','download','Backup (.json)','Cópia completa dos dados para guardar')}
+   </section>
+   <section><h4>${ic('upload',16)} Importar</h4>
+    <div class="dz ${imp?'':'off'}" id="dz" tabindex="0">${ic('upload',28)}<b>Arraste a planilha aqui</b><span>ou clique para escolher · Excel (.xlsx) ou CSV</span></div>
+    ${card('tpl','file','Baixar modelo de planilha','Já vem com exemplos e instruções')}
+    <ul class="dtips"><li>Só o <b>Título</b> é obrigatório.</li><li>Planilha exportada daqui, editada e reenviada <b>atualiza</b> as tarefas (coluna ID).</li><li>Pessoas e etiquetas novas são cadastradas.</li><li>Você vê uma <b>prévia</b> antes de confirmar.</li></ul>
+    ${imp?'':'<div class="hint" style="color:var(--amb)">Seu perfil não importa tarefas.</div>'}
+   </section>
+  </div>
+  <div class="acts"><span class="hint">Dica: você também pode soltar uma planilha em qualquer tela do sistema.</span><button class="pri" id="g_ok" type="button">Fechar</button></div>`;
+  $('#ov').classList.add('on');
+}
+document.addEventListener('click',e=>{
+  const dz=e.target.closest&&e.target.closest('#dz');
+  if(dz){e.stopImmediatePropagation();if(can('import'))$('#xlsIn').click();else deny('import');return}
+  const b=e.target.closest&&e.target.closest('[data-dx]');if(!b)return;
+  e.stopImmediatePropagation();const k=b.dataset.dx;
+  if(k==='xlsx-cur'){exportXlsx('cur');return}
+  if(k==='xlsx-all'){exportXlsx('all');return}
+  if(k==='pdf'){openExportPdf();return}
+  if(k==='tpl'){exportTemplate();return}
+  if(k==='csv'){dlBlob('tarefas_'+today()+'.csv',new Blob(['﻿'+csv()],{type:'text/csv;charset=utf-8'}));toast('CSV gerado — veja a pasta Downloads');return}
+  if(k==='json'){dlBlob('backup_tarefas_'+today()+'.json',new Blob([jsonBackup()],{type:'application/json'}));toast('Backup gerado — veja a pasta Downloads');return}
+},true);
+/* soltar planilha em qualquer lugar da tela */
+(()=>{let n=0;const on=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
+  const hide=()=>{n=0;document.body.classList.remove('filedrag')};
+  window.addEventListener('dragenter',e=>{if(!on(e)||e.target.closest&&e.target.closest('#modal[data-kind=task]'))return;n++;document.body.classList.add('filedrag')});
+  window.addEventListener('dragleave',e=>{if(!on(e))return;n--;if(n<=0)hide()});
+  window.addEventListener('dragover',e=>{if(on(e)&&!(e.target.closest&&e.target.closest('#modal[data-kind=task]')))e.preventDefault()});
+  window.addEventListener('drop',e=>{if(!on(e))return;hide();if(e.target.closest&&e.target.closest('#modal[data-kind=task]'))return;e.preventDefault();
+    const f=[...e.dataTransfer.files][0];if(!f||($('#login')&&$('#login').style.display!=='none'))return;
+    if(/\.(xlsx|xls|csv|txt|json)$/i.test(f.name)){importFile(f)}else toast('Solte uma planilha Excel (.xlsx) ou CSV.')});
+})();
 
 /* ----- PDF executivo ----- */
 function openExportPdf(){
@@ -2296,7 +2358,7 @@ function settings(){
       card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
   }else if(tab==='opcoes'){
     b=card('Aparência','Escolha o tema do sistema. Fica salvo neste navegador.',themePicker())+
-      card('Dados e backup','Exporte ou importe seus dados.',`<div class="btns"><button data-act3="xls">${ic('download',16)} Exportar Excel</button><button data-act3="pdf">${ic('file',16)} Exportar PDF</button><button data-act3="csv">Exportar CSV</button><button data-act3="expjson">Exportar JSON</button><button data-act3="impjson" ${adm?'':'disabled'}>${ic('upload',16)} Importar JSON</button></div>`)+
+      card('Dados e backup','Exporte suas tarefas ou traga tarefas de uma planilha.',`<div class="btns"><button class="pri" data-act3="hub">${ic('download',16)} Importar e exportar</button>`)+
       card('Ajuda','',`<div class="btns"><button data-act3="welcome">Rever guia de boas-vindas</button><button data-act3="keys">Atalhos de teclado</button></div>`)+
       card('Zona de risco','Ações que apagam dados.',`<div class="btns"><button data-act3="rmex" ${prj?'':'disabled'}>Remover tarefas de exemplo</button><button data-act3="delproj" style="color:var(--red)" ${can('delProject')?'':'disabled'}>Excluir este projeto</button></div>`,'danger');
   }else{
@@ -2451,6 +2513,7 @@ document.addEventListener('click',e=>{
     const a=el.dataset.act3;
     if(a==='invite'){inviteMemberDialog();return}
     if(a==='newteam'){newTeamDialog();return}
+    if(a==='hub'){openDataHub();return}
     if(a==='expjson'){$('#bExp').click();return}
     if(a==='csv'){$('#bCsv').click();return}
     if(a==='impjson'){$('#bImp').click();return}
