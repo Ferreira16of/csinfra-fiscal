@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s);
-const exName=()=>{try{const m=(typeof mem==='function'&&S.me&&mem(S.me))||S.members.find(x=>x.name&&!/^sem respons/i.test(x.name));return (m?m.name:'Maria').split(' ')[0].replace(/[^\p{L}\p{N}]/gu,'')||'Maria'}catch(e){return 'Maria'}};
+const exName=()=>'pessoa';
 /* ----- ícones (traço, 24x24) ----- */
 const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',dots:'M5 12h.01M12 12h.01M19 12h.01',image:'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M9 9.5h.01',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
 const ic=(n,s)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"${s?` style="width:${s}px;height:${s}px"`:''}><path d="${ICO[n]||''}"/></svg>`;
@@ -520,7 +520,7 @@ function userMenu(){
     ...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),
     ...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),'-',
     {l:'Exportar Excel',ic:'download',f:B('#bXls')},{l:'Exportar PDF',ic:'file',f:B('#bPdf')},
-    ...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Importar / exportar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',
+    ...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},{l:'Importar / exportar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',
     {l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()},
     {l:'Alterar senha',ic:'lock',f:()=>changePwDialog()},{l:'Sair da conta',ic:'x',f:()=>cloudLogout()}
   ],{side:'right'});
@@ -671,7 +671,7 @@ const HELP=[
 ['Editar',[['F2 , Alt+Enter','Editar nome da tarefa'],['d , Ctrl+D','Editar descrição']]],
 ['Criar',[['q','Ir para a barra de adição rápida (linguagem natural)'],['t','Nova tarefa no primeiro nível'],['Enter','Nova tarefa (no mesmo nível)'],['⇧+Enter','Nova subtarefa'],['l','Adicionar sublista (seção filha)']]],
 ['Ações sobre as selecionadas',[['Ctrl+Del','Excluir'],['c','Comentar'],['Ctrl+M','Auto-atribuir (defina “eu” em Equipe 👤)'],['Ctrl+X , Ctrl+C , Ctrl+V','Cortar / copiar / colar'],['Ctrl+E','Selecionar todas as subtarefas'],['Alt+P','Tornar subtarefa da anterior'],['Ctrl+S','Transformar em seção'],['Ctrl+Alt+M','Transformar em marco'],['⇧+C , Ctrl+/','Concluir / reabrir'],['i','Mostrar ID e detalhes'],['*','Favoritar']]],
-['Visualizar',[['=','Minhas tarefas (filtro por “eu”)'],['Ctrl+B','Pesquisa rápida (projetos, pessoas, etiquetas, tarefas)'],['s','Pesquisar tarefas e comentários'],['Espaço','Abrir / fechar o painel de detalhes'],[']','Mostrar / ocultar a barra lateral'],['( , )','Alternar entre as vistas'],['1 , 2 , 3 , 4 , 5 , 6','Lista, Quadro, Calendário, Cronograma, Pessoas, Painel'],['Ctrl+.','Tela cheia'],['z','Zoom na tarefa selecionada'],['a , ⇧+Esc','Menos zoom']]],
+['Visualizar',[['=','Minhas tarefas (filtro por “eu”)'],['Ctrl+K , Ctrl+B','Busca rápida: projetos, tarefas, pessoas e comandos'],['s','Pesquisar tarefas e comentários'],['Espaço','Abrir / fechar o painel de detalhes'],['[ , ]','Recolher / expandir o menu lateral'],['( , )','Alternar entre as vistas'],['1 , 2 , 3 , 4 , 5 , 6','Lista, Quadro, Calendário, Cronograma, Pessoas, Painel'],['Ctrl+.','Tela cheia'],['z','Zoom na tarefa selecionada'],['a , ⇧+Esc','Menos zoom']]],
 ['Outros',[['Ctrl+Z','Lista de operações para desfazer'],['Alt+Q','Citar o texto selecionado no comentário (painel aberto)'],['Ctrl+P','Imprimir (impressão do navegador, com layout próprio)'],['F1','Esta ajuda']]]
 ];
 const K=s=>s.split(' , ').map(x=>`<kbd>${esc(x)}</kbd>`).join(' ');
@@ -1528,7 +1528,7 @@ function people(){
     });
   });
   const lab={late:'Atrasadas',later:'Depois',nodate:'Sem data'};
-  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Tarefa sem estimativa conta 1 h. A capacidade (h/semana) de cada pessoa é editada em 👥 Equipe. Clique numa célula para ver as tarefas.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
+  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Tarefa sem estimativa conta 1 h. A capacidade (h/semana) de cada pessoa é editada em Configurações → Membros. Clique numa célula para ver as tarefas.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
   P.forEach(p=>{
     const tot=Object.keys(grid).filter(k=>k.startsWith(p.id+'|')).reduce((a,k)=>a+grid[k].list.length,0);
     if(p.id==='none'&&!tot)return;
@@ -1704,7 +1704,7 @@ function guideHTML(){
    <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Tarefas podem ter subtarefas sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subtarefa. Clique no nome para renomear.</p></div>
    <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>Resp.</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
    <div class="step"><b><span class="n">4</span>Veja do jeito certo</b><p><b>Lista</b> (detalhe) · <b>Quadro</b> (fluxo) · <b>Calendário</b> (prazos) · <b>Cronograma</b> (Gantt com dependências) · <b>Pessoas</b> (carga de trabalho) · <b>Painel</b> (visão executiva).</p></div>
-   <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas tarefas</b> reúnem todos os projetos. Os chips acima da lista filtram o projeto atual.</p></div>
+   <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas tarefas</b> reúnem todos os projetos. O botão <b>Filtros</b> (acima da lista) filtra o projeto atual.</p></div>
    <div class="step"><b><span class="n">6</span>Acompanhe e reporte</b><p>🔔 mostra alertas. No <b>Painel</b>, use <b>Resumo executivo</b> para gerar o texto de status e enviar por e-mail.</p></div>
   </div>
   <div class="hint" style="margin-top:14px"><b>Glossário:</b> <b>Seção</b> = grupo de tarefas (linha em destaque) · <b>Marco</b> ◆ = entrega-chave · <b>Dependência</b> 🔒 = só começa quando a predecessora termina · <b>Saúde</b> 🟢🟡🔴 = situação da seção no painel · <b>Automações</b> ⚡ = regras “quando… faça…” · <b>Perfis</b> = Administrador, Normal, Limitado e Convidado (⚙ Configurações).</div>`;
@@ -1808,7 +1808,7 @@ const HOWTO=[['Como importar tarefas pelo Excel'],[''],
  ['6. Repete: Diariamente, Dias úteis, Semanalmente, Mensalmente, Anualmente ou “A cada 2 semanas”, “A cada 3 meses”…'],
  ['7. Marco e Favorita: escreva Sim para marcar.'],
  ['8. Coluna ID preenchida (arquivo exportado pelo sistema) = a tarefa é ATUALIZADA. ID vazio = tarefa NOVA (ou atualizada, se já existir uma com o mesmo título e caminho).'],
- ['9. No sistema: barra lateral → Excel e PDF → Importar Excel. Você vê uma prévia antes de confirmar.']];
+ ['9. No sistema: barra lateral → menu da sua conta (rodapé do menu lateral) → Importar Excel. Você vê uma prévia antes de confirmar.']];
 function sheetFrom(rows,widths,dateCols){
   const ws=XLSX.utils.aoa_to_sheet(rows,{cellDates:true});
   if(widths)ws['!cols']=widths.map(w=>({wch:w}));
@@ -1847,9 +1847,9 @@ function exportTemplate(){
   if(!haveXLSX())return;
   const wb=XLSX.utils.book_new();
   const ex=[XLS_COLS,
-   ['','Operação CS Infra','Fiscal > SPED','Gerar SPED Fiscal','A fazer','Alta','João; Maria','fiscal',xd(addDays(0)),'',xd(addDays(5)),'17:00','',2,'','','','','Conferir CFOP antes de transmitir'],
-   ['','Operação CS Infra','Fiscal > SPED','Validar no PVA e transmitir','A fazer','Alta','Maria','fiscal','','',xd(addDays(7)),'','',1,'','Sim','','',''],
-   ['','Operação CS Infra','Rotinas','Revisar backups','Em andamento','Média','João','infra','','',xd(addDays(3)),'','Semanalmente',1,'','','Sim','',''],
+   ['','Operação CS Infra','Fiscal > SPED','Gerar SPED Fiscal','A fazer','Alta',(S.members[0]?S.members[0].name:'Pessoa 1')+'; '+(S.members[1]?S.members[1].name:'Pessoa 2'),'fiscal',xd(addDays(0)),'',xd(addDays(5)),'17:00','',2,'','','','','Conferir CFOP antes de transmitir'],
+   ['','Operação CS Infra','Fiscal > SPED','Validar no PVA e transmitir','A fazer','Alta',(S.members[0]?S.members[0].name:'Pessoa 1'),'fiscal','','',xd(addDays(7)),'','',1,'','Sim','','',''],
+   ['','Operação CS Infra','Rotinas','Revisar backups','Em andamento','Média',(S.members[S.members.length>1?1:0]?S.members[S.members.length>1?1:0].name:'Pessoa 1'),'infra','','',xd(addDays(3)),'','Semanalmente',1,'','','Sim','',''],
    ['','','','Tarefa simples sem seção','','','','','','','','','','','','','','','']];
   XLSX.utils.book_append_sheet(wb,sheetFrom(HOWTO,[140]),'Como importar');
   XLSX.utils.book_append_sheet(wb,sheetFrom(ex,XLS_W),'Tarefas');
@@ -1984,7 +1984,7 @@ async function onXlsFile(e){
     const order=[...wb.SheetNames.filter(n=>/tarefa/i.test(n)),...wb.SheetNames.filter(n=>!/tarefa/i.test(n))];
     let grid=null,sheet='';
     for(const n of order){const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''});if(g.some(r=>r.some(c=>ALIAS.titulo.includes(nh(c))))){grid=g;sheet=n;break}}
-    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Tarefa”). Baixe o modelo em Excel e PDF → Modelo Excel.','',()=>{},{confirm:1,noCancel:1});return}
+    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Tarefa”). Baixe o modelo no menu da sua conta (rodapé do menu lateral) → Modelo de planilha.','',()=>{},{confirm:1,noCancel:1});return}
     const plan=planImport(grid);
     if(plan.error){ask(plan.error,'',()=>{},{confirm:1,noCancel:1});return}
     importPreview(plan,f.name,sheet);
@@ -2309,6 +2309,65 @@ function settings(){
   $('#view').innerHTML=`<div class="setpg"><header class="sph"><h1>Configurações</h1><p>Perfis, equipe, aparência e dados do sistema.</p></header><div class="setwrap">${nav}<div class="setmain">${b}</div></div></div>`;
 }
 
+/* ----- remover pessoa: o que fazer com as tarefas dela ----- */
+async function flushSync(){
+  if(!CLOUD||!cloud.ready)return;
+  clearTimeout(cloud.timer);cloud.timer=null;
+  const wait=async()=>{for(let i=0;i<60&&cloud.pushing;i++)await new Promise(r=>setTimeout(r,100))};
+  await wait();await pushNow();await wait();
+}
+async function finishRemoveMember(m){
+  const hasLogin=CLOUD&&m.access&&validEmail(m.email||'');
+  if(CLOUD)await flushSync();
+  if(hasLogin){
+    try{await fnCall({action:'delete',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false);render();return 'login'}
+    catch(x){if(!fnMissing(x)){toast(trErr(x.message));return 'erro'}}
+  }
+  S.members=S.members.filter(x=>x.id!==m.id);S.tasks.forEach(t=>t.assignees=t.assignees.filter(a=>a!==m.id));if(S.me===m.id)S.me='';
+  render();save();return 'ok';
+}
+function removeMemberDialog(m){
+  const mine=S.tasks.filter(t=>(t.assignees||[]).includes(m.id)),excl=mine.filter(t=>t.assignees.length===1);
+  const hasLogin=CLOUD&&m.access&&validEmail(m.email||'');
+  const loginNote=hasLogin?'<div class="hint" style="margin-top:10px">O login dela (Authentication → Users do Supabase) também será excluído.</div>':'';
+  if(!mine.length){
+    ask('Remover '+m.name+' do sistema?'+(hasLogin?' O login dela (Authentication → Users do Supabase) também será excluído.':''),'',async()=>{await finishRemoveMember(m);toast('Pessoa removida')},{confirm:1,ok:'Remover'});return}
+  const others=S.members.filter(x=>x.id!==m.id&&x.access!==false);
+  const extra=excl.reduce((n,t)=>n+desc(t.id).filter(d=>!(d.assignees||[]).includes(m.id)).length,0);
+  const M=$('#modal');M.dataset.kind='rmm';M.style.width='';editing=null;closePop();window._rmId=m.id;
+  M.innerHTML=`<h3>Remover ${esc(m.name)}</h3>
+  <div class="hint" style="margin:-6px 0 12px"><b>${mine.length}</b> tarefa${mine.length>1?'s':''} no nome dela${mine.length>excl.length?` (${mine.length-excl.length} compartilhada${mine.length-excl.length>1?'s':''} com outras pessoas)`:''}. O que fazer com elas?</div>
+  <label class="opt"><input type="radio" name="rm_mode" value="move" checked><span><b>Passar para outra(s) pessoa(s)</b><small>As tarefas continuam, com os novos responsáveis.</small></span></label>
+  <div class="alist" id="rm_who" style="margin:4px 0 10px;max-height:190px;overflow:auto">${others.map(x=>`<label class="arow"><input type="checkbox" class="rm_to" value="${x.id}"><span class="av" style="background:${x.color};border-color:transparent">${esc(ini(x.name))}</span><span class="an"><b>${esc(x.name)}</b><small>${esc(x.email||'sem e-mail')}</small></span>${roleBadge(x)}</label>`).join('')||'<div class="hint" style="padding:14px">Não há outra pessoa para receber as tarefas.</div>'}</div>
+  <label class="opt"><input type="radio" name="rm_mode" value="del"><span><b>Excluir as tarefas</b><small>${excl.length?`Apaga ${excl.length} tarefa${excl.length>1?'s':''} que ${excl.length>1?'são só dela':'é só dela'}${extra?` e ${extra} subtarefa${extra>1?'s':''} de outras pessoas`:''}. Nas compartilhadas ela só deixa de ser responsável.`:'Não há tarefas só dela; nas compartilhadas ela apenas deixa de ser responsável.'}</small></span></label>
+  <label class="opt"><input type="radio" name="rm_mode" value="none"><span><b>Deixar sem responsável</b><small>As tarefas continuam, sem ninguém atribuído.</small></span></label>
+  ${loginNote}
+  <div class="hint" id="rm_msg" style="color:var(--red)"></div>
+  <div class="acts"><span></span><span><button id="g_ok" type="button">Cancelar</button> <button class="pri" id="rm_go" type="button" style="background:var(--red);border-color:var(--red)">Remover pessoa</button></span></div>`;
+  $('#ov').classList.add('on');
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest&&e.target.closest('#rm_go');if(!b)return;
+  e.stopImmediatePropagation();
+  const m=mem(window._rmId);if(!m)return;
+  const mode=(document.querySelector('input[name=rm_mode]:checked')||{}).value||'move';
+  const ids=[...document.querySelectorAll('.rm_to:checked')].map(x=>x.value);
+  if(mode==='move'&&!ids.length){$('#rm_msg').textContent='Escolha para quem passar as tarefas (ou use outra opção).';return}
+  b.disabled=true;b.textContent='Removendo…';
+  const mine=S.tasks.filter(t=>(t.assignees||[]).includes(m.id));let moved=0,gone=0;
+  if(mode==='move'){mine.forEach(t=>{t.assignees=[...new Set(t.assignees.filter(a=>a!==m.id).concat(ids))];moved++})}
+  else if(mode==='del'){
+    const excl=mine.filter(t=>t.assignees.length===1);
+    excl.forEach(t=>{if(byId(t.id)){delTask(t.id);gone++}});
+    S.tasks.forEach(t=>{t.assignees=(t.assignees||[]).filter(a=>a!==m.id)});
+  }else{S.tasks.forEach(t=>{t.assignees=(t.assignees||[]).filter(a=>a!==m.id)})}
+  const r=await finishRemoveMember(m);
+  if(r==='erro'){closeModal();render();return}
+  closeModal();render();
+  toast(mode==='move'?`Pessoa removida; ${moved} tarefa${moved!==1?'s':''} passaram para ${ids.map(i=>(mem(i)||{}).name).filter(Boolean).join(', ')}`:mode==='del'?`Pessoa removida; ${gone} tarefa${gone!==1?'s':''} excluída${gone!==1?'s':''}`:'Pessoa removida; tarefas sem responsável');
+},true);
+document.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('rm_to')){const r=document.querySelector('input[name=rm_mode][value=move]');if(r)r.checked=true}});
+
 /* ----- acesso por projeto ----- */
 const roleBadge=m=>`<span class="rb rb-${roleOfM(m)}">${ROLES[roleOfM(m)].n}</span>`;
 function projAccessNote(p){
@@ -2387,13 +2446,7 @@ document.addEventListener('click',e=>{
     if(!can('members')){deny('members');return}
     const m=mem(el.dataset.sdel);if(!m)return;
     if(roleOfM(m)==='admin'&&S.members.filter(x=>roleOfM(x)==='admin').length<2){toast('Mantenha pelo menos um administrador.');return}
-    const hasLogin=CLOUD&&m.access&&validEmail(m.email||'');
-    ask('Remover '+m.name+' do sistema? As atribuições dela nas tarefas serão limpas.'+(hasLogin?' O login dela (Authentication → Users do Supabase) também será excluído.':''),'',async()=>{
-      if(hasLogin){
-        try{await fnCall({action:'delete',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false);render();toast('Removido(a) do sistema e do login');return}
-        catch(x){if(!fnMissing(x)){toast(trErr(x.message));return}}
-      }
-      S.members=S.members.filter(x=>x.id!==m.id);S.tasks.forEach(t=>t.assignees=t.assignees.filter(a=>a!==m.id));if(S.me===m.id)S.me='';render();save()},{confirm:1,ok:'Remover'});return}
+    removeMemberDialog(m);return}
   if(el=g('[data-act3]')){
     const a=el.dataset.act3;
     if(a==='invite'){inviteMemberDialog();return}
