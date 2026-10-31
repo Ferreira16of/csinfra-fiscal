@@ -372,7 +372,7 @@ function collect(){
   const np=$('#m_par').value||null;if(np!==t.parent){t.parent=np;if(np)byId(np).open=true}
   setStatus(t,$('#m_st').value);
 }
-function closeModal(){document.body.classList.remove('sca');$('#ov').classList.remove('on');editing=null;modalRO=false;const M=$('#modal');M.dataset.kind='';M.style.width=''}
+function closeModal(){document.body.classList.remove('sca');if(typeof cloud!=='undefined'&&cloud.stale){cloud.stale=false;setTimeout(()=>{try{render()}catch(e){}},0)}$('#ov').classList.remove('on');editing=null;modalRO=false;const M=$('#modal');M.dataset.kind='';M.style.width=''}
 function quickDelete(id){
   const t=byId(id);if(!t)return;
   if(!can('del')||!canEdit(t)){deny('del');return}
@@ -561,7 +561,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-ie]')){startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
   if(el=g('[data-ds]')){S.dash=el.dataset.ds;render();return}
-  if(el=g('.pi')){S.cur=el.dataset.id;adding=null;zoom=null;cur=null;sel=new Set();if(S.view==='smart')S.view='list';render();return}
+  if(el=g('.pi')){S.cur=el.dataset.id;adding=null;zoom=null;cur=null;sel=new Set();if(S.view==='smart')S.view='list';render();if(CLOUD&&Date.now()-(cloud.last||0)>4000)pollPull(true);return}
   if(el=g('[data-tg]')){const t=byId(el.dataset.tg);t.open=t.open===false;render();return}
   if(el=g('[data-add]')){adding=el.dataset.add;if(adding!=='root'){const t=byId(adding);if(t)t.open=true}render();return}
   if(el=g('[data-mv]')){const[a,b]=el.dataset.mv.split(':');move(a,+b);render();return}
@@ -843,7 +843,7 @@ function openPalette(mode){
   const ACTS0=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
-    ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Importar e exportar (Excel, PDF, CSV…)','download',()=>setTimeout(openDataHub,0)],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
+    ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Importar e exportar (Excel, PDF, CSV…)','download',()=>setTimeout(openDataHub,0)],['Atualizar dados agora','zap',()=>{if(CLOUD)pollPull(true);toast('Atualizando…')}],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
   const PK={'Nova tarefa':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules'};
   const ACTS=ACTS0.filter(a=>!PK[a[0]]||can(PK[a[0]]));
   if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
@@ -2382,7 +2382,7 @@ async function finishRemoveMember(m){
   const hasLogin=CLOUD&&m.access&&validEmail(m.email||'');
   if(CLOUD)await flushSync();
   if(hasLogin){
-    try{await fnCall({action:'delete',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false);render();return 'login'}
+    try{await fnCall({action:'delete',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false,true);render();return 'login'}
     catch(x){if(!fnMissing(x)){toast(trErr(x.message));return 'erro'}}
   }
   S.members=S.members.filter(x=>x.id!==m.id);S.tasks.forEach(t=>t.assignees=t.assignees.filter(a=>a!==m.id));if(S.me===m.id)S.me='';
@@ -2701,8 +2701,8 @@ async function enterApp(){
   render();
   if(cloud.poll)clearInterval(cloud.poll);
   const tq=new URLSearchParams(location.search).get('task');if(tq){history.replaceState(null,'',location.pathname);if(byId(tq))setTimeout(()=>goTask(tq),300)}
-  cloud.poll=setInterval(pollPull,12000);
-  if(!cloud.vis){cloud.vis=1;document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollPull()})}
+  cloud.poll=setInterval(pollPull,6000);
+  if(!cloud.vis){cloud.vis=1;document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollPull(true)});window.addEventListener('focus',()=>{if(cloud.on&&Date.now()-(cloud.last||0)>3000)pollPull(true)})}
   maybeOfferMigration();
   if(!S.seen)setTimeout(openWelcome,400);
 }
@@ -2736,8 +2736,10 @@ function applyRows(R){
   if(!S.projects.some(p=>p.id===S.cur))S.cur=S.projects[0].id;
   defaults(S);
 }
-async function pullAll(first){
+async function pullAll(first,force){
+  const rev0=cloud.rev||0;
   const [members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws,pacc]=await Promise.all([getAll('members','created_at'),getAll('teams','created_at'),getAll('tags','name'),getAll('projects','position'),getAll('tasks','position'),getAll('task_assignees','task_id'),getAll('task_tags','task_id'),getAll('task_deps','task_id'),getAll('comments','created_at'),getAll('task_stars','task_id'),getAll('workspace','id'),getAll('project_access','created_at').catch(()=>[])]);
+  if(!first&&!force&&((cloud.rev||0)!==rev0||cloud.timer||cloud.pushing))return false; // houve edição local durante a busca: descarta para não sobrescrever
   applyRows({members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws,pacc});
   const rows=dbRows();const sig=sigOf(rows);
   const changed=first||sig!==cloud.sig;
@@ -2745,9 +2747,13 @@ async function pullAll(first){
   return changed;
 }
 function busyUI(){return $('#ov').classList.contains('on')||(pop!==null)||adding||document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&!['q','qa'].includes(document.activeElement.id)}
-async function pollPull(){
-  if(!cloud.ready||cloud.pushing||cloud.timer||document.hidden||busyUI())return;
-  try{const ch=await pullAll(false);if(ch){render();setSync('ok')}}catch(e){setSync('err')}
+async function pollPull(force){
+  if(!cloud.ready||!cloud.on||cloud.pushing||cloud.timer||(document.hidden&&!force)||cloud.pulling)return;
+  cloud.pulling=true;
+  try{
+    const ch=await pullAll(false);cloud.last=Date.now();setSync('ok');
+    if(ch){if(busyUI())cloud.stale=true;else{cloud.stale=false;render()}}
+  }catch(e){setSync('err')}finally{cloud.pulling=false}
 }
 
 /* ----- posições (ordem) sem reescrever a lista inteira ----- */
@@ -2817,6 +2823,7 @@ async function syncLinks(t,cur,base,col,tasksCur,key='task_id'){
 }
 function cloudSchedule(){
   if(!CLOUD||!cloud.ready)return;
+  cloud.rev=(cloud.rev||0)+1;
   setSync('busy');clearTimeout(cloud.timer);cloud.timer=setTimeout(()=>{cloud.timer=null;pushNow()},700);
 }
 async function pushNow(){
@@ -2852,6 +2859,7 @@ async function pushNow(){
     const dTm=[...b.teams.keys()].filter(id=>!cur.teams.has(id));if(dTm.length)await delRows('teams',dTm);
     if(denied)throw Object.assign(new Error('42501'),{denied:true});
     cloud.base=cloneRows(cur);cloud.sig=sigOf(cur);setSync('ok');
+    setTimeout(()=>pollPull(),1500);
   }catch(e){
     setSync('err');
     const net=!e.denied&&(e.name==='TypeError'||/failed to fetch|networkerror|load failed|conex/i.test(e.message||''));
@@ -2859,7 +2867,7 @@ async function pushNow(){
     else if(e.status===401||/jwt/i.test(e.message||'')){if(!(await refreshSession())){sessSave(null);cloud.on=false;cloud.ready=false;loginView('signin','Sua sessão expirou. Entre novamente.')}else cloud.retry=setTimeout(pushNow,500)}
     else{
       toast('⚠ '+(e.denied?'Algumas alterações não foram aceitas pelo seu perfil e foram desfeitas.':trErr(e.message)));
-      try{await pullAll(false);render();setSync('ok')}catch(x){}
+      try{await pullAll(false,true);render();setSync('ok')}catch(x){}
     }
   }finally{
     cloud.pushing=false;
@@ -2899,7 +2907,7 @@ const fnMissing=e=>e.status===404||/not found|failed to fetch|load failed/i.test
 async function cloudInvite(email,name,role,teamId){
   try{
     const r=await fnCall({action:'invite',email,name,role,team_id:teamId||null});
-    await pullAll(false);render();return{ok:true,msg:(r&&r.message)||('Convite enviado para '+email)};
+    await pullAll(false,true);render();return{ok:true,msg:(r&&r.message)||('Convite enviado para '+email)};
   }catch(e){
     if(fnMissing(e)){
       if(!S.members.some(m=>(m.email||'').toLowerCase()===email.toLowerCase()))S.members.push({id:uid(),name:name||email.split('@')[0],email,color:COLORS[S.members.length%COLORS.length],cap:40,role,status:'invited',access:true,team:teamId||null});
@@ -2950,7 +2958,7 @@ document.addEventListener('click',async e=>{
   if(el=g('[data-cloud]')){stop();const a=el.dataset.cloud;closePop();
     if(a==='out')cloudLogout();
     else if(a==='pw')changePwDialog();
-    else if(a==='sync'){setSync('busy');try{await pullAll(false);render();setSync('ok');toast('Sincronizado')}catch(x){setSync('err');toast(trErr(x.message))}}
+    else if(a==='sync'){setSync('busy');try{await pullAll(false,true);render();setSync('ok');toast('Sincronizado')}catch(x){setSync('err');toast(trErr(x.message))}}
     return}
   if(g('#np_save')){stop();const a=$('#np1').value,b=$('#np2').value,m=$('#npm');if(a.length<8){m.textContent='A senha precisa ter pelo menos 8 caracteres.';return}if(a!==b){m.textContent='As senhas não conferem.';return}
     try{await authSetPassword(a);closeModal();toast('Senha alterada')}catch(x){m.textContent=trErr(x.message)}return}
@@ -2968,7 +2976,7 @@ document.addEventListener('click',async e=>{
     try{const r=await fnCall({action:'resend',email:m.email,name:m.name,role:roleOfM(m)});toast((r&&r.message)||'Convite reenviado')}catch(x){if(fnMissing(x))inviteResult({fallback:true},m.email);else toast(trErr(x.message))}return}
   if(el=g('[data-crevoke]')){stop();const m=mem(el.dataset.crevoke);if(!m)return;
     ask('Revogar o acesso de '+m.name+'? Ela deixa de conseguir entrar (os dados e tarefas dela continuam).','',async()=>{
-      try{await fnCall({action:'revoke',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false)}
+      try{await fnCall({action:'revoke',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false,true)}
       catch(x){if(fnMissing(x)){m.access=false;m.status='blocked';cloudSchedule()}else{toast(trErr(x.message));return}}
       render();toast('Acesso revogado')},{confirm:1,ok:'Revogar acesso'});return}
   if(g('[data-asuser]')||g('[data-mst]')||g('[data-mi]')){stop();return}
