@@ -19,9 +19,9 @@ input[type=date],input[type=time]{color-scheme:light dark}
    claro (papel) + escuro (grafite), acento verde-petróleo
    ========================================================= */
 :root,[data-theme=light]{
-  --bg:#f2f3ef;--bg2:#ffffff;--row:#f8f8f4;--row2:#ffffff;--bd:#e3e5de;--tx:#14181b;--mu:#687077;
+  --bg:#f5f6f8;--bg2:#ffffff;--row:#f8f9fb;--row2:#ffffff;--bd:#e4e7ec;--tx:#101828;--mu:#667085;
   --ac:#0f766e;--ac2:#e0f1ee;--acx:#ffffff;--red:#d23f3f;--amb:#b4730d;--ok:#15803d;
-  --hov:#10201a08;--hov2:#10201a12;--hdr:#eff0ea;--inp:#ffffff;--sel:#0f766e17;
+  --hov:#10201a08;--hov2:#10201a12;--hdr:#f2f4f7;--inp:#ffffff;--sel:#0f766e17;
   --sh:0 1px 2px rgba(20,30,25,.05),0 1px 1px rgba(20,30,25,.03);
   --sh2:0 24px 60px -12px rgba(15,25,20,.28),0 8px 20px -8px rgba(15,25,20,.16);
   --side:#ffffff;--ring:0 0 0 3px color-mix(in srgb,var(--ac) 22%,transparent);--r:14px;
@@ -544,3 +544,134 @@ body[data-view=settings] #top{padding-bottom:12px}
 .hv button:hover{background:var(--hov2);color:var(--tx)}
 .hv .hdel{color:var(--red)}
 .op{border-radius:8px;height:24px;line-height:22px}
+
+/* ===== painel lateral da tarefa (abre ao lado da lista) ===== */
+#ov:has(#modal[data-kind=task]){inset:0 0 0 auto;width:min(540px,100vw);background:transparent;backdrop-filter:none;padding:0;align-items:stretch;overflow:visible;z-index:12}
+#ov:has(#modal[data-kind=task]) .modal{width:100%!important;height:100%;max-height:100vh;margin:0;border-radius:0;border:0;border-left:1px solid var(--bd);box-shadow:-24px 0 48px -24px rgba(10,20,15,.28);padding:56px 26px 0;overflow:auto;animation:dr-in .2s ease-out;position:relative}
+@keyframes dr-in{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:1101px){body:has(#ov.on #modal[data-kind=task]) #main{margin-right:min(540px,100vw)}}
+#modal[data-kind=task] .dxb{position:absolute;top:14px;right:16px;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:10px;border:0;box-shadow:none;background:transparent;color:var(--mu)}
+#modal[data-kind=task] .dxb:hover{background:var(--hov2);color:var(--tx)}
+#modal[data-kind=task] .bc{position:absolute;top:20px;left:26px;right:60px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#modal[data-kind=task] h3{margin:0 0 4px}
+#modal[data-kind=task] h3 input{font:600 22px/1.25 var(--serif);letter-spacing:-.4px;border:1px solid transparent;background:transparent;padding:6px 8px;margin-left:-8px;width:calc(100% + 8px)}
+#modal[data-kind=task] h3 input:hover{border-color:var(--bd)}
+#modal[data-kind=task] h3 input:focus{background:var(--inp)}
+#modal[data-kind=task] .g3{grid-template-columns:1fr 1fr}
+#modal[data-kind=task] .g3>div:last-child{grid-column:1/-1}
+#modal[data-kind=task] .g4{grid-template-columns:1fr 1fr}
+#modal[data-kind=task] .g4>div[style*=span]{grid-column:1/-1!important}
+#modal[data-kind=task] .acts{position:sticky;bottom:0;margin:20px -26px 0;padding:14px 26px;background:var(--bg2);border-top:1px solid var(--bd);z-index:2}
+#modal[data-kind=task] label{margin-top:14px}
+body:has(#modal[data-kind=task]) #ov.on~#toast{left:calc(50% - 270px)}
+.row.cur{background:color-mix(in srgb,var(--ac) 7%,transparent)}
+
+/* ===== menu lateral recolhível ===== */
+.brand{position:relative}
+.brand .bt{min-width:0;flex:1}
+.ibn{margin-left:auto;width:30px;height:30px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--mu);display:inline-flex;align-items:center;justify-content:center;border-radius:9px;flex-shrink:0}
+.ibn:hover{background:var(--hov2);color:var(--tx)}
+#side{transition:width .2s ease}
+@media(min-width:901px){
+  body.sc #side{width:72px}
+  body.sc .brand{flex-direction:column;gap:10px;padding:16px 0 10px;align-items:center}
+  body.sc .brand .bt{display:none}
+  body.sc .ibn{margin:0}
+  body.sc .pal,body.sc #newTask{width:44px;height:44px;margin:0 14px 8px;padding:0;justify-content:center}
+  body.sc .pal span,body.sc .pal kbd,body.sc #newTask span,body.sc #newTask kbd{display:none}
+  body.sc .snav{padding:2px 12px}
+  body.sc .lbl{height:1px;padding:0;margin:10px 6px;background:var(--bd);font-size:0;overflow:hidden}
+  body.sc .lbl button{display:none}
+  body.sc .si,body.sc .pi{justify-content:center;padding:0;height:42px;margin:2px 0}
+  body.sc .si span,body.sc .si small,body.sc .pi span,body.sc .pi small{display:none}
+  body.sc .si small.bad{display:block;position:absolute;top:4px;right:4px;font-size:0;width:9px;height:9px;min-width:0;padding:0;border-radius:50%}
+  body.sc .pi .pd{width:14px;height:14px;border-radius:5px}
+  body.sc #syncst{font-size:0;padding:8px 0;justify-content:center}
+  body.sc #syncst::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  body.sc #side .foot{padding:8px 12px}
+  body.sc #side .fgrid{grid-template-columns:1fr}
+  body.sc #side .foot .fgrid .fi{flex-direction:row;height:42px;padding:0;font-size:0}
+  body.sc #side .foot .fgrid .fi .ico{width:20px;height:20px}
+  body.sc #side summary{justify-content:center;padding:10px 0}body.sc #side summary span{display:none}
+  body.sc #side details[open]>div{display:none}
+  body.sc #bUser{justify-content:center;padding:6px 0;background:transparent}
+  body.sc #bUser>span:not(.av){display:none}body.sc #bUser::after{display:none}
+}
+
+
+/* ===== v4: refinamento profissional ===== */
+:root,[data-theme=light],[data-theme=dark]{--serif:var(--sans)}
+:root,[data-theme=light]{--ac:#0e7a6e;--ac2:#e3f4f1}
+h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#login h2,#login .lside h1,#login .lbrand b,.brand b,.empty b{font-family:var(--sans)}
+.psw h2{font-weight:650;font-size:23px;letter-spacing:-.5px}
+.brand b{font-size:15px;font-weight:650;letter-spacing:-.2px}
+.brand small,#brandSub{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi b{font-weight:650;font-size:32px;letter-spacing:-.9px}
+.dh h3,.calhead h3{font-weight:650;letter-spacing:-.4px}
+.modal h3{font-weight:650}
+.setpg h1{font-weight:700;font-size:30px}
+#login h2{font-weight:700;letter-spacing:-.8px}
+#login .lside h1{font-weight:700;letter-spacing:-1.2px}
+/* lista */
+.row.root{background:color-mix(in srgb,var(--ac) 4%,var(--row))}
+.row.root>.main .tt{font-weight:650}
+.gut.p2{color:transparent}
+.row:hover .gut.p2{color:color-mix(in srgb,var(--mu) 40%,transparent)}
+.st.st0{background:var(--hov2);color:var(--mu)!important;opacity:1}
+.tg2{background:color-mix(in srgb,var(--c) 13%,transparent)!important;color:var(--c)!important;font-weight:600;padding:2px 10px 2px 8px;display:inline-flex;align-items:center;gap:6px}
+.tg2::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c);flex-shrink:0}
+[data-theme=dark] .tg2{background:color-mix(in srgb,var(--c) 22%,transparent)!important}
+.outline{border-radius:14px}
+.row.hdr{background:var(--row)}
+.hc{color:var(--mu)}
+/* header e navegação */
+.tabs button{font-weight:500;padding:11px 14px}
+.tabs button .ico{width:17px;height:17px}
+.tb,.sbox{border-radius:10px;box-shadow:none}
+.sbox{background:var(--bg2)}
+.qa{border-radius:12px}
+.qa button.pri{border-radius:9px;padding:8px 16px}
+/* cartões */
+.card2,.kpi,.cal,.gwrap,.cside,.outline{box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.col{background:var(--hdr)}
+[data-theme=dark] .col{background:#ffffff08}
+/* menu lateral */
+.brand{padding:18px 16px 14px;gap:10px}
+.si,.pi{font-size:13.5px;height:36px;padding:0 10px;margin:1px 0}
+.si.on,.pi.on{box-shadow:inset 3px 0 0 var(--ac)}
+.lbl{padding:16px 10px 6px}
+#projs .pi .pd{width:10px;height:10px}
+#side .foot{background:transparent}
+#bUser>span:not(.av){min-width:0}
+@media(min-width:901px){
+  body.sc #bUser>span:not(.av){display:none!important}
+  body.sc #bUser{width:44px;height:44px;margin:6px auto 0;padding:0;justify-content:center}
+  body.sc .si,body.sc .pi{height:40px}
+}
+/* painel responsivo ao lado do painel de tarefa */
+#main{container-type:inline-size;container-name:main}
+@container main (max-width:900px){
+  .col-t{display:none}.col-d{width:116px}.col-s{width:104px}
+  .sbox{width:38px;padding:0;justify-content:center;gap:0}.sbox input,.sbox kbd{display:none}
+  .sbox:focus-within{width:220px;padding:0 8px 0 11px;justify-content:flex-start;gap:8px}.sbox:focus-within input{display:block}
+  .tabs button{padding:11px 11px}
+  .t3>.tb .bl{display:none}
+}
+@container main (max-width:720px){
+  .col-a{display:none}
+  .tabs button span{display:none}.tabs button.on span{display:inline}
+  #pname{font-size:20px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+.sws{display:inline-flex;gap:5px;align-items:center;margin-left:6px;flex-wrap:nowrap}
+.sw{width:16px;height:16px;border-radius:50%;margin:0;border:2px solid transparent;box-shadow:inset 0 0 0 1px #0002;transition:transform .1s}
+.sw:hover{transform:scale(1.18)}.sw.on{border-color:var(--bg2);box-shadow:0 0 0 2px var(--tx)}
+.mx{gap:8px 8px}.mx input{width:64px}
+@media(min-width:901px){
+  body.sc #side details{display:none}
+  body.sc .si,body.sc .pi{height:36px;margin:1px 0}
+  body.sc #side .foot .fgrid .fi{height:36px}
+  body.sc .pal,body.sc #newTask{height:40px;width:40px;margin:0 16px 6px}
+}
+body[data-view=settings] .t3{display:none}body[data-view=settings] #top{border-bottom:1px solid var(--bd)}
