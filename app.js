@@ -1323,7 +1323,7 @@ function dateCols(t){
     if(a===b&&t.startTime&&t.dueTime&&own){const m=(+t.dueTime.slice(0,2)*60+ +t.dueTime.slice(3))-(+t.startTime.slice(0,2)*60+ +t.startTime.slice(3));u=m>0?fmtDur(m*60000):'1 d'}
     else u=(diffDays(a,b)+1)+' d';
   }
-  return{i:a?fmtS(a)+(own?tm(t.startTime):''):'',d:(hasRep(t)?'🔁 ':'')+(b?fmtS(b)+(own?tm(t.dueTime):''):''),u,agg:!own&&!!sp};
+  return{i:a?fmtS(a):'',d:(hasRep(t)?'🔁 ':'')+(b?fmtS(b):''),u,agg:!own&&!!sp,ti:own&&t.startTime?' às '+t.startTime:'',td:own&&t.dueTime?' às '+t.dueTime:''};
 }
 function rowHTML(t,depth,flat){
   const ks=flat?[]:kidsOf(t.id),pr=flat?null:prog(t),done=t.status==='done',f=filtering();
@@ -1349,8 +1349,8 @@ function rowHTML(t,depth,flat){
     <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
     <span class="cell col-t ${t.tags.length?'':'e'}" data-pop="t:${t.id}" title="Etiquetas">${tagChips(t)}</span>
     <span class="cell col-s" data-pop="s:${t.id}" title="Status">${stChip(t)}</span>
-    <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Data de início">${ds.i}</span>
-    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Data de conclusão':'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
+    <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Início${ds.ti}">${ds.i}</span>
+    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Conclusão'+ds.td:'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
     <span class="cell col-u ${ds.u?'':'e'}" data-pop="d:${t.id}" title="Duração (início → conclusão, contando os dois dias)">${ds.u}</span>
    </div></div>`;
   if(open){
