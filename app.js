@@ -1351,7 +1351,7 @@ function render(){
 
 /* ----- lista em árvore (com modo plano para as visões inteligentes) ----- */
 /* ===== colunas da tabela: ordem e visibilidade (preferência só deste usuário/navegador) ===== */
-const COLDEFS=[['a','Resp.',66],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',50],['d','Conclusão',84],['dh','Hora',50],['u','Duração',58],['ds','Descrição',240],['id','ID',66]];
+const COLDEFS=[['a','Resp.',66],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',52],['d','Conclusão',84],['dh','Hora',52],['u','Duração',68],['ds','Descrição',240],['id','ID',66]];
 const COLNAME={a:'Responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Conclusão (data)',dh:'Conclusão (hora)',u:'Duração',ds:'Descrição',id:'ID'};
 const COLDEF_HIDE=['ds'];
 function colsKey(){return 'cs-cols-'+(S.me||'local')}

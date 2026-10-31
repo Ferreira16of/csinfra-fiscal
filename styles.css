@@ -1217,3 +1217,25 @@ html{-webkit-text-size-adjust:100%}
 .fdrop{outline:2px dashed var(--ac);outline-offset:-2px;background:var(--ac2)!important}
 .card.fdrop{outline-offset:2px}
 @container main (max-width:900px){.outline .row{min-width:0!important}}
+
+/* ===== v11: tudo com o mesmo tamanho e alinhamento ===== */
+@media(min-width:701px){
+  .row{box-sizing:border-box;height:36px;min-height:36px;max-height:36px}
+  .row.root{border-top:0!important;box-shadow:inset 4px 0 0 var(--ac),inset 0 3px 0 var(--bg)}
+  .row.root.cur{box-shadow:inset 4px 0 0 var(--ac),inset 0 3px 0 var(--bg),inset 0 0 0 2px color-mix(in srgb,var(--ac) 35%,transparent)}
+  .row .tt,.row.root>.main .tt,.row.par>.main .tt{font-size:13.5px;line-height:20px}
+  .row.root>.main .tt{font-weight:650}.row.par>.main .tt{font-weight:600}.row.sub:not(.par)>.main .tt{font-weight:450}
+  .row .main input[type=checkbox]{width:17px;height:17px;flex:none}
+  .row .main .bar{width:46px;flex:none}
+  .row .main{gap:7px;flex-wrap:nowrap}
+  .row .main .pg,.row .main .imgc,.row .main .star{flex:none}
+  .row .st{display:inline-block;box-sizing:border-box;width:84px;text-align:center;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .cell.col-s{width:96px;justify-content:flex-start}
+  .col-u{width:68px}.col-ih,.col-dh{width:52px}
+  .rt>.hc{height:20px;line-height:20px}
+  .rt>.hc.col-u,.rt>.cell.col-u{text-align:right;justify-content:flex-end;padding-right:10px}
+  .row.sub>.main{background-image:repeating-linear-gradient(to right,transparent 0 11px,color-mix(in srgb,var(--mu) 18%,transparent) 11px 12px,transparent 12px 24px)}
+  .row .av,.row .avs>.av{width:22px;height:22px;font-size:9.5px;flex:none}
+  .row.addrow input{height:28px}
+}
+@media(min-width:701px){.row.root,.row.par,.row.sub{height:36px;min-height:36px;max-height:36px}}
