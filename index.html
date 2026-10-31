@@ -3032,7 +3032,14 @@ async function cloudBoot(){
     if(q.get('token_hash')&&q.get('type')){
       const type=q.get('type'),em=q.get('email')||'';
       history.replaceState(null,'',location.pathname);
-      await authVerify({type,token_hash:q.get('token_hash')});
+      const th=q.get('token_hash');let ok=false,lastE=null;
+      for(const ty of (type==='recovery'?['recovery']:[type,'signup','email'])){
+        try{await authVerify({type:ty,token_hash:th});ok=true;break}catch(e){lastE=e;if(e.status&&e.status!==403&&e.status!==400&&e.status!==422)break}
+      }
+      if(!ok){
+        const rec=type==='recovery';
+        loginView(rec?'forgot':'activate','Este link já foi usado ou expirou (links de e-mail valem uma vez só). '+(rec?'Peça um novo código abaixo.':'Peça ao administrador para reenviar o convite, ou use o código do e-mail.'),{email:em});return;
+      }
       let u=null;try{u=await sbFetch('/auth/v1/user')}catch(e){}
       loginView('setpw','',{email:(u&&u.email)||em,recovery:type==='recovery'});return;
     }
