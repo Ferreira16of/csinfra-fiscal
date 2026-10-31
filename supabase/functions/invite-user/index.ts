@@ -10,7 +10,7 @@
 //  Chamada (o app fará isso):
 //    POST {SUPABASE_URL}/functions/v1/invite-user
 //    Authorization: Bearer <token do usuário logado>
-//    { "action": "invite" | "resend" | "revoke" | "delete" | "notify",
+//    { "action": "invite" | "resend" | "revoke" | "delete" | "notify" | "mail_status",
 //      "email": "pessoa@empresa.com", "name": "Nome", "role": "normal", "team_id": null }
 // =====================================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -32,8 +32,11 @@ const json = (body: unknown, status = 200) =>
 //  Avisar por e-mail: monta o e-mail NO SERVIDOR a partir dos dados da tarefa
 //  (o navegador só escolhe as pessoas e o recado) e envia por SMTP.
 //  Segredos necessários (Edge Functions → Secrets):
-//    SMTP_USER  (ex.: seu.gmail@gmail.com)   SMTP_PASS  (senha de app do Google)
-//    SMTP_HOST (padrão smtp.gmail.com)  SMTP_PORT (padrão 465)  SMTP_FROM (ex.: CS Infra <seu.gmail@gmail.com>)
+//  Opção A (mais simples, recomendada) — Resend (resend.com):
+//    RESEND_API_KEY  (chave da API)    MAIL_FROM  (ex.: CS Infra <avisos@seudominio.com.br>, domínio verificado no Resend)
+//  Opção B — SMTP (Gmail com senha de app, Outlook, etc.):
+//    SMTP_USER  SMTP_PASS  SMTP_HOST (padrão smtp.gmail.com)  SMTP_PORT (padrão 465)  SMTP_FROM (ex.: CS Infra <seu.gmail@gmail.com>)
+//  O e-mail sai SEMPRE do endereço configurado aqui (não do e-mail de quem clicou); quem clicou vai em "responder para".
 // ---------------------------------------------------------------------
 const ST_LABEL: Record<string, string> = { todo: 'A fazer', doing: 'Em andamento', review: 'Em revisão', blocked: 'Impedido', done: 'Concluído' }
 const PR_LABEL: Record<number, string> = { 1: 'Baixa', 2: 'Média', 3: 'Alta' }
@@ -41,13 +44,52 @@ const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '
 const nl2br = (s: string) => esc(s).replace(/\r?\n/g, '<br>')
 const fmtDate = (d?: string | null) => (d ? d.split('-').reverse().join('/') : '')
 
+function mailProvider(): { kind: 'resend' | 'smtp' | null; from: string } {
+  const rk = Deno.env.get('RESEND_API_KEY'), mf = Deno.env.get('MAIL_FROM') ?? Deno.env.get('SMTP_FROM')
+  if (rk && mf) return { kind: 'resend', from: mf }
+  const u = Deno.env.get('SMTP_USER'), p = Deno.env.get('SMTP_PASS')
+  if (u && p) return { kind: 'smtp', from: Deno.env.get('SMTP_FROM') ?? u }
+  return { kind: null, from: '' }
+}
+async function sendMails(list: { to: string; subject: string; text: string; html: string; replyTo?: string }[]) {
+  const pv = mailProvider()
+  if (pv.kind === 'resend') {
+    for (const m of list) {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + Deno.env.get('RESEND_API_KEY'), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: pv.from, to: [m.to], reply_to: m.replyTo, subject: m.subject, html: m.html, text: m.text }),
+      })
+      if (!r.ok) { let d = ''; try { d = (await r.json()).message ?? '' } catch { /* */ } throw new Error(d || ('Resend respondeu ' + r.status)) }
+    }
+    return
+  }
+  const port = Number(Deno.env.get('SMTP_PORT') ?? 465)
+  const client = new SMTPClient({ connection: { hostname: Deno.env.get('SMTP_HOST') ?? 'smtp.gmail.com', port, tls: port === 465, auth: { username: Deno.env.get('SMTP_USER')!, password: Deno.env.get('SMTP_PASS')! } } })
+  try {
+    for (const m of list) await client.send({ from: pv.from, to: m.to, replyTo: m.replyTo, subject: m.subject, content: m.text, html: m.html })
+  } finally { try { await client.close() } catch { /* ignore */ } }
+}
+
+async function mailStatus({ me, body }: any) {
+  const pv = mailProvider()
+  if (body.test) {
+    if (me.role !== 'admin') return json({ error: 'Só administradores enviam o teste.' }, 403)
+    if (!pv.kind) return json({ error: 'smtp_not_configured' }, 501)
+    if (!me.email) return json({ error: 'Seu cadastro não tem e-mail.' }, 400)
+    try {
+      await sendMails([{ to: me.email, subject: 'Teste de envio — CS Infra', text: 'Se você recebeu esta mensagem, o envio de e-mails pelo sistema está funcionando.', html: '<p style="font-family:Segoe UI,Arial,sans-serif">Se você recebeu esta mensagem, o <b>envio de e-mails pelo sistema</b> está funcionando. ✅</p>' }])
+    } catch (e) { return json({ error: 'Não foi possível enviar: ' + (e as Error).message }, 502) }
+    return json({ ok: true, provider: pv.kind, from: pv.from, message: 'E-mail de teste enviado para ' + me.email })
+  }
+  return json({ ok: true, provider: pv.kind, from: pv.from })
+}
+
 async function notifyByEmail({ asUser, admin, me, body }: any) {
   const taskId = String(body.task_id ?? '')
   const memberIds: string[] = Array.isArray(body.member_ids) ? body.member_ids.slice(0, 20).map(String) : []
   if (!taskId || !memberIds.length) return json({ error: 'Escolha ao menos uma pessoa.' }, 400)
 
-  const smtpUser = Deno.env.get('SMTP_USER'), smtpPass = Deno.env.get('SMTP_PASS')
-  if (!smtpUser || !smtpPass) return json({ error: 'smtp_not_configured' }, 501)
+  if (!mailProvider().kind) return json({ error: 'smtp_not_configured' }, 501)
 
   // quem chama precisa poder editar a tarefa (regras do banco)
   const { data: allowed } = await asUser.rpc('can_edit_task', { p_task: taskId })
@@ -78,7 +120,7 @@ async function notifyByEmail({ asUser, admin, me, body }: any) {
   }
 
   const site = (Deno.env.get('SITE_URL') ?? SITE_URL).replace(/\/$/, '')
-  const link = site + '/?task=' + encodeURIComponent(taskId)
+  const link = site + '/t/' + encodeURIComponent(taskId)
   const row = (k: string, v: string) => v ? `<tr><td style="padding:4px 14px 4px 0;color:#667085;font-size:13px;white-space:nowrap">${k}</td><td style="padding:4px 0;font-size:14px;color:#101828">${v}</td></tr>` : ''
   const rows = wantDet
     ? row('Projeto', esc(proj?.name)) + row('Status', esc(ST_LABEL[task.status] ?? task.status)) + row('Prioridade', esc(PR_LABEL[task.priority] ?? ''))
@@ -99,16 +141,10 @@ async function notifyByEmail({ asUser, admin, me, body }: any) {
   const text = [note, 'Tarefa: ' + task.title, 'Projeto: ' + (proj?.name ?? ''), wantDet ? 'Status: ' + (ST_LABEL[task.status] ?? task.status) : '', wantDet && task.description ? '\n' + task.description : '',
     (cms ?? []).length ? '\nComentários:\n' + (cms ?? []).map((c: any) => `- ${c.author_name || 'Alguém'}: ${c.body}`).join('\n') : '', '\nAbrir: ' + link].filter(Boolean).join('\n')
 
-  const port = Number(Deno.env.get('SMTP_PORT') ?? 465)
-  const client = new SMTPClient({ connection: { hostname: Deno.env.get('SMTP_HOST') ?? 'smtp.gmail.com', port, tls: port === 465, auth: { username: smtpUser, password: smtpPass } } })
   try {
-    for (const r of to) {
-      await client.send({ from: Deno.env.get('SMTP_FROM') ?? smtpUser, to: r.email, replyTo: me.email ?? undefined, subject, content: text, html })
-    }
+    await sendMails(to.map((r: any) => ({ to: r.email, subject, text, html, replyTo: me.email ?? undefined })))
   } catch (e) {
     return json({ error: 'Não foi possível enviar: ' + (e as Error).message }, 502)
-  } finally {
-    try { await client.close() } catch { /* ignore */ }
   }
   return json({ ok: true, sent: to.length, message: 'E-mail enviado para ' + to.length + ' pessoa(s).' })
 }
@@ -141,6 +177,7 @@ Deno.serve(async (req: Request) => {
 
   // ---- avisar por e-mail (qualquer perfil que possa editar a tarefa) ----
   if (action === 'notify') return await notifyByEmail({ asUser, admin, me, body })
+  if (action === 'mail_status') return await mailStatus({ me, body })
 
   // ---- gestão de convites: somente administrador ----
   if (me.role !== 'admin') return json({ error: 'Somente administradores podem gerenciar convites.' }, 403)

@@ -290,7 +290,8 @@ function renderPop(anchor){
     ${r.freq?`<div class="hint">A cada ${r.every||1} ${REPU[r.freq]}. ${(t.due||t.start)?'Ao concluir, as datas avançam sozinhas.':'Defina uma data para a repetição funcionar.'}</div>`:''}
     <div class="ft"><button data-act="clear">Limpar datas e repetição</button></div>`;
   }
-  P.innerHTML=h;P.style.display='block';
+  const hint={a:'↑ ↓ navega · Espaço marca · Enter confirma · letra pula para o nome',t:'↑ ↓ navega · Espaço marca · Enter confirma · letra pula para a etiqueta',s:'↑ ↓ navega · Enter escolhe · letra pula',p:'↑ ↓ navega · Enter escolhe',j:'↑ ↓ navega · Enter escolhe · letra pula',d:'Tab muda de campo · Enter aplica · Esc fecha'}[pop.type];
+  P.innerHTML=h+(hint?`<div class="kh">${hint}</div>`:'');P.style.display='block';
   if(anchor){
     const r=anchor.getBoundingClientRect();
     let x=Math.min(r.left,innerWidth-P.offsetWidth-8),y=r.bottom+4;
@@ -348,7 +349,7 @@ function openTaskBase(id){
   <label>Etiquetas (clique para marcar) — ou crie uma nova</label>
   <div class="pick" id="m_tg">${S.tags.map(g=>`<span class="ac ${t.tags.includes(g.id)?'on':''}" data-pg="${g.id}" style="background:${g.color}">${esc(g.name)}</span>`).join('')}<input id="m_newtag" placeholder="+ nova etiqueta (Enter)" style="width:190px"></div>
   <label>Descrição / observações</label><textarea id="m_desc" rows="4">${esc(t.desc)}</textarea>
-  ${CLOUD?`<div class="galwrap" id="m_gw"><div class="gal" id="m_gal">${galHTML(t)}</div>${canImg(t)?`<button type="button" class="gadd" id="m_addimg">${ic('image',16)} Adicionar imagem</button><input type="file" id="m_file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>`:''}</div>${canImg(t)?'<div class="hint">Cole com Ctrl+V, arraste para cá ou clique em “Adicionar imagem”.</div>':''}`:''}
+  ${CLOUD?`<div class="galwrap" id="m_gw"><div class="gal" id="m_gal">${galHTML(t)}</div>${canImg(t)?`<button type="button" class="gadd" id="m_addimg">${ic('image',16)} Adicionar imagem <small style="opacity:.7;margin-left:6px">ou cole (Ctrl+V) / arraste</small></button><input type="file" id="m_file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>`:''}</div>${canImg(t)?'<div class="hint">Cole com Ctrl+V, arraste para cá ou clique em “Adicionar imagem”.</div>':''}`:''}
   <label>Subatividades</label>
   <div class="sub2">${ks.map(k=>`<div class="row ${k.status==='done'?'done':''}"><div class="main"><input type="checkbox" data-mck="${k.id}" ${k.status==='done'?'checked':''}><span class="tt" data-t="${k.id}" style="cursor:pointer">${esc(k.title)}</span></div><div class="rt"><span class="col-a" style="display:flex">${avs(k)}</span><span class="col-d ${dueCls(k)}" style="width:150px">${dateTxt(k)}</span></div></div>`).join('')}
   <div style="padding:6px 8px"><input id="m_sub" placeholder="+ Nova subatividade (Enter)"></div></div>
@@ -442,12 +443,13 @@ function notifyDialog(id){
   <label>Assunto</label><input id="nt_subj" value="${esc('Atividade: '+t.title)}" maxlength="150">
   <label>Recado (opcional)</label><textarea id="nt_note" rows="3" placeholder="Escreva um recado para quem vai receber…"></textarea>
   <label>Enviar junto</label>
-  <div class="nopts"><label class="chk"><input type="checkbox" id="nt_det" checked> Detalhes (status, prazo, descrição)</label><label class="chk"><input type="checkbox" id="nt_com" ${ncom?'checked':'disabled'}> Comentários (${ncom})</label><label class="chk"><input type="checkbox" id="nt_img" ${nimg?'checked':'disabled'}> Imagens (${nimg})</label></div>
+  <div class="nopts"><label class="chk"><input type="checkbox" id="nt_det" checked> Detalhes (status, prazo, descrição)</label><label class="chk"><input type="checkbox" id="nt_com" ${ncom?'checked':'disabled'}> Comentários (${ncom})</label><label class="chk"><input type="checkbox" id="nt_savecom"> Guardar o recado como comentário na atividade</label><label class="chk"><input type="checkbox" id="nt_img" ${nimg?'checked':'disabled'}> Imagens (${nimg})</label></div>
   <div class="hint" id="nt_msg"></div>
-  <div class="acts"><span><button id="nt_back" type="button">Voltar</button></span><span><button id="nt_mailto" type="button">Abrir no meu e-mail</button> <button class="pri" id="nt_send" type="button" ${cands.length?'':'disabled'}>Enviar e-mail</button></span></div>`;
+  <div class="acts"><span><button id="nt_back" type="button">Voltar</button></span><span><button class="pri" id="nt_send" type="button" ${cands.length?'':'disabled'}>Enviar e-mail</button></span></div>
+  <div class="hint" style="margin-top:10px">O e-mail sai pelo próprio sistema (não do seu e-mail pessoal) e as respostas chegam a você. <a href="#" id="nt_mailto" style="color:var(--ac)">Prefiro abrir no meu programa de e-mail</a></div>`;
   $('#ov').classList.add('on');
 }
-function ntRead(){return{ids:[...document.querySelectorAll('.nt_to:checked')].map(x=>x.value),subject:($('#nt_subj').value||'').trim(),note:($('#nt_note').value||'').trim(),det:$('#nt_det').checked,com:$('#nt_com').checked,img:$('#nt_img').checked}}
+function ntRead(){return{ids:[...document.querySelectorAll('.nt_to:checked')].map(x=>x.value),subject:($('#nt_subj').value||'').trim(),note:($('#nt_note').value||'').trim(),det:$('#nt_det').checked,com:$('#nt_com').checked,img:$('#nt_img').checked,save:!!($('#nt_savecom')&&$('#nt_savecom').checked)}}
 function ntMailto(){
   const t=byId(window._ntId),o=ntRead();if(!t)return;
   const to=o.ids.map(i=>(mem(i)||{}).email).filter(Boolean);if(!to.length){toast('Escolha ao menos uma pessoa.');return}
@@ -456,18 +458,21 @@ function ntMailto(){
 document.addEventListener('click',async e=>{
   const g=s=>e.target.closest&&e.target.closest(s);
   if(g('#nt_back')){e.stopImmediatePropagation();openTask(window._ntId);return}
-  if(g('#nt_mailto')){e.stopImmediatePropagation();ntMailto();return}
+  if(g('#nt_mailto')){e.stopImmediatePropagation();e.preventDefault();ntMailto();return}
   if(g('#nt_send')){
     e.stopImmediatePropagation();const t=byId(window._ntId),o=ntRead();if(!t)return;
     if(!o.ids.length){toast('Escolha ao menos uma pessoa.');return}
     if(!CLOUD){ntMailto();return}
     const bt=$('#nt_send'),msg=$('#nt_msg');bt.disabled=true;bt.textContent='Enviando…';msg.textContent='';msg.style.color='';
     try{
-      const r=await fnCall({action:'notify',task_id:t.id,member_ids:o.ids,subject:o.subject,note:o.note,details:o.det,comments:o.com,images:o.img});
+      let com=o.com;
+      if(o.save&&o.note){t.comments.push({id:uid(),text:o.note,ts:Date.now(),by:(mem(S.me)||{}).name||'Você'});com=true}
+      msg.textContent='Salvando as alterações…';await flushSync();msg.textContent='';
+      const r=await fnCall({action:'notify',task_id:t.id,member_ids:o.ids,subject:o.subject,note:o.note,details:o.det,comments:com,images:o.img});
       closeModal();render();toast('✔ E-mail enviado'+(r&&r.sent?' para '+r.sent+' pessoa'+(r.sent>1?'s':''):''));
     }catch(x){
       bt.disabled=false;bt.textContent='Enviar e-mail';
-      if(fnMissing(x)||/smtp_not_configured/.test(x.message||'')){msg.style.color='var(--amb)';msg.innerHTML='O envio direto pelo servidor ainda não está configurado. Use <b>Abrir no meu e-mail</b> (o guia explica como ativar o envio automático).'}
+      if(fnMissing(x)||/smtp_not_configured/.test(x.message||'')){msg.style.color='var(--amb)';msg.innerHTML='O envio pelo sistema ainda não foi ativado pelo administrador (Configurações → Geral → E-mail do sistema explica em 2 minutos). Enquanto isso, use “Prefiro abrir no meu programa de e-mail”.'}
       else{msg.style.color='var(--red)';msg.textContent=trErr(x.message)}
     }
     return}
@@ -558,6 +563,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(el=g('[data-pop]')){const[ty,id]=el.dataset.pop.split(':');if(pop&&pop.type===ty&&pop.id===id)closePop();else openPop(ty,id,el);return}
+  if(el=g('[data-descid]')){const id=el.dataset.descid;if(canEdit(byId(id))){openTask(id);setTimeout(()=>{const d=$('#m_desc');if(d)d.focus()},80)}else openTask(id);return}
   if(el=g('[data-cid]')){copyLink(el.dataset.cid,'ID '+el.dataset.cid+' copiado');return}
   if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
@@ -588,7 +594,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-t]')){if(editing)collect();openTask(el.dataset.t);return}
   if(g('#m_ok')||g('#m_x')){collect();closeModal();render();return}
   if(g('#m_link')){copyLink(location.origin+'/t/'+editing);return}
-  if(g('#m_mail')){collect();render();notifyDialog(editing);return}
+  if(g('#m_mail')){collect();const cm=$('#m_comment'),tx=cm&&cm.value.trim(),tt=byId(editing);if(tx&&tt){tt.comments.push({id:uid(),text:tx,ts:Date.now(),by:(mem(S.me)||{}).name||'Você'});cm.value=''}render();notifyDialog(editing);return}
   if(g('#m_del')){collect();const id=editing;ask('Excluir esta atividade e todas as subatividades?','',()=>{delTask(id);editing=null;render()},{confirm:1,ok:'Excluir',back:()=>openTask(id)});return}
 });
 document.addEventListener('change',e=>{
@@ -709,9 +715,9 @@ function boardStep(dx,dy){
 }
 function selectAll(){const ids=navIds();if(!ids.length)return;sel=new Set(ids);cur=cur||ids[0];anchor=ids[0];markSel()}
 let ccol=null;
-const CELLS=[['tt','.tt'],['id','.col-id'],['a','.col-a'],['t','.col-t'],['s','.col-s'],['i','.col-i'],['d','.col-d'],['u','.col-u']];
+const CELLS=[['tt','.tt'],['id','.col-id'],['a','.col-a'],['t','.col-t'],['s','.col-s'],['i','.col-i'],['ih','.col-ih'],['d','.col-d'],['dh','.col-dh'],['u','.col-u'],['ds','.col-ds']];
 function cellVisible(row,k){const sel=CELLS.find(c=>c[0]===k)[1],el=row.querySelector(sel);return !!el&&el.getClientRects().length>0}
-function visCells(){const row=document.querySelector(`#view [data-row="${cur}"]`);if(!row)return['tt'];return CELLS.map(c=>c[0]).filter(k=>cellVisible(row,k))}
+function visCells(){const row=document.querySelector(`#view [data-row="${cur}"]`);if(!row)return['tt'];return ['tt',...(S.cols?S.cols.order:CELLS.map(c=>c[0]).slice(1))].filter(k=>cellVisible(row,k))}
 function cellMove(d){
   const v=visCells();let i=v.indexOf(ccol||'tt');i=Math.max(0,Math.min(v.length-1,i+d));ccol=v[i];markSel(true);
 }
@@ -719,7 +725,8 @@ function editCell(){
   const k=ccol||'tt';
   if(k==='tt'){act('edit');return}
   if(k==='id'){const t=byId(cur);if(t)copyLink(t.id,'ID '+t.id+' copiado');return}
-  popKey({a:'a',t:'t',s:'s',i:'d',d:'d',u:'d'}[k]);
+  if(k==='ds'){openTask(cur);setTimeout(()=>{const d=$('#m_desc');if(d)d.focus()},80);return}
+  popKey({a:'a',t:'t',s:'s',i:'d',ih:'d',d:'d',dh:'d',u:'d'}[k]);
 }
 function leftKey(){const t=byId(cur);if(!t)return;if(kidsOf(t.id).length&&t.open!==false){t.open=false;render()}else if(t.parent&&navIds().includes(t.parent))setCur(t.parent)}
 function rightKey(){const t=byId(cur);if(!t)return;const ks=kidsOf(t.id);if(!ks.length)return;if(t.open===false){t.open=true;render()}else if(navIds().includes(ks[0].id))setCur(ks[0].id)}
@@ -974,7 +981,14 @@ function kbd(e){
     const fo=[...P.querySelectorAll('.pl[tabindex],.pl>input[type=checkbox],#pop_new,button[data-act]')];
     if((k==='ArrowDown'||k==='ArrowUp')&&!(t.tagName==='INPUT'&&t.type!=='checkbox')&&t.tagName!=='SELECT'){
       eat();let i=fo.indexOf(t);if(i<0)i=0;else i=k==='ArrowDown'?Math.min(fo.length-1,i+1):Math.max(0,i-1);if(fo[i])fo[i].focus();return}
-    if((k==='Enter'||k===' ')&&t.matches&&t.matches('.pl[tabindex]')){eat();t.click()}
+    if((k==='Enter'||k===' ')&&t.matches&&t.matches('.pl[tabindex]')){eat();t.click();return}
+    if(k==='Enter'&&t.matches&&t.matches('.pl>input[type=checkbox]')){eat();closePop();markSel();return}
+    if(k==='Enter'&&t.matches&&t.matches('#pop input[type=date],#pop input[type=time],#pop select,#pop input[type=number]')){eat();closePop();render();return}
+    if(k.length===1&&!ctrl&&!alt&&!(t.tagName==='INPUT'&&t.type!=='checkbox')&&t.tagName!=='SELECT'&&/\S/.test(k)){
+      const q=norm(k);const rows=[...P.querySelectorAll('.pl')];
+      const cur=rows.findIndex(r=>r.contains(t)),n=rows.length;
+      for(let o=1;o<=n;o++){const r=rows[(cur+o)%n];if(norm(r.textContent.trim()).startsWith(q)){eat();const f=r.querySelector('input[type=checkbox]')||r;f.focus();return}}
+    }
     return;
   }
   if(typing)return;
@@ -1199,19 +1213,47 @@ async function hydrateImgs(){
   els.forEach((e,i)=>{if(urls[i]){e.onerror=()=>e.classList.add('broken');e.src=urls[i];e.removeAttribute('data-ip')}else e.classList.add('broken')});
 }
 function refreshGal(){const t=byId(editing),g=$('#m_gal');if(!t||!g)return;g.innerHTML=galHTML(t);hydrateImgs();const b=$('#m_addimg');if(b)b.style.display=(t.imgs||[]).length>=MAXIMG?'none':''}
-async function addFiles(files){
-  const t=byId(editing);if(!t||!canImg(t))return;
+async function addFiles(files){const t=byId(editing);if(t)return addFilesTo(t,files)}
+async function addFilesTo(t,files){
+  if(!t||!canImg(t)){if(t)deny('edit');return}
   files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;
   const room=MAXIMG-(t.imgs||[]).length;if(room<=0){toast('Limite de '+MAXIMG+' imagens por atividade.');return}
-  const g=$('#m_gal');let ok=0;
-  for(const f of files.slice(0,room)){
-    const ph=document.createElement('figure');ph.className='gi up';ph.innerHTML='<span class="spin"></span>';if(g)g.appendChild(ph);
-    try{const r=await uploadImg(t,f);t.imgs=[...(t.imgs||[]),r];ok++}catch(e){toast('⚠ '+trErr(e.message))}
-    ph.remove();
-  }
+  const inPanel=editing===t.id&&!!$('#m_gal'),g=inPanel?$('#m_gal'):null;
+  const use=files.slice(0,room);
+  const phs=use.map(()=>{const ph=document.createElement('figure');ph.className='gi up';ph.innerHTML='<span class="spin"></span>';if(g)g.appendChild(ph);return ph});
+  if(!inPanel)toast('⏳ Enviando '+use.length+' imagem'+(use.length>1?'ns':'')+'…');
+  const res=await Promise.all(use.map(async(f,i)=>{try{return await uploadImg(t,f)}catch(e){toast('⚠ '+trErr(e.message));return null}finally{phs[i].remove()}}));
+  const ok=res.filter(Boolean);
   if(files.length>room)toast('Só cabem '+MAXIMG+' imagens por atividade.');
-  if(ok){refreshGal();save();render();toast(ok===1?'Imagem adicionada':ok+' imagens adicionadas')}
+  if(ok.length){t.imgs=[...(t.imgs||[]),...ok];if(inPanel)refreshGal();save();render();toast(ok.length===1?'Imagem adicionada':ok.length+' imagens adicionadas')}
 }
+const imgFiles=dt=>[...(dt&&dt.files||[])].filter(f=>/^image\//.test(f.type));
+/* anexar sem abrir o painel: botão 📎 da linha, Ctrl+V com a linha selecionada, ou soltar a imagem sobre a linha */
+let attachFor=null;
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('[data-attach]');if(!b)return;
+  e.stopImmediatePropagation();e.preventDefault();
+  const t=byId(b.dataset.attach);if(!t)return;if(!canImg(t)){deny('edit');return}
+  attachFor=t.id;let f=$('#quickfile');if(!f){f=document.createElement('input');f.type='file';f.id='quickfile';f.accept='image/*';f.multiple=true;f.hidden=true;document.body.appendChild(f);
+    f.onchange=()=>{const t2=byId(attachFor);if(t2)addFilesTo(t2,f.files);f.value=''}}
+  f.click();
+},true);
+document.addEventListener('paste',e=>{
+  if($('#ov').classList.contains('on')||(e.target.matches&&e.target.matches('input,textarea,[contenteditable]')))return;
+  const fs=imgFiles(e.clipboardData);if(!fs.length)return;
+  const t=byId(cur);if(!t){toast('Selecione uma atividade (clique na linha) e cole de novo');return}
+  e.preventDefault();addFilesTo(t,fs);
+});
+['dragover','drop','dragleave'].forEach(ev=>document.addEventListener(ev,e=>{
+  if($('#ov').classList.contains('on')||!e.dataTransfer||![...(e.dataTransfer.types||[])].includes('Files'))return;
+  const r=e.target.closest&&e.target.closest('#view [data-row],#view .card[data-t]');
+  document.querySelectorAll('.fdrop').forEach(x=>x!==r&&x.classList.remove('fdrop'));
+  if(!r){return}
+  const items=[...(e.dataTransfer.items||[])];if(items.length&&!items.some(i=>/^image\//.test(i.type)))return;
+  e.preventDefault();
+  if(ev==='dragover')r.classList.add('fdrop');
+  if(ev==='drop'){e.stopImmediatePropagation();r.classList.remove('fdrop');const t=byId(r.dataset.row||r.dataset.t);const fs=imgFiles(e.dataTransfer);if(t&&fs.length)addFilesTo(t,fs)}
+},true));
 async function openLB(tid,idx){
   const t=byId(tid);if(!t||!(t.imgs||[]).length)return;let i=Math.min(idx,t.imgs.length-1);
   closeLB();const lb=document.createElement('div');lb.id='lb';
@@ -1308,13 +1350,62 @@ function render(){
 }
 
 /* ----- lista em árvore (com modo plano para as visões inteligentes) ----- */
+/* ===== colunas da tabela: ordem e visibilidade (preferência só deste usuário/navegador) ===== */
+const COLDEFS=[['a','Resp.',66],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',50],['d','Conclusão',84],['dh','Hora',50],['u','Duração',58],['ds','Descrição',240],['id','ID',66]];
+const COLNAME={a:'Responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Conclusão (data)',dh:'Conclusão (hora)',u:'Duração',ds:'Descrição',id:'ID'};
+const COLDEF_HIDE=['ds'];
+function colsKey(){return 'cs-cols-'+(S.me||'local')}
+function colsLoad(){
+  let o=null;try{o=JSON.parse(localStorage.getItem(colsKey()))}catch(e){}
+  const all=COLDEFS.map(c=>c[0]);
+  const order=[...((o&&o.order)||[]).filter(k=>all.includes(k)),...all.filter(k=>!((o&&o.order)||[]).includes(k))];
+  const hide=o&&Array.isArray(o.hide)?o.hide.filter(k=>all.includes(k)):COLDEF_HIDE.slice();
+  S.cols={order,hide};
+}
+function colsSave(){try{localStorage.setItem(colsKey(),JSON.stringify(S.cols))}catch(e){}colsCSS()}
+function colsCSS(){
+  if(!S.cols)colsLoad();
+  let st=document.getElementById('colcss');if(!st){st=document.createElement('style');st.id='colcss';document.head.appendChild(st)}
+  st.textContent=S.cols.order.map((k,i)=>`.col-${k}{order:${i+1}}`).join('')+S.cols.hide.map(k=>`.hc.col-${k},.rt>.cell.col-${k}{display:none!important}`).join('')+COLDEFS.map(c=>`.col-${c[0]}{width:${c[2]}px}`).join('')+`:root{--colsw:${COLDEFS.filter(c=>!S.cols.hide.includes(c[0])).reduce((n,c)=>n+c[2],0)}px}`;
+}
+function colMove(k,d){const o=S.cols.order,i=o.indexOf(k),j=i+d;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,k);colsSave()}
+function colMenu(anchor){
+  closeMenu();const m=document.createElement('div');m.id='colmenu';
+  const draw=()=>{m.innerHTML=`<div class="cmh"><b>Colunas</b><button type="button" data-cm="reset" class="ghost">Restaurar padrão</button></div><div class="cmsub">Marque o que quer ver e use ▲ ▼ para mudar a ordem. Vale só para você, neste navegador.</div>`+
+    S.cols.order.map((k,i)=>`<div class="cmr"><label><input type="checkbox" data-cmv="${k}" ${S.cols.hide.includes(k)?'':'checked'}> ${COLNAME[k]}</label><span><button type="button" data-cmu="${k}" ${i?'':'disabled'} title="Mover para a esquerda">▲</button><button type="button" data-cmd="${k}" ${i<S.cols.order.length-1?'':'disabled'} title="Mover para a direita">▼</button></span></div>`).join('')+`<div class="cmsub" style="margin-top:6px">Dica: também dá para arrastar os títulos da tabela.</div>`};
+  draw();document.body.appendChild(m);
+  const r=anchor.getBoundingClientRect();m.style.left=Math.max(8,Math.min(r.right-m.offsetWidth,innerWidth-m.offsetWidth-8))+'px';m.style.top=Math.min(r.bottom+6,Math.max(8,innerHeight-m.offsetHeight-8))+'px';
+  const close=()=>{m.remove();document.removeEventListener('mousedown',off,true);document.removeEventListener('keydown',key,true)};
+  const off=e=>{if(!e.target.closest('#colmenu,#bCols'))close()};
+  const key=e=>{if(e.key==='Escape'){e.stopImmediatePropagation();close();if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}};
+  setTimeout(()=>{document.addEventListener('mousedown',off,true);document.addEventListener('keydown',key,true)},0);
+  m.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.dataset.cm==='reset'){S.cols={order:COLDEFS.map(c=>c[0]),hide:COLDEF_HIDE.slice()};colsSave();draw();render();return}
+    if(t.dataset.cmu){colMove(t.dataset.cmu,-1);draw();render();return}
+    if(t.dataset.cmd){colMove(t.dataset.cmd,1);draw();render();return}
+  });
+  m.addEventListener('change',e=>{const k=e.target.dataset.cmv;if(!k)return;const h=S.cols.hide;if(e.target.checked){const i=h.indexOf(k);if(i>=0)h.splice(i,1)}else if(!h.includes(k))h.push(k);colsSave();render()});
+  const f=m.querySelector('input');if(f)f.focus();
+}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#bCols');if(b){e.stopImmediatePropagation();if(!S.cols)colsLoad();const o=document.getElementById('colmenu');if(o){o.remove();return}colMenu(b)}},true);
+/* arrastar os títulos para reordenar */
+let colDrag=null;
+document.addEventListener('dragstart',e=>{const h=e.target.closest&&e.target.closest('.hc[data-col]');if(!h)return;colDrag=h.dataset.col;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','col:'+colDrag)}catch(_){}h.classList.add('cdrag')});
+document.addEventListener('dragover',e=>{if(!colDrag)return;const h=e.target.closest&&e.target.closest('.hc[data-col]');if(!h)return;e.preventDefault();document.querySelectorAll('.hc.cover').forEach(x=>x!==h&&x.classList.remove('cover'));h.classList.add('cover')});
+document.addEventListener('dragend',()=>{colDrag=null;document.querySelectorAll('.hc.cdrag,.hc.cover').forEach(x=>x.classList.remove('cdrag','cover'))});
+document.addEventListener('drop',e=>{
+  if(!colDrag)return;const h=e.target.closest&&e.target.closest('.hc[data-col]');if(!h)return;e.preventDefault();e.stopImmediatePropagation();
+  const from=colDrag,to=h.dataset.col;colDrag=null;if(from===to)return;
+  const o=S.cols.order;o.splice(o.indexOf(from),1);o.splice(o.indexOf(to),0,from);colsSave();render();
+},true);
 function listHeader(n){
   return `<div class="row hdr"><span class="grip" style="visibility:hidden"></span><span class="gut"></span>
    <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Atividade <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span></div>
-   <div class="rt"><span class="hc col-id">ID</span><span class="hc col-a">Resp.</span><span class="hc col-t">Etiquetas</span><span class="hc col-s">Status</span><span class="hc col-i">Início</span><span class="hc col-d">Conclusão</span><span class="hc col-u">Duração</span></div></div>`;
+   <div class="rt">${COLDEFS.map(c=>`<span class="hc col-${c[0]}" data-col="${c[0]}" draggable="true" title="Arraste para mudar a posição · ${c[1]}">${c[1]}</span>`).join('')}</div></div>`;
 }
+const fmtFull=d=>d?d.split('-').reverse().join('/'):'';
 function dateCols(t){
-  const tm=x=>x?`<small>${x}</small>`:'';
   const own=t.start||t.due,leaf=isLeaf(t);
   const sp=own||leaf?null:tspan(t);
   const a=own?t.start:(sp&&sp[0]),b=own?t.due:(sp&&sp[1]);
@@ -1323,7 +1414,7 @@ function dateCols(t){
     if(a===b&&t.startTime&&t.dueTime&&own){const m=(+t.dueTime.slice(0,2)*60+ +t.dueTime.slice(3))-(+t.startTime.slice(0,2)*60+ +t.startTime.slice(3));u=m>0?fmtDur(m*60000):'1 d'}
     else u=(diffDays(a,b)+1)+' d';
   }
-  return{i:a?fmtS(a):'',d:(hasRep(t)?'🔁 ':'')+(b?fmtS(b):''),u,agg:!own&&!!sp,ti:own&&t.startTime?' às '+t.startTime:'',td:own&&t.dueTime?' às '+t.dueTime:''};
+  return{i:fmtFull(a),d:(hasRep(t)?'🔁 ':'')+fmtFull(b),u,agg:!own&&!!sp,ih:own?(t.startTime||''):'',dh:own?(t.dueTime||''):''};
 }
 function rowHTML(t,depth,flat){
   const ks=flat?[]:kidsOf(t.id),pr=flat?null:prog(t),done=t.status==='done',f=filtering();
@@ -1342,16 +1433,19 @@ function rowHTML(t,depth,flat){
     ${(t.imgs||[]).length?`<span class="imgc" title="${t.imgs.length} imagem(ns)">${ic('image',13)}${t.imgs.length}</span>`:''}${t.star?`<span class="star" data-star="${t.id}" title="Favorita">★</span>`:''}${blocked?`<span class="lk" title="Aguardando: ${esc(wait)}">🔒</span>`:''}${t.timerStart?'<span class="tim" title="Cronômetro em andamento">⏱</span>':''}${t.comments.length?`<span class="pg" title="Comentários">💬${t.comments.length}</span>`:''}
     ${pr?`<span class="pg">${pr[0]}/${pr[1]}</span><span class="bar"><i style="width:${pr[1]?pr[0]/pr[1]*100:0}%"></i></span>`:''}${path}
     <button class="op" data-t="${t.id}" title="Abrir painel de edição (Espaço)">⤢ abrir</button>
-    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button><button class="hdel" data-qdel="${t.id}" title="Excluir atividade">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subatividade">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
+    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button>${CLOUD?`<button data-attach="${t.id}" title="Anexar imagem — ou cole com Ctrl+V / solte a imagem sobre a linha">${ic('image',14)}</button>`:''}<button class="hdel" data-qdel="${t.id}" title="Excluir atividade">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subatividade">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
    </div>
    <div class="rt">
-    <span class="cell col-id" data-cid="${t.id}" title="ID ${t.id} — clique para copiar">${t.sec&&!t.parent?'':esc(t.id)}</span>
+    <span class="cell col-id" data-cid="${t.id}" title="ID ${t.id} — clique para copiar">${esc(t.id)}</span>
     <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
     <span class="cell col-t ${t.tags.length?'':'e'}" data-pop="t:${t.id}" title="Etiquetas">${tagChips(t)}</span>
     <span class="cell col-s" data-pop="s:${t.id}" title="Status">${stChip(t)}</span>
-    <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Início${ds.ti}">${ds.i}</span>
-    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Conclusão'+ds.td:'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
+    <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Data de início">${ds.i}</span>
+    <span class="cell col-ih ${ds.ih?'':'e'}" data-pop="d:${t.id}" title="Hora de início">${ds.ih}</span>
+    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Data de conclusão':'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
+    <span class="cell col-dh ${dueCls(t)} ${ds.dh?'':'e'}" data-pop="d:${t.id}" title="Hora de conclusão">${ds.dh}</span>
     <span class="cell col-u ${ds.u?'':'e'}" data-pop="d:${t.id}" title="Duração (início → conclusão, contando os dois dias)">${ds.u}</span>
+    <span class="cell col-ds ${t.desc?'':'e'}" data-descid="${t.id}" title="${esc(t.desc||'Adicionar descrição')}">${esc((t.desc||'').replace(/\s+/g,' ').slice(0,140))}</span>
    </div></div>`;
   if(open){
     shown.forEach(k=>h+=rowHTML(k,depth+1));
@@ -2101,7 +2195,7 @@ document.addEventListener('click',e=>{
   if(k==='json'){dlBlob('backup_atividades_'+today()+'.json',new Blob([jsonBackup()],{type:'application/json'}));toast('Backup gerado — veja a pasta Downloads');return}
 },true);
 /* soltar planilha em qualquer lugar da tela */
-(()=>{let n=0;const on=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
+(()=>{let n=0;const on=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files')&&!(e.dataTransfer.items&&e.dataTransfer.items.length&&[...e.dataTransfer.items].every(i=>/^image\//.test(i.type)));
   const hide=()=>{n=0;document.body.classList.remove('filedrag')};
   window.addEventListener('dragenter',e=>{if(!on(e)||e.target.closest&&e.target.closest('#modal[data-kind=task]'))return;n++;document.body.classList.add('filedrag')});
   window.addEventListener('dragleave',e=>{if(!on(e))return;n--;if(n<=0)hide()});
@@ -2402,7 +2496,9 @@ function settings(){
     S.teams.map(t=>{const ms=S.members.filter(m=>m.team===t.id);return `<div class="mcard" style="align-items:flex-start"><span class="avl" style="background:var(--ac2);color:var(--ac);font-size:22px">👥</span><div class="mi"><div class="mn"><b>${esc(t.name)}</b></div><div class="mx">${ms.map(m=>`<span class="pa on" style="opacity:1"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span>${esc(m.name)}</span>`).join('')||'<span class="hint">Sem membros</span>'}</div>${adm?`<input data-teamadd="${t.id}" placeholder="+ adicionar pessoa por e-mail (Enter)" style="margin-top:8px;max-width:340px">`:''}</div><div class="mr"><select data-teamrole="${t.id}" ${adm?'':'disabled'}>${['limited','guest'].map(k=>`<option value="${k}" ${t.role===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>${adm?`<div class="mact"><button class="ghost" data-teamdel="${t.id}">Excluir equipe</button></div>`:''}</div></div>`}).join('')||'<div class="hint" style="padding:12px 0">Nenhuma equipe criada ainda.</div>',
     '',adm?`<button class="pri" data-act3="newteam">${ic('plus',16)} Nova equipe</button>`:'');
   }else if(tab==='links'){
+    if(adm&&CLOUD)setTimeout(loadMailStatus,60);
     b=ro+card('Link do sistema','Endereço onde a equipe acessa o sistema. Entra nas mensagens de convite.',row('Endereço','Ex.: https://csinfra-fiscal.vercel.app',`<input data-glink="1" value="${esc(S.link||'')}" placeholder="Cole aqui o endereço publicado" ${adm?'':'disabled'}>`))+
+    (adm&&CLOUD?card('E-mail do sistema','Os avisos por e-mail (“Avisar responsáveis”) saem do próprio sistema, não do e-mail de quem clicou.','<div id="mailst" class="hint">Verificando…</div>'):'')+
     card('Mensagem de convite por perfil','Abre no seu programa de e-mail, pronta para enviar.',Object.keys(ROLES).map(k=>`<div class="frow"><div class="fl"><label>${ROLES[k].n}</label><span>${ROLES[k].d}</span></div><div class="fc"><button data-linkrole="${k}">${ic('file',16)} Gerar convite</button></div></div>`).join(''));
   }else if(tab==='props'){
     const p=proj(),d=!prj?'disabled':'';
@@ -3141,7 +3237,7 @@ if(ROUTER_ON){
   window.addEventListener('popstate',()=>{if(cloud.ready)applyRoute(location.pathname,true)});
 }
 
-{const _r3=render;render=function(){_r3.apply(this,arguments);try{markSel()}catch(e){}};}
+{const _r3=render;render=function(){if(!S.cols||S._colsFor!==(S.me||'local')){colsLoad();S._colsFor=S.me||'local'}colsCSS();_r3.apply(this,arguments);try{markSel()}catch(e){}};}
 
 
 /* ===== autocomplete de @pessoa na barra de adição ===== */
@@ -3185,3 +3281,18 @@ if(ROUTER_ON){
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='Home'||e.key==='End')setTimeout(()=>{if(inp)update(inp)},0);
   },true);
 })();
+
+
+/* ===== e-mail do sistema: estado e teste ===== */
+async function loadMailStatus(test){
+  const el=$('#mailst');if(!el)return;
+  try{
+    const r=await fnCall({action:'mail_status',test:!!test});
+    if(test){toast('✔ '+(r.message||'E-mail de teste enviado'))}
+    el.innerHTML=r.provider?`<div style="color:var(--ok);font-weight:600">✔ Ativo (${r.provider==='resend'?'Resend':'SMTP'})</div><div class="hint" style="margin:4px 0 10px">Remetente: <b>${esc(r.from)}</b> · as respostas vão para quem enviou o aviso.</div><button id="mail_test">Enviar e-mail de teste para mim</button>`:mailHowTo();
+  }catch(e){
+    el.innerHTML=(fnMissing(e)||/smtp_not_configured/.test(e.message||''))?mailHowTo():`<div style="color:var(--red)">${esc(trErr(e.message))}</div><div style="margin-top:8px">${mailHowTo()}</div>`;
+  }
+}
+function mailHowTo(){return `<div style="color:var(--amb);font-weight:600">Ainda não ativado</div><div class="hint" style="margin:4px 0 8px;line-height:1.6">Em <b>Supabase → Edge Functions → Secrets</b> crie <code>RESEND_API_KEY</code> (chave gratuita em resend.com) e <code>MAIL_FROM</code> (ex.: <code>CS Infra &lt;avisos@seudominio.com.br&gt;</code>). Depois reimplante a função <code>invite-user</code> com o arquivo novo do GitHub (pasta supabase/functions). Alternativa: <code>SMTP_USER</code> + <code>SMTP_PASS</code>. Passo a passo no <b>GUIA_SUPABASE.md</b>.</div><button id="mail_test">Testar agora</button>`}
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='mail_test'){e.stopImmediatePropagation();loadMailStatus(true)}},true);

@@ -1121,11 +1121,6 @@ html{-webkit-text-size-adjust:100%}
 .rt .cell.col-d.late{color:var(--red);font-weight:600}.rt .cell.col-d.soon{color:var(--amb);font-weight:600}
 .hc.col-id,.hc.col-i,.hc.col-d,.hc.col-u{display:block;padding:0 4px;text-align:left;font-size:11px;line-height:normal}
 .hc.col-u{text-align:right}
-@container main (max-width:1060px){.col-t{display:none!important}}
-@container main (max-width:1020px){.col-id{display:none!important}}
-@container main (max-width:900px){.col-u{display:none!important}.col-d,.col-i{width:80px}.col-s{width:112px}}
-@container main (max-width:800px){.col-i{display:none!important}}
-@container main (max-width:720px){.col-a{display:none!important}}
 @media(max-width:700px){.row .col-id,.row .col-i,.row .col-u{display:none!important}.row .col-d{width:auto;font-size:12px}}
 
 /* ===== separação visual: seções, grupos e subatividades ===== */
@@ -1174,18 +1169,51 @@ html{-webkit-text-size-adjust:100%}
   .row.par .hv{background:color-mix(in srgb,var(--ac) 3%,var(--row2))}
   .row:hover .hv{display:flex}
 }
-@container main (max-width:1100px){.col-t{display:none!important}}
-@container main (max-width:960px){.col-id{display:none!important}}
-@container main (max-width:860px){.col-u{display:none!important}}
-@container main (max-width:760px){.col-i{display:none!important}}
-@container main (max-width:660px){.col-a{display:none!important}}
 @container main (max-width:900px){.row .op{right:34px}}
 @media(min-width:701px){
   .rt>.cell.col-id,.rt>.cell.col-i,.rt>.cell.col-d,.rt>.cell.col-u{display:flex;line-height:1.2}
   .col-i{width:62px}.col-d{width:76px}.col-u{width:58px}
   .rt>.hc{letter-spacing:.4px;font-size:10px}
-  .row .op{right:172px}
+  .row .op{right:200px}
 }
 @container main (max-width:900px){.row .op{right:44px}}
 @media(min-width:701px){.col-d{width:86px}.col-u{width:64px}.rt>.hc{letter-spacing:.3px}}
 @container main (max-width:900px){.t3r .tb .bl{display:none}.t3r .tb{padding:0 11px}}
+
+/* ===== v10: colunas configuráveis ===== */
+@media(min-width:701px){
+  .rt>.cell.col-ih,.rt>.cell.col-dh,.rt>.cell.col-ds{display:flex;line-height:1.2;font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+  .rt>.cell.col-ds{display:block;line-height:26px;text-overflow:ellipsis;cursor:text;color:var(--tx);opacity:.8}
+  .rt>.cell.col-ds.e{opacity:.4}
+  .rt>.cell.col-ds.e:hover::after{content:'+ descrição';color:var(--mu)}
+  .rt>.cell.col-dh.late{color:var(--red)}.rt>.cell.col-dh.soon{color:var(--amb)}
+  .hc[data-col]{cursor:grab}
+  .hc.cdrag{opacity:.4}
+  .hc.cover{box-shadow:inset 3px 0 0 var(--ac);background:var(--ac2)}
+}
+@media(max-width:700px){#bCols{display:none}.row .col-ih,.row .col-dh,.row .col-ds{display:none!important}}
+@container main (max-width:900px){.t3r #bCols .bl{display:none}}
+#colmenu{position:fixed;z-index:70;width:290px;background:var(--bg2);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh2);padding:10px 8px}
+#colmenu .cmh{display:flex;align-items:center;justify-content:space-between;padding:2px 8px 4px}
+#colmenu .cmh .ghost{font-size:12px;padding:3px 8px}
+#colmenu .cmsub{color:var(--mu);font-size:11.5px;padding:0 8px 6px;line-height:1.4}
+#colmenu .cmr{display:flex;align-items:center;justify-content:space-between;padding:3px 8px;border-radius:8px}
+#colmenu .cmr:hover{background:var(--hov2)}
+#colmenu .cmr label{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;margin:0;color:var(--tx)}
+#colmenu .cmr span button{width:26px;height:24px;padding:0;font-size:10px;margin-left:2px;box-shadow:none}
+#colmenu .cmr span button:disabled{opacity:.25}
+/* foco visível nos mini-painéis (teclado) */
+#pop .pl:focus,#pop .pl:focus-within{background:var(--ac2);outline:2px solid color-mix(in srgb,var(--ac) 55%,transparent);outline-offset:-2px}
+#pop .kh{margin:6px 2px 0;padding-top:6px;border-top:1px solid var(--bd);color:var(--mu);font-size:11px;line-height:1.4}
+
+@container main (max-width:900px){.col-t,.col-id,.col-ih,.col-dh,.col-u,.col-ds{display:none!important}}
+@container main (max-width:760px){.col-i{display:none!important}}
+@container main (max-width:660px){.col-a{display:none!important}}
+@media(min-width:701px){
+  .outline{overflow-x:auto;overflow-y:clip}
+  .outline .row{min-width:calc(var(--colsw,600px) + 330px)}
+  .outline .row.hdr{position:sticky}
+}
+.fdrop{outline:2px dashed var(--ac);outline-offset:-2px;background:var(--ac2)!important}
+.card.fdrop{outline-offset:2px}
+@container main (max-width:900px){.outline .row{min-width:0!important}}

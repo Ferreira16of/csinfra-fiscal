@@ -133,14 +133,13 @@ Além do perfil (Administrador, Normal, Limitado, Convidado), cada projeto contr
 
 **Imagens (descrição da tarefa):** abra uma tarefa e, logo abaixo da descrição, cole (Ctrl+V), arraste ou clique em **Adicionar imagem**. As imagens aparecem como miniaturas; clique para ampliar (setas ← → navegam, Esc fecha). Cada tarefa aceita até 12 imagens (JPG, PNG, GIF ou WebP; fotos grandes são reduzidas automaticamente). Os arquivos ficam num bucket **privado** do Supabase Storage chamado `task-images`, e quem vê a imagem é quem vê o projeto. Para criar o bucket e as regras, rode o `supabase_setup.sql` de novo (seguro repetir).
 
-**Avisar por e-mail (botão "Avisar responsáveis" da tarefa):** escolha as pessoas, o assunto, um recado e o que vai junto (detalhes, comentários, imagens). O e-mail é montado pelo servidor com os dados reais da tarefa e leva um botão "Abrir tarefa no sistema". Para ativar o envio automático:
+**Avisar por e-mail (botão "Avisar responsáveis" da atividade):** escolha as pessoas, o assunto, um recado e o que vai junto (detalhes, comentários, imagens). Dá para marcar "Guardar o recado como comentário". O e-mail sai **pelo próprio sistema** (não do seu e-mail pessoal) e leva o botão "Abrir atividade no sistema"; as respostas vão para quem enviou o aviso. Para ativar (uma vez só):
 1. Publique de novo a função `invite-user` (Edge Functions → invite-user → Code → cole o novo `index.ts` → Deploy).
-2. Em **Edge Functions → Secrets** crie:
-   - `SMTP_USER` = seu Gmail (ex.: `seu.email@gmail.com`)
-   - `SMTP_PASS` = a **senha de app** do Google (a mesma que você usou no SMTP do Auth)
-   - `SMTP_FROM` = `CS Infra <seu.email@gmail.com>` (opcional)
-   - `SMTP_HOST` (padrão `smtp.gmail.com`) e `SMTP_PORT` (padrão `465`) só se usar outro provedor.
-Enquanto isso não estiver configurado, o botão **Abrir no meu e-mail** continua funcionando (abre o seu programa de e-mail com a mensagem pronta).
+2. Em **Edge Functions → Secrets** crie **uma** destas opções:
+   - **Opção A — Resend (mais simples):** crie conta grátis em resend.com, gere uma *API Key* e verifique seu domínio. Secrets: `RESEND_API_KEY` = a chave e `MAIL_FROM` = `CS Infra <avisos@seudominio.com.br>`.
+   - **Opção B — SMTP:** `SMTP_USER`, `SMTP_PASS` (senha de app do Google ou do provedor), `SMTP_FROM` (opcional), `SMTP_HOST`/`SMTP_PORT` se não for Gmail.
+3. No sistema: **Configurações → Links e convites → E-mail do sistema** mostra se está ativo e tem o botão **Enviar e-mail de teste para mim**.
+Enquanto não estiver configurado, o link "Prefiro abrir no meu programa de e-mail" continua disponível no diálogo.
 
 ## Parte F — Tirar o acesso de alguém
 - Pelo sistema (depois da integração) ou no SQL: `update public.members set status = 'blocked', access_enabled = false where email = 'fulano@empresa.com.br';`
