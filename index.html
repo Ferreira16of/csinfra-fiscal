@@ -24,20 +24,16 @@
     <div class="lbl">Projetos <button id="addProj" title="Novo projeto (use um modelo pronto)"><i data-i="plus" data-s="15"></i></button></div>
     <div id="projs"></div>
   </nav>
-  <div id="syncst"></div>
   <div class="foot">
-    <div class="fgrid">
-      <button id="bSet" class="fi" title="Configurações"><i data-i="sliders"></i><span>Ajustes</span></button>
-      <button id="bTeam" class="fi" title="Membros e convites"><i data-i="people"></i><span>Equipe</span></button>
-      <button id="bTags" class="fi" title="Etiquetas"><i data-i="tag"></i><span>Etiquetas</span></button>
-      <button id="bRules" class="fi" title="Automações"><i data-i="zap"></i><span>Regras</span></button>
+    <div id="syncst"></div>
+    <button id="bTeam" class="fi" title="Membros e convites"><i data-i="people"></i><span>Equipe e convites</span></button>
+    <button id="bSet" class="fi" title="Configurações"><i data-i="sliders"></i><span>Configurações</span></button>
+    <button id="bMore" class="fi" title="Etiquetas, automações, importar e exportar"><i data-i="dots"></i><span>Mais</span></button>
+    <div hidden>
+      <button id="bTags"></button><button id="bRules"></button>
+      <button id="bXls"></button><button id="bXlsIn"></button><button id="bPdf"></button><button id="bXlsTpl"></button>
+      <button id="bExp"></button><button id="bCsv"></button><button id="bImp"></button>
     </div>
-    <details><summary><i data-i="download"></i><span>Importar e exportar</span></summary><div>
-      <button id="bXls">Exportar Excel</button><button id="bXlsIn">Importar Excel</button>
-      <button id="bPdf">Exportar PDF</button><button id="bXlsTpl" title="Planilha modelo para incluir tarefas em massa">Modelo Excel</button>
-      <button id="bExp">Exportar JSON</button><button id="bCsv">Exportar CSV</button>
-      <button id="bImp" style="grid-column:1/3">Importar JSON</button>
-    </div></details>
     <button id="bUser" data-pop="u:me" title="Usuário atual"></button>
   </div>
 </aside>

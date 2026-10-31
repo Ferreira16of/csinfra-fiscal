@@ -1,6 +1,6 @@
 const $=s=>document.querySelector(s);
 /* ----- ícones (traço, 24x24) ----- */
-const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
+const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',dots:'M5 12h.01M12 12h.01M19 12h.01',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
 const ic=(n,s)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"${s?` style="width:${s}px;height:${s}px"`:''}><path d="${ICO[n]||''}"/></svg>`;
 function hydrateIcons(root){(root||document).querySelectorAll('i[data-i]').forEach(e=>{e.outerHTML=ic(e.dataset.i,e.dataset.s)})}
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -443,6 +443,23 @@ function csv(){
   return rows.map(r=>r.map(q).join(';')).join('\n');
 }
 
+/* ----- menu suspenso genérico ----- */
+function closeMenu(){const m=$('#menu');if(m)m.remove()}
+function openMenu(anchor,items,o={}){
+  closeMenu();const m=document.createElement('div');m.id='menu';
+  m.innerHTML=items.map((it,i)=>it==='-'?'<div class="msep"></div>':`<button type="button" class="mit ${it.on?'on':''}" data-mi2="${i}">${it.sw?`<i class="msw" style="background:${it.sw}"></i>`:it.ic?ic(it.ic):''}<span>${esc(it.l)}</span>${it.h?`<small>${esc(it.h)}</small>`:''}${it.on?ic('check',16):''}</button>`).join('');
+  document.body.appendChild(m);
+  const r=anchor.getBoundingClientRect(),w=m.offsetWidth,h=m.offsetHeight;
+  let x,y;
+  if(o.side==='right'){x=Math.min(r.right+8,innerWidth-w-8);y=Math.max(8,Math.min(r.bottom-h,innerHeight-h-8))}
+  else{x=Math.max(8,Math.min(r.right-w,innerWidth-w-8));y=Math.min(r.bottom+6,innerHeight-h-8)}
+  m.style.left=x+'px';m.style.top=y+'px';
+  m.onclick=e=>{const b=e.target.closest('[data-mi2]');if(!b)return;const it=items[+b.dataset.mi2];closeMenu();if(it&&it.f)setTimeout(()=>it.f(),0)};
+  setTimeout(()=>{const off=e=>{if(!e.target.closest('#menu')){closeMenu();document.removeEventListener('mousedown',off,true)}};document.addEventListener('mousedown',off,true);document.addEventListener('keydown',function k(e){if(e.key==='Escape'){closeMenu();document.removeEventListener('keydown',k,true)}},true)},0);
+}
+const setTheme=k=>{S.theme=k;save();render()};
+const themeItems=()=>THEMES.map(([k,n,d,c])=>({l:n,sw:c[2],on:S.theme===k,f:()=>setTheme(k)}));
+
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
   const g=s=>e.target.closest(s);let el;
@@ -758,7 +775,7 @@ function openPalette(mode){
   const ACTS=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
-    ['Alternar tema claro/escuro','moon',btn('#bTheme')],['Exportar Excel','download',btn('#bXls')],['Exportar PDF','file',btn('#bPdf')],['Importar Excel','upload',btn('#bXlsIn')],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
+    ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Exportar Excel','download',btn('#bXls')],['Exportar PDF','file',btn('#bPdf')],['Importar Excel','upload',btn('#bXlsIn')],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
   if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
   const draw=()=>{
     const q=$('#pl_q').value.trim().toLowerCase(),has=s=>!q||s.toLowerCase().includes(q);items=[];
@@ -1052,6 +1069,7 @@ const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 
 /* ----- renderização principal ----- */
 function render(){
+  if(S.projects.length>1&&S.projects.some(p=>p.virtual))S.projects=S.projects.filter(p=>!p.virtual);
   const P=proj();S.cur=P.id;
   document.documentElement.dataset.theme=S.theme;
   document.body.dataset.view=S.view;
@@ -1069,8 +1087,8 @@ function render(){
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
-  $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span><small class="${k==='late'&&n?'bad':''}">${n}</small></div>`}).join('');
-  $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button><small>${S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length}</small></div>`).join('');
+  $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="${k==='late'?'bad':''}">${n}</small>`:''}</div>`}).join('');
+  $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button>${(()=>{const n=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length;return n?`<small>${n}</small>`:''})()}</div>`).join('');
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
@@ -1539,7 +1557,9 @@ document.addEventListener('click',e=>{
   if(g('[data-hd]')){S.hideDone=!S.hideDone;render();toast(S.hideDone?'🙈 Tarefas concluídas ocultas':'👁 Tarefas concluídas visíveis');return}
   if(g('#bFilt')){$('#fpanel').classList.toggle('open');return}
   if(g('#bBell')){openAlerts();return}
-  if(g('#bTheme')){S.theme=S.theme==='dark'?'light':'dark';render();return}
+  if(g('#bTheme')){openMenu($('#bTheme'),themeItems());return}
+  if(el=g('[data-gth]')){setTheme(el.dataset.gth);return}
+  if(g('#bMore')){const B=id=>()=>{const b=$(id);if(b)b.click()};openMenu($('#bMore'),[{l:'Etiquetas',ic:'tag',f:B('#bTags')},{l:'Automações',ic:'zap',f:B('#bRules')},'-',{l:'Exportar Excel',ic:'download',f:B('#bXls')},{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Exportar PDF',ic:'file',f:B('#bPdf')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},'-',{l:'Exportar JSON / CSV',ic:'download',f:B('#bExp')},{l:'Importar JSON',ic:'upload',f:B('#bImp')},'-',{l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()}],{side:'right'});return}
   if(g('#bRules')){openRules();return}
   if(g('#newTask')){$('#qa').focus();return}
   if(g('#qaGo')){const i=$('#qa');if(quickAdd(i.value)){i.value='';quickPreview()}return}
@@ -2062,43 +2082,49 @@ function memberCard(m,adm){
     ${adm?`<div class="mact"><button data-asuser="${m.id}" title="Usar o sistema como esta pessoa">Entrar como</button><button data-mst="${m.id}" title="Alternar convidado/ativo">${m.status==='invited'?'Marcar ativo':'Marcar convidado'}</button><button data-mi="${m.id}" title="Enviar convite por e-mail">✉</button><button class="ghost" data-sdel="${m.id}" title="Remover membro">🗑</button></div>`:''}
    </div></div>`;
 }
+const THEMES=[['light','Claro','Visual limpo e neutro. Padrão.',['#f5f6f8','#ffffff','#0e7a6e','#e4e7ec']],['dark','Escuro','Menos brilho para ambientes escuros.',['#0b0e0d','#121716','#38d6b3','#222a29']],['cs','CS Infra','Azul, laranja e verde da identidade da marca.',['#f3f4fa','#262c6e','#3b4796','#f07d12']]];
+const themePicker=()=>`<div class="theme-grid">${THEMES.map(([k,n,d,c])=>`<button type="button" class="tcard ${S.theme===k?'on':''}" data-gth="${k}"><span class="tprev" style="background:${c[0]}"><i style="width:26%;background:${k==='light'?'#fff':c[1]};border-right:1px solid ${c[3]}"></i><span class="tbody"><b style="width:62%;background:${c[2]}"></b><b style="width:90%;background:${c[3]}"></b><b style="width:74%;background:${c[3]}"></b>${k==='cs'?'<em style="background:#f07d12"></em>':''}</span></span><span class="tn">${n}${S.theme===k?'<em>em uso</em>':''}</span><small>${d}</small></button>`).join('')}</div>`;
 function settings(){
   const tab=S.setTab||'membros',adm=can('members'),prj=can('project');
-  const nav=`<nav class="setnav"><a data-stab="geral" class="${tab==='geral'?'on':''}">Geral</a><div class="grp">Membros</div><a class="sub ${tab==='membros'?'on':''}" data-stab="membros">Membros</a><a class="sub ${tab==='equipes'?'on':''}" data-stab="equipes">Equipes externas</a><a class="sub ${tab==='links'?'on':''}" data-stab="links">Links compartilhados</a><a data-stab="props" class="${tab==='props'?'on':''}" style="margin-top:12px">Propriedades</a><a data-stab="opcoes" class="${tab==='opcoes'?'on':''}">Opções</a></nav>`;
-  const ro=adm?'':'<div class="hint" style="background:var(--ac2);color:var(--ac);border-radius:8px;padding:8px 12px;font-weight:600;margin-bottom:12px">🔒 Somente leitura — apenas administradores alteram estas configurações.</div>';
+  const NAV=[['geral','sliders','Geral'],['membros','people','Membros'],['equipes','user','Equipes externas'],['links','file','Links e convites'],['props','board','Projeto atual'],['opcoes','moon','Aparência e dados']];
+  const nav=`<nav class="setnav">${NAV.map(([k,i,l])=>`<a data-stab="${k}" class="${tab===k?'on':''}">${ic(i)}<span>${l}</span></a>`).join('')}</nav>`;
+  const ro=adm?'':'<div class="sro">🔒 Somente leitura — apenas administradores alteram estas configurações.</div>';
+  const card=(t,d,body,cls,act)=>`<section class="scard ${cls||''}"><header><div><h3>${t}</h3>${d?`<p>${d}</p>`:''}</div>${act?`<div class="sact">${act}</div>`:''}</header><div class="sb">${body}</div></section>`;
+  const row=(l,h,c)=>`<div class="frow"><div class="fl"><label>${l}</label>${h?`<span>${h}</span>`:''}</div><div class="fc">${c}</div></div>`;
   let b='';
   if(tab==='membros'){
-    b=`<h2>Membros</h2><div class="hint" style="margin:0 0 6px">${S.members.length} membro(s)</div>${ro}`+S.members.map(m=>memberCard(m,adm)).join('')+(adm?`<button class="gbtn" data-act3="invite">＋ Convidar novos membros</button>${CLOUD?`<button class="gbtn" style="margin-left:8px" data-act3="addperson" title="Pessoa que só aparece para atribuir tarefas, sem login">＋ Pessoa sem acesso</button>`:''}`:'')+
-    `<h3 style="margin:34px 0 8px">Perfis e permissões</h3><table class="perm"><tr><th></th>${Object.keys(ROLES).map(k=>`<th>${ROLES[k].n}</th>`).join('')}</tr>${PERMROWS.map(r=>`<tr><td>${r[0]}</td>${Object.keys(ROLES).map(k=>`<td>${r[1](k)?'<span style="color:var(--ok)">✔</span>':'<span style="color:var(--mu)">—</span>'}</td>`).join('')}</tr>`).join('')}</table><div class="hint" style="margin-top:10px">⚠ Este controle é aplicado na interface. Como o sistema roda sem servidor, quem tiver o arquivo pode trocar de perfil — para segurança real é preciso login em servidor.</div>`;
+    const act=adm?`<button class="pri" data-act3="invite">${ic('plus',16)} Convidar</button>${CLOUD?`<button data-act3="addperson" title="Pessoa que só aparece para atribuir tarefas, sem login">Pessoa sem acesso</button>`:''}`:'';
+    b=ro+card(`Membros <span class="cnt">${S.members.length}</span>`,'Quem pode entrar no sistema e com qual perfil.',S.members.map(m=>memberCard(m,adm)).join(''),'',act)+
+    card('Perfis e permissões','O que cada perfil pode fazer.',`<table class="perm"><tr><th></th>${Object.keys(ROLES).map(k=>`<th>${ROLES[k].n}</th>`).join('')}</tr>${PERMROWS.map(r=>`<tr><td>${r[0]}</td>${Object.keys(ROLES).map(k=>`<td>${r[1](k)?'<span style="color:var(--ok)">✔</span>':'<span style="color:var(--mu)">—</span>'}</td>`).join('')}</tr>`).join('')}</table>${CLOUD?'<div class="hint" style="margin-top:12px">As permissões são aplicadas também no banco de dados (não só na tela).</div>':'<div class="hint" style="margin-top:12px">⚠ Sem login em servidor, este controle vale apenas na interface.</div>'}`);
   }else if(tab==='equipes'){
-    b=`<h2>Equipes externas</h2><div class="hint" style="margin:0 0 6px">Grupos de pessoas de fora (clientes, parceiros) com um perfil limitado. ${S.teams.length} equipe(s).</div>${ro}`+
-    S.teams.map(t=>{const ms=S.members.filter(m=>m.team===t.id);return `<div class="mcard" style="align-items:flex-start"><span class="avl" style="background:var(--ac2);color:var(--ac);font-size:22px">👥</span><div class="mi"><div class="mn"><b>${esc(t.name)}</b></div><div class="mx">${ms.map(m=>`<span class="pa on" style="opacity:1"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span>${esc(m.name)}</span>`).join('')||'<span class="hint">Sem membros</span>'}</div>${adm?`<input data-teamadd="${t.id}" placeholder="+ adicionar pessoa por e-mail (Enter)" style="margin-top:8px;max-width:340px">`:''}</div><div class="mr"><select data-teamrole="${t.id}" ${adm?'':'disabled'}>${['limited','guest'].map(k=>`<option value="${k}" ${t.role===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>${adm?`<div class="mact"><button class="ghost" data-teamdel="${t.id}">🗑 Excluir equipe</button></div>`:''}</div></div>`}).join('')+
-    (adm?`<button class="gbtn" data-act3="newteam">＋ Criar uma nova equipe</button>`:'');
+    b=ro+card('Equipes externas',`Grupos de pessoas de fora (clientes, parceiros) com perfil limitado. ${S.teams.length} equipe(s).`,
+    S.teams.map(t=>{const ms=S.members.filter(m=>m.team===t.id);return `<div class="mcard" style="align-items:flex-start"><span class="avl" style="background:var(--ac2);color:var(--ac);font-size:22px">👥</span><div class="mi"><div class="mn"><b>${esc(t.name)}</b></div><div class="mx">${ms.map(m=>`<span class="pa on" style="opacity:1"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span>${esc(m.name)}</span>`).join('')||'<span class="hint">Sem membros</span>'}</div>${adm?`<input data-teamadd="${t.id}" placeholder="+ adicionar pessoa por e-mail (Enter)" style="margin-top:8px;max-width:340px">`:''}</div><div class="mr"><select data-teamrole="${t.id}" ${adm?'':'disabled'}>${['limited','guest'].map(k=>`<option value="${k}" ${t.role===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>${adm?`<div class="mact"><button class="ghost" data-teamdel="${t.id}">Excluir equipe</button></div>`:''}</div></div>`}).join('')||'<div class="hint" style="padding:12px 0">Nenhuma equipe criada ainda.</div>',
+    '',adm?`<button class="pri" data-act3="newteam">${ic('plus',16)} Nova equipe</button>`:'');
   }else if(tab==='links'){
-    b=`<h2>Links compartilhados</h2><div class="hint" style="margin:0 0 10px">Endereço onde a equipe acessa o sistema e mensagens de convite prontas para cada perfil.</div>${ro}<label>Link do sistema (vai nos convites)</label><input data-glink="1" value="${esc(S.link||'')}" placeholder="Cole aqui o endereço onde o sistema está publicado" ${adm?'':'disabled'}>
-    <h3 style="margin:24px 0 8px">Gerar mensagem de convite por perfil</h3>${Object.keys(ROLES).map(k=>`<div class="mcard" style="padding:10px 0"><div class="mi"><b>${ROLES[k].n}</b><div class="me">${ROLES[k].d}</div></div><button data-linkrole="${k}">✉ Gerar convite</button></div>`).join('')}<div class="hint">O sistema não envia e-mails sozinho: a mensagem abre no seu programa de e-mail, pronta para enviar.</div>`;
+    b=ro+card('Link do sistema','Endereço onde a equipe acessa o sistema. Entra nas mensagens de convite.',row('Endereço','Ex.: https://csinfra-fiscal.vercel.app',`<input data-glink="1" value="${esc(S.link||'')}" placeholder="Cole aqui o endereço publicado" ${adm?'':'disabled'}>`))+
+    card('Mensagem de convite por perfil','Abre no seu programa de e-mail, pronta para enviar.',Object.keys(ROLES).map(k=>`<div class="frow"><div class="fl"><label>${ROLES[k].n}</label><span>${ROLES[k].d}</span></div><div class="fc"><button data-linkrole="${k}">${ic('file',16)} Gerar convite</button></div></div>`).join(''));
   }else if(tab==='props'){
     const p=proj(),d=!prj?'disabled':'';
-    b=`<h2>Propriedades do projeto</h2><div class="hint" style="margin:0 0 6px">${esc(p.name)}</div>${prj?'':'<div class="hint" style="background:var(--ac2);color:var(--ac);border-radius:8px;padding:8px 12px;font-weight:600;margin-bottom:12px">🔒 Somente leitura para o seu perfil.</div>'}
-    <label>Nome do projeto</label><input data-pprop="name" value="${esc(p.name)}" ${d}>
-    <label>Descrição</label><textarea data-pprop="desc" rows="3" ${d}>${esc(p.desc||'')}</textarea>
-    <div class="g4" style="grid-template-columns:1fr 1fr"><div><label>Início do projeto</label><input type="date" data-pprop="start" value="${p.start||''}" ${d}></div><div><label>Término previsto</label><input type="date" data-pprop="end" value="${p.end||''}" ${d}></div></div>
-    <label>Cor do projeto</label><div>${PCOL.map(c=>`<span class="sw ${pcol(p)===c?'on':''}" data-pcolor="${c}" style="background:${c}"></span>`).join('')}</div>
-    <label>Perfil padrão para novos membros</label><select data-grole="1" style="max-width:260px" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`;
+    b=(prj?'':'<div class="sro">🔒 Somente leitura para o seu perfil.</div>')+card('Projeto atual',esc(p.name),
+      row('Nome','',`<input data-pprop="name" value="${esc(p.name)}" ${d}>`)+
+      row('Descrição','',`<textarea data-pprop="desc" rows="3" ${d}>${esc(p.desc||'')}</textarea>`)+
+      row('Início do projeto','',`<input type="date" data-pprop="start" value="${p.start||''}" ${d}>`)+
+      row('Término previsto','',`<input type="date" data-pprop="end" value="${p.end||''}" ${d}>`)+
+      row('Cor','Aparece no menu e nas etiquetas do projeto',`<div class="swrow">${PCOL.map(c=>`<span class="sw ${pcol(p)===c?'on':''}" data-pcolor="${c}" style="background:${c}"></span>`).join('')}</div>`))+
+      card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
   }else if(tab==='opcoes'){
-    b=`<h2>Opções</h2>
-    <label>Tema</label><select data-gtheme="1" style="max-width:220px"><option value="dark" ${S.theme==='dark'?'selected':''}>Escuro</option><option value="light" ${S.theme==='light'?'selected':''}>Claro</option></select>
-    <h3 style="margin:26px 0 8px">Dados e backup</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-act3="expjson">Exportar JSON</button><button data-act3="csv">Exportar CSV</button><button data-act3="impjson" ${adm?'':'disabled'}>Importar JSON</button><button data-act3="xls">Exportar Excel</button><button data-act3="pdf">Exportar PDF</button></div>
-    <h3 style="margin:26px 0 8px">Ajuda</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-act3="welcome">Rever guia de boas-vindas</button><button data-act3="keys">Atalhos de teclado</button></div>
-    <h3 style="margin:26px 0 8px;color:var(--red)">Zona de risco</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button data-act3="rmex" ${prj?'':'disabled'}>Remover tarefas de exemplo</button><button data-act3="delproj" style="color:var(--red)" ${can('delProject')?'':'disabled'}>Excluir este projeto</button></div>`;
+    b=card('Aparência','Escolha o tema do sistema. Fica salvo neste navegador.',themePicker())+
+      card('Dados e backup','Exporte ou importe seus dados.',`<div class="btns"><button data-act3="xls">${ic('download',16)} Exportar Excel</button><button data-act3="pdf">${ic('file',16)} Exportar PDF</button><button data-act3="csv">Exportar CSV</button><button data-act3="expjson">Exportar JSON</button><button data-act3="impjson" ${adm?'':'disabled'}>${ic('upload',16)} Importar JSON</button></div>`)+
+      card('Ajuda','',`<div class="btns"><button data-act3="welcome">Rever guia de boas-vindas</button><button data-act3="keys">Atalhos de teclado</button></div>`)+
+      card('Zona de risco','Ações que apagam dados.',`<div class="btns"><button data-act3="rmex" ${prj?'':'disabled'}>Remover tarefas de exemplo</button><button data-act3="delproj" style="color:var(--red)" ${can('delProject')?'':'disabled'}>Excluir este projeto</button></div>`,'danger');
   }else{
     const m=mem(S.me);
-    b=`<h2>Geral</h2>${ro}<label>Nome da organização</label><input data-gorg="1" value="${esc(S.org||'CS Infra')}" ${adm?'':'disabled'} style="max-width:380px">
-    ${CLOUD?cloudAccountHTML():`<label>Usuário atual (entrar como)</label><select data-gme="1" style="max-width:380px"><option value="">— ninguém definido (administrador) —</option>${S.members.map(x=>`<option value="${x.id}" ${S.me===x.id?'selected':''}>${esc(x.name)} — ${ROLES[roleOfM(x)].n}</option>`).join('')}</select>`}
-    <div class="hint">${m?`Você está usando o sistema como <b>${esc(m.name)}</b> (${ROLES[roleOfM(m)].n}).`:'Defina quem é você para usar “Minhas tarefas”, atribuir tarefas a si e aplicar o perfil de acesso.'}</div>
-    <label>Idioma e fuso</label><div class="hint" style="margin:0">Português (Brasil) · ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</div>`;
+    b=ro+card('Organização','',row('Nome da organização','Aparece no topo do menu',`<input data-gorg="1" value="${esc(S.org||'CS Infra')}" ${adm?'':'disabled'}>`))+
+      card('Sua conta','',CLOUD?`<div class="frow"><div class="fl"><label>Conectado como</label><span>Perfil <b>${ROLES[role()].n}</b></span></div><div class="fc"><b>${esc((sess&&sess.user&&sess.user.email)||(cloud.me&&cloud.me.email)||'')}</b></div></div><div class="frow"><div class="fl"><label>Segurança</label></div><div class="fc btns"><button data-cloud="pw">Alterar senha</button><button data-cloud="out">Sair da conta</button></div></div>`:
+        row('Usuário atual','Entrar como outra pessoa',`<select data-gme="1"><option value="">— ninguém definido (administrador) —</option>${S.members.map(x=>`<option value="${x.id}" ${S.me===x.id?'selected':''}>${esc(x.name)} — ${ROLES[roleOfM(x)].n}</option>`).join('')}</select>`))+
+      card('Idioma e fuso','',row('Região','',`Português (Brasil) · ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}`));
   }
-  $('#view').innerHTML=`<div class="setpg"><h1>Configurações</h1><div class="setwrap">${nav}<section class="setmain">${b}</section></div></div>`;
+  $('#view').innerHTML=`<div class="setpg"><header class="sph"><h1>Configurações</h1><p>Perfis, equipe, aparência e dados do sistema.</p></header><div class="setwrap">${nav}<div class="setmain">${b}</div></div></div>`;
 }
 
 /* ----- ações da página de Configurações ----- */
