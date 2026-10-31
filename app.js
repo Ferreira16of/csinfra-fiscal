@@ -1,4 +1,8 @@
 const $=s=>document.querySelector(s);
+/* ----- ícones (traço, 24x24) ----- */
+const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
+const ic=(n,s)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"${s?` style="width:${s}px;height:${s}px"`:''}><path d="${ICO[n]||''}"/></svg>`;
+function hydrateIcons(root){(root||document).querySelectorAll('i[data-i]').forEach(e=>{e.outerHTML=ic(e.dataset.i,e.dataset.s)})}
 const uid=()=>Math.random().toString(36).slice(2,9);
 const KEY='quire-like-v3';
 const ST=[{id:'todo',n:'A fazer',c:'#6b7280'},{id:'doing',n:'Em andamento',c:'#3b82f6'},{id:'review',n:'Em revisão',c:'#a855f7'},{id:'blocked',n:'Impedido',c:'#ef4444'},{id:'done',n:'Concluído',c:'#3ecf74'}];
@@ -975,7 +979,7 @@ const plus=(s,n)=>{const d=dparse(s);d.setDate(d.getDate()+n);return ymd(d)};
 const num=v=>parseFloat(String(v).replace(',','.'))||0;
 const fmtDur=ms=>{const m=Math.floor(ms/60000);return Math.floor(m/60)+'h'+pad(m%60)};
 function defaults(d){
-  d.hideDone=!!d.hideDone;d.rules=d.rules||{};d.qf=d.qf||'all';d.theme=d.theme||'dark';d.calMonth=d.calMonth||today().slice(0,7);d.gz=d.gz||'week';
+  d.hideDone=!!d.hideDone;d.rules=d.rules||{};d.qf=d.qf||'all';d.theme=d.theme||'light';d.calMonth=d.calMonth||today().slice(0,7);d.gz=d.gz||'week';
   d.smart=d.smart||null;d.seen=!!d.seen;d.helpTab=d.helpTab||'guia';
   d.tasks.forEach(t=>{if(t.star===undefined)t.star=false;t.est=+t.est||0;t.spent=+t.spent||0;if(t.timerStart===undefined)t.timerStart=null;t.deps=t.deps||[]});
   d.members.forEach(m=>{m.cap=+m.cap||40;m.role=m.role||'admin';if(m.team===undefined)m.team=null});
@@ -998,7 +1002,7 @@ const QF={all:()=>true,
   done:t=>t.status==='done'};
 const qfPred=k=>QF[k]||QF.all;
 const CHIPS=[['all','Todas'],['today','Hoje'],['week','7 dias'],['late','Atrasadas'],['mine','Minhas'],['blocked','Impedidas'],['star','★ Favoritas'],['done','Concluídas']];
-const SMARTS=[['today','🗓 Hoje'],['week','📅 Próximos 7 dias'],['late','⚠ Atrasadas'],['mine','👤 Minhas tarefas'],['star','★ Favoritas'],['blocked','🚧 Impedidas']];
+const SMARTS=[['today','🗓 Hoje','calendar'],['week','📅 Próximos 7 dias','gantt'],['late','⚠ Atrasadas','alert'],['mine','👤 Minhas tarefas','user'],['star','★ Favoritas','star'],['blocked','🚧 Impedidas','ban']];
 const EMPTY={today:'Nenhuma tarefa vence hoje nem está atrasada.',week:'Nada vence nos próximos 7 dias.',late:'Nenhuma tarefa atrasada. Bom trabalho!',mine:'Você não tem tarefas abertas atribuídas.',star:'Marque tarefas com ★ (tecla *) para vê-las aqui.',blocked:'Nenhuma tarefa impedida.'};
 const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 
@@ -1006,6 +1010,7 @@ const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 function render(){
   const P=proj();S.cur=P.id;
   document.documentElement.dataset.theme=S.theme;
+  document.body.dataset.view=S.view;
   runRules();
   fillFilters();
   if(cur&&!byId(cur))cur=null;sel=new Set([...sel].filter(byId));
@@ -1018,13 +1023,14 @@ function render(){
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
-  $('#smarts').innerHTML=SMARTS.map(([k,l])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}"><span>${l}</span><small class="${k==='late'&&n?'bad':''}">${n}</small></div>`}).join('');
+  $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span><small class="${k==='late'&&n?'bad':''}">${n}</small></div>`}).join('');
   $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><small>${S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length}</small></div>`).join('');
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length;
-  $('#bFilt').innerHTML='⚙ Filtros'+(nf?` <span class="badge" style="position:static;margin-left:4px">${nf}</span>`:'');
-  const al=alertCount();$('#bBell').innerHTML='🔔'+(al?`<span class="badge">${al}</span>`:'');
+  $('#bFilt').innerHTML=ic('filter')+'<span class="bl">Filtros</span>'+(nf?` <span class="badge" style="position:static;margin-left:4px">${nf}</span>`:'');
+  $('#bTheme').innerHTML=ic(S.theme==='dark'?'sun':'moon');
+  const al=alertCount();$('#bBell').innerHTML=ic('bell')+(al?`<span class="badge">${al}</span>`:'');
   ({list,board,cal:calView,gantt,people,dash,smart:smartView,settings}[V]||list)();
   document.querySelectorAll('input[data-part]').forEach(i=>i.indeterminate=true);
   applyRoleUI();
@@ -1893,10 +1899,11 @@ const PERM={
   guest:{comment:1}};
 const roleOfM=m=>m?(m.role||'normal'):'admin';
 const role=()=>roleOfM(mem(S.me));
-const can=p=>!!PERM[role()][p];
+const noProj=()=>{try{return CLOUD&&proj().virtual&&!PERM[role()].project}catch(e){return false}};
+const can=p=>!!PERM[role()][p]&&!(p==='add'&&noProj());
 const canEdit=t=>{if(!t)return false;const P=PERM[role()];if(P.editAll)return true;if(P.own)return t.assignees.includes(S.me)||t.by===S.me;return false};
 const DENY={add:'não pode criar tarefas.',edit:'só pode editar tarefas atribuídas a você ou criadas por você.',del:'não pode excluir.',tags:'não pode gerenciar etiquetas.',rules:'não pode gerenciar automações.',project:'não pode gerenciar o projeto.',delProject:'só administradores excluem projetos.',members:'só administradores gerenciam membros e configurações.',import:'não pode importar tarefas.'};
-function deny(k){toast('🔒 Perfil '+ROLES[role()].n+': '+(DENY[k]||'ação não permitida.'))}
+function deny(k){if(k==='add'&&noProj()){toast('Ainda não há projetos. Peça a um administrador para criar o primeiro.');return}toast('🔒 Perfil '+ROLES[role()].n+': '+(DENY[k]||'ação não permitida.'))}
 const ADDA=['add','addroot','addsub','sublist','paste'],EDITA=['edit','done','self','indent','outdent','mup','mdown','mtop','mbottom','section','milestone','star','cut'];
 function actAllowed(name,tg,first){
   if(ADDA.includes(name)&&!can('add')){deny('add');return false}
@@ -1915,7 +1922,7 @@ function applyRoleUI(){
   set('#bXlsIn',can('import'),'Seu perfil não importa tarefas');
   set('#qaGo',can('add'),'Seu perfil não cria tarefas');
   set('#newTask',can('add'),'Seu perfil não cria tarefas');
-  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?'Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
+  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?'Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta':noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
   const m=mem(S.me),u=$('#bUser');
   u.innerHTML=m?`<span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">${esc(m.name)}</b><small style="color:var(--mu);font-size:10.5px">${ROLES[role()].n}</small></span>`:`<span class="av" style="background:#667085;border-color:transparent">?</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">Quem é você?</b><small style="color:var(--mu);font-size:10.5px">Administrador (sem login)</small></span>`;
   $('#brandSub').textContent=(S.org||'CS Infra')+' · gestão executiva';
@@ -2149,6 +2156,10 @@ function trErr(m){
   if(/different from the old|same password/i.test(m))return 'Escolha uma senha diferente da anterior.';
   if(/failed to fetch|networkerror|load failed/i.test(m))return 'Sem conexão com o servidor. Verifique a internet.';
   if(/row-level security|42501|permission denied/i.test(m))return 'Seu perfil não permite esta alteração.';
+  if(/foreign key|23503|violates.*constraint.*fkey/i.test(m))return 'Outra pessoa alterou ou excluiu algo ao mesmo tempo. A tela foi atualizada; refaça a ação.';
+  if(/duplicate key|23505|already exists/i.test(m))return 'Já existe um registro igual (e-mail ou nome repetido).';
+  if(/jwt expired|invalid jwt|JWT/i.test(m))return 'Sessão expirada. Entre novamente.';
+  if(/payload too large|413/i.test(m))return 'Arquivo grande demais para enviar de uma vez.';
   return m;
 }
 async function sbFetch(path,o={}){
@@ -2417,8 +2428,13 @@ async function pushNow(){
     cloud.base=cloneRows(cur);cloud.sig=sigOf(cur);setSync('ok');
   }catch(e){
     setSync('err');
-    toast('⚠ '+(e.denied?'Algumas alterações não foram aceitas pelo seu perfil e foram desfeitas.':trErr(e.message)));
-    try{await pullAll(false);render()}catch(x){}
+    const net=!e.denied&&(e.name==='TypeError'||/failed to fetch|networkerror|load failed|conex/i.test(e.message||''));
+    if(net){toast('⚠ Sem conexão. Suas alterações serão enviadas assim que a internet voltar.');clearTimeout(cloud.retry);cloud.retry=setTimeout(()=>{cloud.retry=null;cloud.again=false;pushNow()},6000)}
+    else if(e.status===401||/jwt/i.test(e.message||'')){if(!(await refreshSession())){sessSave(null);cloud.on=false;cloud.ready=false;loginView('signin','Sua sessão expirou. Entre novamente.')}else cloud.retry=setTimeout(pushNow,500)}
+    else{
+      toast('⚠ '+(e.denied?'Algumas alterações não foram aceitas pelo seu perfil e foram desfeitas.':trErr(e.message)));
+      try{await pullAll(false);render();setSync('ok')}catch(x){}
+    }
   }finally{
     cloud.pushing=false;
     if(cloud.again){cloud.again=false;cloudSchedule()}
@@ -2540,5 +2556,9 @@ document.addEventListener('click',e=>{
 
 pushHist();
 
+window.addEventListener('beforeunload',e=>{if(typeof cloud!=='undefined'&&cloud.on&&(cloud.timer||cloud.pushing)){e.preventDefault();e.returnValue=''}});
+window.addEventListener('online',()=>{if(typeof cloud!=='undefined'&&cloud.on){cloudSchedule();pollPull()}});
+document.addEventListener('click',e=>{const t=e.target;if(t.closest&&t.closest('#mnu')){document.body.classList.toggle('menu');return}if(t.id==='scrim'||(document.body.classList.contains('menu')&&t.closest&&t.closest('#side .si,#side .pi,#side .fi')))document.body.classList.remove('menu')});
+hydrateIcons();
 render();
 if(CLOUD){loginShow(true);cloudBoot()}else{loginShow(false);if(!S.seen)setTimeout(openWelcome,350)}

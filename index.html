@@ -4,54 +4,66 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Controle de Tarefas — CS Infra</title>
-<meta name="theme-color" content="#0a1126">
+<meta name="theme-color" content="#0f766e">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235b8cff'/%3E%3Cstop offset='1' stop-color='%233ecf8e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22' font-size='15' font-weight='700' text-anchor='middle' fill='white' font-family='Arial'%3ECS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="side">
-  <div class="brand"><div class="lg">CS</div><div><b>Controle de Tarefas</b><small id="brandSub">CS Infra · gestão executiva</small></div></div>
+<button id="mnu" class="mnu" aria-label="Menu"><i data-i="menu"></i></button>
+<div id="scrim"></div>
+<aside id="side">
+  <div class="brand"><div class="lg">CS</div><div><b>Controle de Tarefas</b><small id="brandSub">CS Infra</small></div></div>
   <button id="bUser" data-pop="u:me" title="Usuário atual — clique para entrar como outra pessoa"></button>
-  <button id="newTask">+ Nova tarefa <small style="opacity:.8">(q)</small></button>
-  <div class="lbl">Visões inteligentes</div>
-  <div id="smarts"></div>
-  <div class="lbl">Projetos <button id="addProj" title="Novo projeto (use um modelo pronto)">+</button></div>
-  <div id="projs"></div>
-  <div id="syncst" class="hint" style="padding:0 16px 8px;margin:0;color:var(--mu)"></div>
+  <button id="newTask"><i data-i="plus"></i><span>Nova tarefa</span><kbd>Q</kbd></button>
+  <nav class="snav">
+    <div class="lbl">Visões</div>
+    <div id="smarts"></div>
+    <div class="lbl">Projetos <button id="addProj" title="Novo projeto (use um modelo pronto)"><i data-i="plus" data-s="15"></i></button></div>
+    <div id="projs"></div>
+  </nav>
+  <div id="syncst"></div>
   <div class="foot">
-    <button id="bSet" style="grid-column:1/3">⚙ Configurações</button>
-    <button id="bTeam">👥 Membros</button><button id="bTags">🏷 Etiquetas</button>
-    <button id="bRules" style="grid-column:1/3">⚡ Automações</button>
-    <div class="lbl" style="grid-column:1/3;padding:8px 2px 0">Excel e PDF</div>
-    <button id="bXls">📊 Exportar Excel</button><button id="bXlsIn">📥 Importar Excel</button>
-    <button id="bPdf">📄 Exportar PDF</button><button id="bXlsTpl" title="Planilha modelo para incluir tarefas em massa">Modelo Excel</button>
-    <details><summary>Dados e backup</summary><div>
+    <button id="bSet" class="fi"><i data-i="sliders"></i><span>Configurações</span></button>
+    <button id="bTeam" class="fi"><i data-i="people"></i><span>Membros</span></button>
+    <button id="bTags" class="fi"><i data-i="tag"></i><span>Etiquetas</span></button>
+    <button id="bRules" class="fi"><i data-i="zap"></i><span>Automações</span></button>
+    <details><summary><i data-i="download"></i><span>Importar e exportar</span></summary><div>
+      <button id="bXls">Exportar Excel</button><button id="bXlsIn">Importar Excel</button>
+      <button id="bPdf">Exportar PDF</button><button id="bXlsTpl" title="Planilha modelo para incluir tarefas em massa">Modelo Excel</button>
       <button id="bExp">Exportar JSON</button><button id="bCsv">Exportar CSV</button>
-      <button id="bImp" style="grid-column:1/3">Importar JSON</button></div></details>
+      <button id="bImp" style="grid-column:1/3">Importar JSON</button>
+    </div></details>
   </div>
-</div>
+</aside>
 <div id="main">
-  <div id="top">
+  <header id="top">
     <div class="t1">
       <div class="ttl"><h2 id="pname" title="Clique para renomear"></h2><div id="subline"></div></div>
-      <div class="tabs">
-        <button id="vl" title="Lista em árvore (1)">☰ Lista</button><button id="vb" title="Quadro Kanban (2)">▥ Quadro</button><button id="vc" title="Calendário (3)">🗓 Calendário</button><button id="vg" title="Cronograma / Gantt (4)">📊 Cronograma</button><button id="vp" title="Carga de trabalho (5)">👥 Pessoas</button><button id="vd" title="Painel executivo (6)">📈 Painel</button>
-      </div>
       <div class="tools">
-        <input id="q" placeholder="Buscar (s)…">
-        <button id="bFilt" title="Filtros avançados">⚙ Filtros</button>
-        <button id="bBell" title="Alertas">🔔</button>
-        <button id="bTheme" title="Tema claro / escuro">🌓</button>
-        <button id="bHelp" title="Ajuda e atalhos (F1)" style="font-weight:700;min-width:34px">?</button>
-        <button id="delProj" class="ghost" title="Excluir projeto">🗑</button>
+        <label class="sbox"><i data-i="search"></i><input id="q" placeholder="Buscar" aria-label="Buscar"><kbd>S</kbd></label>
+        <button id="bFilt" class="tb" title="Filtros avançados"></button>
+        <button id="bBell" class="tb ib" title="Alertas"></button>
+        <button id="bTheme" class="tb ib" title="Tema claro / escuro"><i data-i="moon"></i></button>
+        <button id="bHelp" class="tb ib" title="Ajuda e atalhos (F1)"><i data-i="help"></i></button>
+        <button id="delProj" class="tb ib" title="Excluir projeto"><i data-i="trash"></i></button>
       </div>
     </div>
-    <div class="t2"><div class="qa"><span>+</span><input id="qa" autocomplete="off" placeholder="Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div></div>
+    <nav class="tabs" aria-label="Visões do projeto">
+      <button id="vl" title="Lista em árvore (1)"><i data-i="list"></i><span>Lista</span></button>
+      <button id="vb" title="Quadro Kanban (2)"><i data-i="board"></i><span>Quadro</span></button>
+      <button id="vc" title="Calendário (3)"><i data-i="calendar"></i><span>Calendário</span></button>
+      <button id="vg" title="Cronograma / Gantt (4)"><i data-i="gantt"></i><span>Cronograma</span></button>
+      <button id="vp" title="Carga de trabalho (5)"><i data-i="people"></i><span>Pessoas</span></button>
+      <button id="vd" title="Painel executivo (6)"><i data-i="chart"></i><span>Painel</span></button>
+    </nav>
+    <div class="t2"><div class="qa"><i data-i="plus"></i><input id="qa" autocomplete="off" placeholder="Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div></div>
     <div id="qaprev"></div>
     <div id="chips"></div>
     <div id="fbar"><select id="fm"></select><select id="ft"></select><select id="fs"></select>
       <select id="fp"><option value="">Prioridade: todas</option><option value="3">Alta</option><option value="2">Média</option><option value="1">Baixa</option></select></div>
-  </div>
+  </header>
   <div id="view"></div>
 </div>
 <div id="ov"><div class="modal" id="modal"></div></div>
@@ -62,9 +74,9 @@
     <h1>Gestão de tarefas com visão executiva.</h1>
     <p>Projetos, prazos e responsáveis em um só lugar, sincronizados em tempo real para toda a equipe.</p>
     <ul>
-      <li><i>◧</i><span><b>Lista, quadro, calendário e Gantt</b><em>A visão certa para cada reunião</em></span></li>
-      <li><i>◔</i><span><b>Painéis e relatórios em PDF/Excel</b><em>Indicadores prontos para a diretoria</em></span></li>
-      <li><i>⛨</i><span><b>Acesso somente por convite</b><em>Perfis de permissão protegidos no servidor</em></span></li>
+      <li><i data-i="board"></i><span><b>Lista, quadro, calendário e Gantt</b><em>A visão certa para cada reunião</em></span></li>
+      <li><i data-i="chart"></i><span><b>Painéis e relatórios em PDF/Excel</b><em>Indicadores prontos para a diretoria</em></span></li>
+      <li><i data-i="lock"></i><span><b>Acesso somente por convite</b><em>Perfis de permissão protegidos no servidor</em></span></li>
     </ul>
     <div class="lcopy">© CS Infra</div>
   </aside>
