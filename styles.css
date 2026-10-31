@@ -1210,7 +1210,7 @@ html{-webkit-text-size-adjust:100%}
 @container main (max-width:760px){.col-i{display:none!important}}
 @container main (max-width:660px){.col-a{display:none!important}}
 @media(min-width:701px){
-  .outline{overflow-x:auto;overflow-y:clip}
+  .outline{overflow:clip;max-width:none;min-width:100%;width:calc(var(--colsw,600px) + 420px)}
   .outline .row{min-width:calc(var(--colsw,600px) + 330px)}
   .outline .row.hdr{position:sticky}
 }
@@ -1244,3 +1244,23 @@ html{-webkit-text-size-adjust:100%}
 .rt>.cell.editing{overflow:visible;position:relative;z-index:6}
 .cin{position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;min-width:86px;height:28px;padding:0 8px;font:12.5px var(--sans);color:var(--tx);background:var(--bg2);border:2px solid var(--ac);border-radius:8px;box-shadow:var(--sh2);z-index:7;box-sizing:border-box}
 .cin.bad{border-color:var(--red)}
+
+/* ===== v12: nome da atividade fixo ao rolar para o lado ===== */
+#view{overflow-x:auto}
+@media(min-width:701px){
+  .row{--stk:var(--row2);background:var(--stk)!important}
+  .row:hover{--stk:var(--row)}
+  .row.par{--stk:color-mix(in srgb,var(--ac) 3%,var(--row2))}
+  .row.root{--stk:color-mix(in srgb,var(--ac) 5%,var(--row))}
+  [data-theme=cs] .row.root{--stk:color-mix(in srgb,var(--cs-orange) 7%,var(--row))}
+  .row.hdr{--stk:var(--hdr)}
+  .row.cur{--stk:color-mix(in srgb,var(--ac) 8%,var(--row2))}
+  .row.sel{--stk:color-mix(in srgb,var(--ac) 14%,var(--row2))}
+  .row>.grip,.row>.gut,.row>.main{position:sticky;background-color:var(--stk);z-index:3}
+  .row>.grip{left:0;z-index:4}
+  .row>.gut{left:16px;z-index:4}
+  .row>.main{left:42px}
+  .row>.main:hover{z-index:5}
+  .row.dd-before,.row.dd-after,.row.dd-child{background:var(--stk)!important}
+}
+@container main (max-width:900px){.outline{width:auto}}
