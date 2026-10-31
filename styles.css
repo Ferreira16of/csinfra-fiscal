@@ -411,7 +411,7 @@ table.perm{width:auto;min-width:100%}table.perm th{font-size:11px;text-transform
 .wc{border-radius:10px}
 .wc.l2{background:color-mix(in srgb,var(--ac) 18%,transparent);color:var(--ac)}.wc.l1{background:#15803d1f;color:var(--ok)}
 /* modal e menus */
-#ov{background:rgba(10,16,14,.55);backdrop-filter:blur(6px)}
+#ov{background:rgba(10,16,14,.55);backdrop-filter:blur(6px);z-index:50}
 .modal{border-radius:20px;padding:26px 28px;border:1px solid var(--bd)}
 .modal h3{font:600 22px var(--serif);letter-spacing:-.4px;margin-bottom:14px}
 .modal label,#pop label.k{font-size:12px;letter-spacing:.2px;color:var(--mu)}
@@ -573,29 +573,29 @@ body:has(#modal[data-kind=task]) #ov.on~#toast{left:calc(50% - 270px)}
 .ibn:hover{background:var(--hov2);color:var(--tx)}
 #side{transition:width .2s ease}
 @media(min-width:901px){
-  body.sc #side{width:72px}
-  body.sc .brand{flex-direction:column;gap:10px;padding:16px 0 10px;align-items:center}
-  body.sc .brand .bt{display:none}
-  body.sc .ibn{margin:0}
-  body.sc .pal,body.sc #newTask{width:44px;height:44px;margin:0 14px 8px;padding:0;justify-content:center}
-  body.sc .pal span,body.sc .pal kbd,body.sc #newTask span,body.sc #newTask kbd{display:none}
-  body.sc .snav{padding:2px 12px}
-  body.sc .lbl{height:1px;padding:0;margin:10px 6px;background:var(--bd);font-size:0;overflow:hidden}
-  body.sc .lbl button{display:none}
-  body.sc .si,body.sc .pi{justify-content:center;padding:0;height:42px;margin:2px 0}
-  body.sc .si span,body.sc .si small,body.sc .pi span,body.sc .pi small{display:none}
-  body.sc .si small.bad{display:block;position:absolute;top:4px;right:4px;font-size:0;width:9px;height:9px;min-width:0;padding:0;border-radius:50%}
-  body.sc .pi .pd{width:14px;height:14px;border-radius:5px}
-  body.sc #syncst{font-size:0;padding:8px 0;justify-content:center}
-  body.sc #syncst::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
-  body.sc #side .foot{padding:8px 12px}
-  body.sc #side .fgrid{grid-template-columns:1fr}
-  body.sc #side .foot .fgrid .fi{flex-direction:row;height:42px;padding:0;font-size:0}
-  body.sc #side .foot .fgrid .fi .ico{width:20px;height:20px}
-  body.sc #side summary{justify-content:center;padding:10px 0}body.sc #side summary span{display:none}
-  body.sc #side details[open]>div{display:none}
-  body.sc #bUser{justify-content:center;padding:6px 0;background:transparent}
-  body.sc #bUser>span:not(.av){display:none}body.sc #bUser::after{display:none}
+  body:is(.sc,.sca) #side{width:72px}
+  body:is(.sc,.sca) .brand{flex-direction:column;gap:10px;padding:16px 0 10px;align-items:center}
+  body:is(.sc,.sca) .brand .bt{display:none}
+  body:is(.sc,.sca) .ibn{margin:0}
+  body:is(.sc,.sca) .pal,body:is(.sc,.sca) #newTask{width:44px;height:44px;margin:0 14px 8px;padding:0;justify-content:center}
+  body:is(.sc,.sca) .pal span,body:is(.sc,.sca) .pal kbd,body:is(.sc,.sca) #newTask span,body:is(.sc,.sca) #newTask kbd{display:none}
+  body:is(.sc,.sca) .snav{padding:2px 12px}
+  body:is(.sc,.sca) .lbl{height:1px;padding:0;margin:10px 6px;background:var(--bd);font-size:0;overflow:hidden}
+  body:is(.sc,.sca) .lbl button{display:none}
+  body:is(.sc,.sca) .si,body:is(.sc,.sca) .pi{justify-content:center;padding:0;height:42px;margin:2px 0}
+  body:is(.sc,.sca) .si span,body:is(.sc,.sca) .si small,body:is(.sc,.sca) .pi span,body:is(.sc,.sca) .pi small{display:none}
+  body:is(.sc,.sca) .si small.bad{display:block;position:absolute;top:4px;right:4px;font-size:0;width:9px;height:9px;min-width:0;padding:0;border-radius:50%}
+  body:is(.sc,.sca) .pi .pd{width:14px;height:14px;border-radius:5px}
+  body:is(.sc,.sca) #syncst{font-size:0;padding:8px 0;justify-content:center}
+  body:is(.sc,.sca) #syncst::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  body:is(.sc,.sca) #side .foot{padding:8px 12px}
+  body:is(.sc,.sca) #side .fgrid{grid-template-columns:1fr}
+  body:is(.sc,.sca) #side .foot .fgrid .fi{flex-direction:row;height:42px;padding:0;font-size:0}
+  body:is(.sc,.sca) #side .foot .fgrid .fi .ico{width:20px;height:20px}
+  body:is(.sc,.sca) #side summary{justify-content:center;padding:10px 0}body:is(.sc,.sca) #side summary span{display:none}
+  body:is(.sc,.sca) #side details[open]>div{display:none}
+  body:is(.sc,.sca) #bUser{justify-content:center;padding:6px 0;background:transparent}
+  body:is(.sc,.sca) #bUser>span:not(.av){display:none}body:is(.sc,.sca) #bUser::after{display:none}
 }
 
 
@@ -644,9 +644,9 @@ h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#logi
 #side .foot{background:transparent}
 #bUser>span:not(.av){min-width:0}
 @media(min-width:901px){
-  body.sc #bUser>span:not(.av){display:none!important}
-  body.sc #bUser{width:44px;height:44px;margin:6px auto 0;padding:0;justify-content:center}
-  body.sc .si,body.sc .pi{height:40px}
+  body:is(.sc,.sca) #bUser>span:not(.av){display:none!important}
+  body:is(.sc,.sca) #bUser{width:44px;height:44px;margin:6px auto 0;padding:0;justify-content:center}
+  body:is(.sc,.sca) .si,body:is(.sc,.sca) .pi{height:40px}
 }
 /* painel responsivo ao lado do painel de tarefa */
 #main{container-type:inline-size;container-name:main}
@@ -669,10 +669,10 @@ h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#logi
 .sw:hover{transform:scale(1.18)}.sw.on{border-color:var(--bg2);box-shadow:0 0 0 2px var(--tx)}
 .mx{gap:8px 8px}.mx input{width:64px}
 @media(min-width:901px){
-  body.sc #side details{display:none}
-  body.sc .si,body.sc .pi{height:36px;margin:1px 0}
-  body.sc #side .foot .fgrid .fi{height:36px}
-  body.sc .pal,body.sc #newTask{height:40px;width:40px;margin:0 16px 6px}
+  body:is(.sc,.sca) #side details{display:none}
+  body:is(.sc,.sca) .si,body:is(.sc,.sca) .pi{height:36px;margin:1px 0}
+  body:is(.sc,.sca) #side .foot .fgrid .fi{height:36px}
+  body:is(.sc,.sca) .pal,body:is(.sc,.sca) #newTask{height:40px;width:40px;margin:0 16px 6px}
 }
 body[data-view=settings] .t3{display:none}body[data-view=settings] #top{border-bottom:1px solid var(--bd)}
 
@@ -681,7 +681,7 @@ body[data-view=settings] .t3{display:none}body[data-view=settings] #top{border-b
 .brand .lgo{filter:drop-shadow(0 4px 8px rgba(16,24,40,.12))}
 #login .lbrand .lgo{width:46px;height:46px;background:#fff;border-radius:14px;padding:6px;box-shadow:0 10px 24px -10px #000a}
 #login .lmob img{height:40px;width:auto}
-body.sc .brand .lgo{width:36px;height:36px}
+body:is(.sc,.sca) .brand .lgo{width:36px;height:36px}
 
 #login .lfull{display:block;height:44px;width:auto;margin:0 0 36px;max-width:100%}
 @media(max-width:900px){#login .lfull{display:none}}
@@ -692,7 +692,7 @@ body.sc .brand .lgo{width:36px;height:36px}
 .pi .pe{display:none;width:24px;height:24px;padding:0;border:0;background:transparent;box-shadow:none;color:var(--mu);border-radius:7px;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
 .pi:hover .pe{display:inline-flex}.pi .pe:hover{background:var(--hov2);color:var(--tx)}
 .pi:hover small{margin-left:0}
-body.sc .pi .pe{display:none!important}
+body:is(.sc,.sca) .pi .pe{display:none!important}
 
 /* ===== v5: menu lateral limpo ===== */
 #side{width:264px}
@@ -709,9 +709,9 @@ body.sc .pi .pe{display:none!important}
 #side .foot .fi:hover{background:var(--hov2);color:var(--tx)}
 #bUser{margin:8px 0 0;width:100%;padding:8px 10px;background:var(--row);border-radius:12px;box-shadow:none}
 @media(min-width:901px){
-  body.sc #side .foot .fi{justify-content:center;padding:0;height:38px;font-size:0}
-  body.sc #side .foot .fi span{display:none}
-  body.sc #syncst{font-size:0;padding:4px 0 8px;justify-content:center}
+  body:is(.sc,.sca) #side .foot .fi{justify-content:center;padding:0;height:38px;font-size:0}
+  body:is(.sc,.sca) #side .foot .fi span{display:none}
+  body:is(.sc,.sca) #syncst{font-size:0;padding:4px 0 8px;justify-content:center}
 }
 /* menu suspenso */
 #menu{position:fixed;z-index:60;min-width:236px;background:var(--bg2);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh2);padding:6px;animation:mn .12s ease-out}
@@ -812,3 +812,63 @@ body.sc .pi .pe{display:none!important}
 [data-theme=cs] .setnav a.on{background:var(--ac2);color:var(--cs-navy)}
 [data-theme=cs] .psw .pd{box-shadow:0 0 0 3px #f07d1233}
 [data-theme=cs] .tcard.on{border-color:var(--cs-navy)}
+
+/* ===== acesso por projeto ===== */
+.seg{display:inline-flex;gap:4px;padding:4px;background:var(--hdr);border-radius:12px;margin:6px 0 14px}
+.seg button{border:0;box-shadow:none;background:transparent;border-radius:9px;padding:8px 14px;color:var(--mu);font-weight:600;display:inline-flex;align-items:center;gap:7px}
+.seg button.on{background:var(--bg2);color:var(--ac);box-shadow:var(--sh)}
+.seg button:disabled{opacity:.6;cursor:not-allowed}
+.alist{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.arow{display:flex;align-items:center;gap:12px;padding:10px 14px;margin:0!important;border-bottom:1px solid var(--bd);cursor:pointer;font-size:13.5px;color:var(--tx)!important;font-weight:400!important}
+.arow:last-child{border-bottom:0}.arow:hover{background:var(--hov)}
+.arow.auto{cursor:default;opacity:.75}
+.arow .an{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.arow .an b{font-weight:600}.arow .an small{color:var(--mu);font-size:12px}
+.arow em{font-style:normal;font-size:11px;color:var(--mu);background:var(--hov2);border-radius:20px;padding:1px 9px}
+.arow .pd{width:11px;height:11px}
+.rb{font-size:11px;font-weight:600;border-radius:20px;padding:2px 9px;background:var(--hov2);color:var(--mu)}
+.rb-admin{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.rb-normal{background:var(--ac2);color:var(--ac)}
+.rb-limited{background:color-mix(in srgb,var(--amb) 14%,transparent);color:var(--amb)}
+.rb-guest{background:var(--hov2);color:var(--mu)}
+.plock{color:var(--mu);margin-left:auto;display:inline-flex;line-height:0}.plock+small,.plock+.pe{margin-left:6px}
+body:is(.sc,.sca) .plock{display:none}
+[data-theme=cs] .plock{color:#a5ade2}
+
+/* ===== o que cada perfil enxerga ===== */
+body:is(.r-normal,.r-limited,.r-guest) #bTeam{display:none!important}
+body:is(.r-limited,.r-guest) :is(#addProj,#pedit,.pi .pe){display:none!important}
+body:is(.r-limited,.r-guest) :is(.hdel,.cdel){display:none!important}
+body.r-guest :is(.t2,#newTask,.addrow,.op[data-add],.hv [data-add],.grip,.gut,[data-add]){display:none!important}
+body.r-guest input[data-ck]{pointer-events:none;opacity:.45}
+body.r-guest #bFilt+*,body.r-guest .zoombar{display:none}
+.mact button{display:inline-flex}
+label.arow{display:flex!important;font-size:13.5px!important}
+
+/* camadas: menu lateral < telas modais < menus < avisos < login */
+#side{z-index:40}
+#ov{z-index:50}
+#ov:has(#modal[data-kind=task]){z-index:45}
+#pop{z-index:55}
+#menu{z-index:60}
+#toast{z-index:70;left:calc(50% + 132px)}
+body:is(.sc,.sca) #toast{left:calc(50% + 36px)}
+@media(max-width:900px){#toast{left:50%}}
+#login{z-index:100}
+.dh h3{display:flex;flex-direction:column;gap:2px;line-height:1.2}
+.dh h3 small{font-size:13px;font-weight:500;color:var(--mu);letter-spacing:0}
+.pempty{padding:10px;color:var(--mu);font-size:13px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.pempty button{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+.card2:has(.wl){overflow-x:auto}
+.wl th,.wl td{white-space:nowrap}
+.gbar2 .tabs{margin:0;padding:3px;gap:2px;background:var(--hdr);border-radius:10px;overflow:visible}
+.gbar2 .tabs button{padding:5px 12px;border-radius:8px}
+.gbar2 .tabs button.on::after{display:none}
+.gbar2 .tabs button.on{background:var(--bg2);box-shadow:var(--sh)}
+.gbar2 b{font-size:14px;margin-right:6px}
+
+@container main (max-width:900px){
+  .hv [data-mv],.hv [data-star],.hv [data-add]{display:none}
+  .op{font-size:0;padding:0;width:26px;justify-content:center}
+  .op::before{content:"⤢";font-size:13px;line-height:22px}
+  .row.root .pg{display:none}
+}

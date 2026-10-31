@@ -202,7 +202,7 @@ function dashBase(){
   const noOwner=open.filter(t=>!t.assignees.length),noDue=open.filter(t=>!t.due);
   const pct=L.length?Math.round(done.length/L.length*100):0;
   const kpi=(v,l,c='')=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`;
-  let h=`<div class="dh"><h3>Visão executiva — ${all?'todos os projetos':esc(proj().name)}</h3>
+  let h=`<div class="dh"><h3>Visão executiva<small>${all?'Todos os projetos':esc(proj().name)}</small></h3>
    <div class="seg"><button data-ds="cur" class="${!all?'on':''}">Este projeto</button><button data-ds="all" class="${all?'on':''}">Todos os projetos</button></div></div>`;
   h+=`<div class="kpis">${kpi(L.length,'Tarefas (itens de trabalho)')}${kpi(pct+'%','Concluído ('+done.length+' de '+L.length+')','g')}${kpi(open.filter(t=>t.status==='doing').length,'Em andamento')}${kpi(late.length,'Atrasadas','r')}${kpi(soon.length,'Vencem em 7 dias','a')}${kpi(blocked.length,'Impedidas','r')}${kpi(noOwner.length,'Sem responsável','a')}${kpi(noDue.length,'Sem prazo')}</div>`;
   if(!L.length){$('#view').innerHTML=h+'<div class="empty">Sem tarefas para exibir.</div>';return}
@@ -321,6 +321,7 @@ function openTaskBase(id){
   const ordered=[];(function walk(par){S.tasks.filter(x=>x.pid===t.pid&&(x.parent||null)===par&&!banned.includes(x.id)).forEach(x=>{ordered.push(x);walk(x.id)})})(null);
   const r=t.repeat||{freq:'',every:1};
   const M0=$('#modal');M0.dataset.kind='task';M0.style.width='';
+  if(innerWidth>900&&innerWidth<1500)document.body.classList.add('sca');
   $('#modal').innerHTML=`<button class="dxb" id="m_x" type="button" title="Fechar (Esc)">${ic('x',18)}</button>${bc}<h3><input id="m_title" value="${esc(t.title)}" style="font-size:16px;font-weight:600"></h3>
   <div class="g3">
     <div><label>Status</label><select id="m_st">${ST.map(s=>`<option value="${s.id}" ${s.id===t.status?'selected':''}>${s.n}</option>`).join('')}</select></div>
@@ -366,7 +367,7 @@ function collect(){
   const np=$('#m_par').value||null;if(np!==t.parent){t.parent=np;if(np)byId(np).open=true}
   setStatus(t,$('#m_st').value);
 }
-function closeModal(){$('#ov').classList.remove('on');editing=null;modalRO=false;const M=$('#modal');M.dataset.kind='';M.style.width=''}
+function closeModal(){document.body.classList.remove('sca');$('#ov').classList.remove('on');editing=null;modalRO=false;const M=$('#modal');M.dataset.kind='';M.style.width=''}
 function quickDelete(id){
   const t=byId(id);if(!t)return;
   if(!can('del')||!canEdit(t)){deny('del');return}
@@ -772,10 +773,12 @@ function openPalette(mode){
   const go=(v,extra)=>()=>{S.view=v;if(extra)extra();zoom=null;cur=null;sel=new Set()};
   const btn=id=>()=>setTimeout(()=>{const b=$(id);if(b)b.click()},0);
   const VIEWS=[['list','Lista','list'],['board','Quadro','board'],['cal','Calendário','calendar'],['gantt','Cronograma','gantt'],['people','Pessoas e carga','people'],['dash','Painel executivo','chart']];
-  const ACTS=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
+  const ACTS0=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
     ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Exportar Excel','download',btn('#bXls')],['Exportar PDF','file',btn('#bPdf')],['Importar Excel','upload',btn('#bXlsIn')],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
+  const PK={'Nova tarefa':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules','Importar Excel':'import'};
+  const ACTS=ACTS0.filter(a=>!PK[a[0]]||can(PK[a[0]]));
   if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
   const draw=()=>{
     const q=$('#pl_q').value.trim().toLowerCase(),has=s=>!q||s.toLowerCase().includes(q);items=[];
@@ -1073,6 +1076,7 @@ function render(){
   const P=proj();S.cur=P.id;
   document.documentElement.dataset.theme=S.theme;
   document.body.dataset.view=S.view;
+  document.body.className=document.body.className.replace(/\br-\w+/g,'').trim()+' r-'+role();
   runRules();
   fillFilters();
   if(cur&&!byId(cur))cur=null;sel=new Set([...sel].filter(byId));
@@ -1088,7 +1092,7 @@ function render(){
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
   $('#smarts').innerHTML=SMARTS.map(([k,l,i])=>{const n=all.filter(qfPred(k)).length;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="${k==='late'?'bad':''}">${n}</small>`:''}</div>`}).join('');
-  $('#projs').innerHTML=S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span><button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button>${(()=>{const n=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length;return n?`<small>${n}</small>`:''})()}</div>`).join('');
+  $('#projs').innerHTML=S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}<button class="pe" data-pren="${p.id}" title="Renomear projeto" type="button">${ic('edit',14)}</button>${(()=>{const n=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)&&t.status!=='done').length;return n?`<small>${n}</small>`:''})()}</div>`).join('');
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
@@ -1146,7 +1150,7 @@ function list(){
   const vis=(filtering()||S.hideDone)?roots.filter(matchTree):roots;
   let h=zoom?zoomBar():'';
   h+=`<div class="outline">`+listHeader(ptasks().length);
-  const emptyMsg=!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @Rafael #fiscal !alta">Enviar SPED amanhã 14h @Rafael #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma tarefa encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
+  const emptyMsg=noProj()?`<div class="empty"><b>Nenhum projeto liberado para você</b>Peça a um administrador para incluir você em um projeto.<br>Assim que ele liberar, o projeto aparece aqui sozinho.</div>`:(!can('add')&&!ptasks().length)?`<div class="empty"><b>Nenhuma tarefa neste projeto ainda</b>Seu perfil é somente leitura/comentário.</div>`:!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @Rafael #fiscal !alta">Enviar SPED amanhã 14h @Rafael #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma tarefa encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
   h+=vis.map(t=>rowHTML(t,0)).join('')||emptyMsg;
   h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / tarefa</button></div></div>`);
   $('#view').innerHTML=h+'</div>';
@@ -1423,7 +1427,7 @@ function openAlerts(){
   editing=null;closePop();const M=$('#modal');M.dataset.kind='alerts';
   const L=S.tasks.filter(isLeaf),op=L.filter(t=>t.status!=='done'),td=today();
   const sec=(ttl,arr,c)=>arr.length?`<h4 style="margin:14px 0 4px;color:${c}">${ttl} (${arr.length})</h4>`+arr.slice(0,8).map(t=>`<div class="al" data-goto="${t.id}"><span>${esc(t.title)}</span><small>${esc((S.projects.find(p=>p.id===t.pid)||{}).name||'')}${t.due?' · '+fmtS(t.due):''}</small></div>`).join('')+(arr.length>8?`<div class="hint">+ ${arr.length-8} outras</div>`:''):'';
-  const body=sec('⚠ Atrasadas',op.filter(isLate),'var(--red)')+sec('🗓 Vencem hoje',op.filter(t=>t.due===td&&!isLate(t)),'var(--amb)')+sec('📅 Vencem amanhã',op.filter(t=>t.due&&dayDiff(t.due)===1),'var(--ac)')+sec('🚧 Impedidas',op.filter(t=>t.status==='blocked'),'var(--red)')+sec('🔒 Aguardando dependência',op.filter(t=>t.status!=='blocked'&&depsBlocked(t)),'var(--mu)')+sec('👤 Sem responsável',op.filter(t=>!t.assignees.length),'var(--mu)');
+  const body=sec('⚠ Atrasadas',op.filter(isLate),'var(--red)')+sec('🗓 Vencem hoje',op.filter(t=>t.due===td&&!isLate(t)),'var(--amb)')+sec('📅 Vencem amanhã',op.filter(t=>t.due&&dayDiff(t.due)===1),'var(--ac)')+sec('🚧 Impedidas',op.filter(t=>t.status==='blocked'),'var(--red)')+sec('🔒 Aguardando dependência',op.filter(t=>t.status!=='blocked'&&depsBlocked(t)),'var(--mu)');
   M.innerHTML=`<h3>🔔 Central de alertas</h3>${body||'<div class="empty"><b>Tudo em dia 🎉</b>Nenhum alerta no momento.</div>'}<div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
   $('#ov').classList.add('on');
 }
@@ -1559,7 +1563,8 @@ document.addEventListener('click',e=>{
   if(g('#bBell')){openAlerts();return}
   if(g('#bTheme')){openMenu($('#bTheme'),themeItems());return}
   if(el=g('[data-gth]')){setTheme(el.dataset.gth);return}
-  if(g('#bMore')){const B=id=>()=>{const b=$(id);if(b)b.click()};openMenu($('#bMore'),[{l:'Etiquetas',ic:'tag',f:B('#bTags')},{l:'Automações',ic:'zap',f:B('#bRules')},'-',{l:'Exportar Excel',ic:'download',f:B('#bXls')},{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')},{l:'Exportar PDF',ic:'file',f:B('#bPdf')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},'-',{l:'Exportar JSON / CSV',ic:'download',f:B('#bExp')},{l:'Importar JSON',ic:'upload',f:B('#bImp')},'-',{l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()}],{side:'right'});return}
+  if(g('#addProj2')){$('#addProj').click();return}
+  if(g('#bMore')){const B=id=>()=>{const b=$(id);if(b)b.click()};openMenu($('#bMore'),[...(can('tags')?[{l:'Etiquetas',ic:'tag',f:B('#bTags')}]:[]),...(can('rules')?[{l:'Automações',ic:'zap',f:B('#bRules')}]:[]),...(can('tags')||can('rules')?['-']:[]),{l:'Exportar Excel',ic:'download',f:B('#bXls')},...(can('import')?[{l:'Importar Excel',ic:'upload',f:B('#bXlsIn')}]:[]),{l:'Exportar PDF',ic:'file',f:B('#bPdf')},{l:'Modelo de planilha',ic:'file',f:B('#bXlsTpl')},'-',{l:'Exportar JSON / CSV',ic:'download',f:B('#bExp')},...(can('import')?[{l:'Importar JSON',ic:'upload',f:B('#bImp')}]:[]),'-',{l:'Ajuda e atalhos',ic:'help',f:()=>toggleHelp()}],{side:'right'});return}
   if(g('#bRules')){openRules();return}
   if(g('#newTask')){$('#qa').focus();return}
   if(g('#qaGo')){const i=$('#qa');if(quickAdd(i.value)){i.value='';quickPreview()}return}
@@ -2085,9 +2090,11 @@ function memberCard(m,adm){
 const THEMES=[['light','Claro','Visual limpo e neutro. Padrão.',['#f5f6f8','#ffffff','#0e7a6e','#e4e7ec']],['dark','Escuro','Menos brilho para ambientes escuros.',['#0b0e0d','#121716','#38d6b3','#222a29']],['cs','CS Infra','Azul, laranja e verde da identidade da marca.',['#f3f4fa','#262c6e','#3b4796','#f07d12']]];
 const themePicker=()=>`<div class="theme-grid">${THEMES.map(([k,n,d,c])=>`<button type="button" class="tcard ${S.theme===k?'on':''}" data-gth="${k}"><span class="tprev" style="background:${c[0]}"><i style="width:26%;background:${k==='light'?'#fff':c[1]};border-right:1px solid ${c[3]}"></i><span class="tbody"><b style="width:62%;background:${c[2]}"></b><b style="width:90%;background:${c[3]}"></b><b style="width:74%;background:${c[3]}"></b>${k==='cs'?'<em style="background:#f07d12"></em>':''}</span></span><span class="tn">${n}${S.theme===k?'<em>em uso</em>':''}</span><small>${d}</small></button>`).join('')}</div>`;
 function settings(){
-  const tab=S.setTab||'membros',adm=can('members'),prj=can('project');
+  let tab=S.setTab||'membros';const adm=can('members'),prj=can('project');if(!adm&&['membros','equipes','links'].includes(tab)){tab='geral';S.setTab='geral'}
   const NAV=[['geral','sliders','Geral'],['membros','people','Membros'],['equipes','user','Equipes externas'],['links','file','Links e convites'],['props','board','Projeto atual'],['opcoes','moon','Aparência e dados']];
-  const nav=`<nav class="setnav">${NAV.map(([k,i,l])=>`<a data-stab="${k}" class="${tab===k?'on':''}">${ic(i)}<span>${l}</span></a>`).join('')}</nav>`;
+  const NAVV=NAV.filter(n=>adm||!['membros','equipes','links'].includes(n[0]));
+  if(!NAVV.some(n=>n[0]===tab))S.setTab='geral';
+  const nav=`<nav class="setnav">${NAVV.map(([k,i,l])=>`<a data-stab="${k}" class="${tab===k?'on':''}">${ic(i)}<span>${l}</span></a>`).join('')}</nav>`;
   const ro=adm?'':'<div class="sro">🔒 Somente leitura — apenas administradores alteram estas configurações.</div>';
   const card=(t,d,body,cls,act)=>`<section class="scard ${cls||''}"><header><div><h3>${t}</h3>${d?`<p>${d}</p>`:''}</div>${act?`<div class="sact">${act}</div>`:''}</header><div class="sb">${body}</div></section>`;
   const row=(l,h,c)=>`<div class="frow"><div class="fl"><label>${l}</label>${h?`<span>${h}</span>`:''}</div><div class="fc">${c}</div></div>`;
@@ -2111,6 +2118,7 @@ function settings(){
       row('Início do projeto','',`<input type="date" data-pprop="start" value="${p.start||''}" ${d}>`)+
       row('Término previsto','',`<input type="date" data-pprop="end" value="${p.end||''}" ${d}>`)+
       row('Cor','Aparece no menu e nas etiquetas do projeto',`<div class="swrow">${PCOL.map(c=>`<span class="sw ${pcol(p)===c?'on':''}" data-pcolor="${c}" style="background:${c}"></span>`).join('')}</div>`))+
+      accessCard(p,adm)+
       card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
   }else if(tab==='opcoes'){
     b=card('Aparência','Escolha o tema do sistema. Fica salvo neste navegador.',themePicker())+
@@ -2127,12 +2135,58 @@ function settings(){
   $('#view').innerHTML=`<div class="setpg"><header class="sph"><h1>Configurações</h1><p>Perfis, equipe, aparência e dados do sistema.</p></header><div class="setwrap">${nav}<div class="setmain">${b}</div></div></div>`;
 }
 
+/* ----- acesso por projeto ----- */
+const roleBadge=m=>`<span class="rb rb-${roleOfM(m)}">${ROLES[roleOfM(m)].n}</span>`;
+function projAccessNote(p){
+  if(p.restricted)return 'Somente administradores e as pessoas marcadas abaixo veem este projeto e suas tarefas.';
+  return 'Todos os membros com perfil Administrador ou Normal veem este projeto. Pessoas de fora (Limitado e Convidado) só veem se estiverem marcadas abaixo.';
+}
+function accessCard(p,adm){
+  const people=S.members.filter(m=>roleOfM(m)!=='admin'&&m.access!==false);
+  const mark=(m)=>{
+    const on=(p.access||[]).includes(m.id),auto=!p.restricted&&roleOfM(m)==='normal';
+    return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-pm2="${m.id}" ${on||auto?'checked':''} ${(!adm||auto)?'disabled':''}><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span class="an"><b>${esc(m.name)}</b><small>${esc(m.email||'sem e-mail')}</small></span>${roleBadge(m)}${auto?'<em>automático</em>':''}</label>`};
+  const seg=`<div class="seg"><button type="button" class="${!p.restricted?'on':''}" data-pacc="open" ${adm?'':'disabled'}>${ic('people',16)} Equipe toda</button><button type="button" class="${p.restricted?'on':''}" data-pacc="restricted" ${adm?'':'disabled'}>${ic('lock',16)} Somente selecionados</button></div>`;
+  return `<section class="scard"><header><div><h3>Quem acessa este projeto</h3><p>${projAccessNote(p)}</p></div></header><div class="sb">${adm?'':'<div class="hint" style="margin:0 0 10px">Somente administradores alteram o acesso.</div>'}${seg}<div class="alist">${people.map(mark).join('')||'<div class="hint">Nenhuma pessoa cadastrada além dos administradores.</div>'}</div></section>`;
+}
+function setAccess(pid,mid,on){
+  const p=S.projects.find(x=>x.id===pid);if(!p||!can('members'))return;
+  const a=new Set(p.access||[]);on?a.add(mid):a.delete(mid);p.access=[...a].sort();save();
+}
+function memberProjectsDialog(mid){
+  if(!can('members')){deny('members');return}
+  const m=mem(mid);if(!m)return;
+  const M=$('#modal');M.dataset.kind='mproj';M.style.width='';editing=null;closePop();
+  const ps=S.projects.filter(p=>!p.virtual);
+  M.innerHTML=`<h3>Projetos de ${esc(m.name)}</h3><div class="hint" style="margin:-6px 0 10px">${roleBadge(m)} ${roleOfM(m)==='limited'||roleOfM(m)==='guest'?'Pessoa de fora: vê somente os projetos marcados.':roleOfM(m)==='normal'?'Vê os projetos abertos automaticamente; os restritos só se marcados.':'Administrador vê tudo.'}</div>
+  <div class="alist">${ps.map(p=>{const on=(p.access||[]).includes(m.id),auto=roleOfM(m)==='admin'||(roleOfM(m)==='normal'&&!p.restricted);return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-mp2="${p.id}|${m.id}" ${on||auto?'checked':''} ${auto?'disabled':''}><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span>${auto?'<em>automático</em>':''}</label>`}).join('')||'<div class="hint">Nenhum projeto criado.</div>'}</div>
+  <div class="acts"><span></span><button class="pri" id="g_ok">Concluir</button></div>`;
+  $('#ov').classList.add('on');
+}
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.pm2){setAccess(proj().id,t.dataset.pm2,t.checked);return}
+  if(t.dataset&&t.dataset.mp2){const[pid,mid]=t.dataset.mp2.split('|');setAccess(pid,mid,t.checked);return}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('[data-pacc]');
+  if(b&&!b.disabled){const p=proj();if(!can('members')){deny('members');return}p.restricted=b.dataset.pacc==='restricted';
+    if(p.restricted&&S.me&&!(p.access||[]).includes(S.me)&&roleOfM(mem(S.me))==='normal')p.access=[...(p.access||[]),S.me];
+    save();render();return}
+  const mp=e.target.closest&&e.target.closest('[data-mproj]');
+  if(mp){memberProjectsDialog(mp.dataset.mproj)}
+});
+
 /* ----- ações da página de Configurações ----- */
 function inviteMemberDialog(teamId){
   if(!can('members')){deny('members');return}
   const M=$('#modal');M.dataset.kind='invite';editing=null;closePop();
   const dr=teamId?(S.teams.find(t=>t.id===teamId)||{}).role:(S.defaultRole||'normal');
-  M.innerHTML=`<h3>＋ Convidar novos membros</h3><label style="margin-top:0">E-mail</label><input id="iv_email" placeholder="email@empresa.com.br"><label>Nome (opcional)</label><input id="iv_name" placeholder="Nome da pessoa"><label>Perfil</label><select id="iv_role">${Object.keys(ROLES).map(k=>`<option value="${k}" ${dr===k?'selected':''}>${ROLES[k].n} — ${ROLES[k].d}</option>`).join('')}</select><div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="iv_go">Enviar convite</button></span></div>`;
+  M.innerHTML=`<h3>＋ Convidar novos membros</h3><label style="margin-top:0">E-mail</label><input id="iv_email" placeholder="email@empresa.com.br"><label>Nome (opcional)</label><input id="iv_name" placeholder="Nome da pessoa"><label>Perfil</label><select id="iv_role">${Object.keys(ROLES).map(k=>`<option value="${k}" ${dr===k?'selected':''}>${ROLES[k].n} — ${ROLES[k].d}</option>`).join('')}</select>
+  <div id="iv_pwrap"><label>Projetos que esta pessoa poderá ver</label><div class="hint" id="iv_phint" style="margin:0 0 6px"></div><div class="alist" style="max-height:190px;overflow:auto">${S.projects.filter(p=>!p.virtual).map(p=>`<label class="arow"><input type="checkbox" class="iv_p" value="${p.id}"><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span></label>`).join('')||'<div class="hint">Nenhum projeto criado ainda.</div>'}</div></div>
+  <div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="iv_go">Enviar convite</button></span></div>`;
+  const ivSync=()=>{const r=$('#iv_role').value;$('#iv_pwrap').style.display=r==='admin'?'none':'';$('#iv_phint').textContent=r==='limited'||r==='guest'?'Pessoas de fora só enxergam os projetos marcados aqui. Sem nenhum marcado, ela entra e vê o sistema vazio.':'Projetos abertos já aparecem automaticamente; marque os restritos que ela deve ver.'};
+  $('#iv_role').onchange=ivSync;ivSync();
   window._ivTeam=teamId||null;$('#ov').classList.add('on');$('#iv_email').focus();
 }
 function addMember(email,name,r,teamId){
@@ -2369,7 +2423,8 @@ function applyRows(R){
   S.members=R.members.map(r=>{if(r.user_id)uidMem[r.user_id]=r.id;return{id:r.id,name:r.name,email:r.email||'',color:r.color||'#5b8cff',cap:+r.capacity||40,role:r.role,status:r.status,access:!!r.access_enabled,team:r.team_id||null,uid:r.user_id||null,last:r.last_login_at||null}});
   S.teams=R.teams.map(r=>({id:r.id,name:r.name,role:r.role}));
   S.tags=R.tags.map(r=>({id:r.id,name:r.name,color:r.color}));
-  S.projects=R.projects.map(r=>({id:r.id,name:r.name,desc:r.description||'',color:r.color||'',start:r.start_date||'',end:r.end_date||'',_pos:+r.position}));
+  const PA=new Map();(R.pacc||[]).forEach(r=>{if(!PA.has(r.project_id))PA.set(r.project_id,[]);PA.get(r.project_id).push(r.member_id)});
+  S.projects=R.projects.map(r=>({id:r.id,name:r.name,desc:r.description||'',color:r.color||'',start:r.start_date||'',end:r.end_date||'',_pos:+r.position,restricted:!!r.restricted,access:(PA.get(r.id)||[]).sort()}));
   const by=(rows,k,v)=>{const m=new Map();rows.forEach(r=>{if(!m.has(r[k]))m.set(r[k],[]);m.get(r[k]).push(v?r[v]:r)});return m};
   const A=by(R.asg,'task_id','member_id'),TG=by(R.ttag,'task_id','tag_id'),D=by(R.dep,'task_id','depends_on_id'),C=by(R.cmt,'task_id');
   const stars=new Set(R.stars.map(r=>r.task_id));
@@ -2385,8 +2440,8 @@ function applyRows(R){
   defaults(S);
 }
 async function pullAll(first){
-  const [members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws]=await Promise.all([getAll('members','created_at'),getAll('teams','created_at'),getAll('tags','name'),getAll('projects','position'),getAll('tasks','position'),getAll('task_assignees','task_id'),getAll('task_tags','task_id'),getAll('task_deps','task_id'),getAll('comments','created_at'),getAll('task_stars','task_id'),getAll('workspace','id')]);
-  applyRows({members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws});
+  const [members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws,pacc]=await Promise.all([getAll('members','created_at'),getAll('teams','created_at'),getAll('tags','name'),getAll('projects','position'),getAll('tasks','position'),getAll('task_assignees','task_id'),getAll('task_tags','task_id'),getAll('task_deps','task_id'),getAll('comments','created_at'),getAll('task_stars','task_id'),getAll('workspace','id'),getAll('project_access','created_at').catch(()=>[])]);
+  applyRows({members,teams,tags,projects,tasks,asg,ttag,dep,cmt,stars,ws,pacc});
   const rows=dbRows();const sig=sigOf(rows);
   const changed=first||sig!==cloud.sig;
   cloud.base=cloneRows(rows);cloud.sig=sig;
@@ -2420,11 +2475,12 @@ function assignPos(arr){
 const iso=ms=>ms?new Date(ms).toISOString():null;
 function dbRows(){
   const P=S.projects.filter(p=>!p.virtual);assignPos(P);assignPos(S.tasks);
-  const R={teams:new Map(),members:new Map(),tags:new Map(),projects:new Map(),tasks:new Map(),comments:new Map(),asg:new Map(),ttag:new Map(),dep:new Map(),stars:new Set(),ws:null};
+  const R={teams:new Map(),members:new Map(),tags:new Map(),projects:new Map(),tasks:new Map(),comments:new Map(),asg:new Map(),ttag:new Map(),dep:new Map(),stars:new Set(),pacc:new Map(),ws:null};
   S.teams.forEach(t=>R.teams.set(t.id,{id:t.id,name:t.name,role:t.role}));
   S.members.forEach(m=>R.members.set(m.id,{id:m.id,name:m.name,email:m.email||null,color:m.color,capacity:m.cap||40,role:m.role||'normal',status:m.status||'active',access_enabled:!!m.access,team_id:m.team||null}));
   S.tags.forEach(t=>R.tags.set(t.id,{id:t.id,name:t.name,color:t.color}));
-  P.forEach(p=>R.projects.set(p.id,{id:p.id,name:p.name,description:p.desc||'',color:p.color||null,start_date:p.start||null,end_date:p.end||null,position:p._pos}));
+  P.forEach(p=>R.projects.set(p.id,{id:p.id,name:p.name,description:p.desc||'',color:p.color||null,start_date:p.start||null,end_date:p.end||null,position:p._pos,restricted:!!p.restricted}));
+  P.forEach(p=>R.pacc.set(p.id,[...new Set(p.access||[])].sort()));
   S.tasks.forEach(t=>{
     R.tasks.set(t.id,{id:t.id,project_id:t.pid,parent_id:t.parent||null,title:t.title,description:t.desc||'',status:t.status,priority:t.prio,start_date:t.start||null,start_time:t.startTime||null,due_date:t.due||null,due_time:t.dueTime||null,repeat_freq:t.repeat?t.repeat.freq:null,repeat_every:t.repeat?t.repeat.every:null,estimate_h:t.est||0,spent_h:t.spent||0,timer_started_at:iso(t.timerStart),is_section:!!t.sec,is_milestone:!!t.ms,position:t._pos,done_at:iso(t.doneAt),done_log:(t.doneLog||[]).map(iso)});
     R.asg.set(t.id,[...(t.assignees||[])].sort());R.ttag.set(t.id,[...(t.tags||[])].sort());R.dep.set(t.id,[...(t.deps||[])].sort());
@@ -2434,8 +2490,8 @@ function dbRows(){
   R.ws={org_name:S.org||'CS Infra',system_link:S.link||'',default_role:S.defaultRole||'normal',rules:S.rules||{}};
   return R;
 }
-const sigOf=R=>JSON.stringify([...R.teams],0)+JSON.stringify([...R.members])+JSON.stringify([...R.tags])+JSON.stringify([...R.projects])+JSON.stringify([...R.tasks])+JSON.stringify([...R.comments])+JSON.stringify([...R.asg])+JSON.stringify([...R.ttag])+JSON.stringify([...R.dep])+JSON.stringify([...R.stars].sort())+JSON.stringify(R.ws);
-const cloneRows=R=>{const c=JSON.parse(JSON.stringify({teams:[...R.teams],members:[...R.members],tags:[...R.tags],projects:[...R.projects],tasks:[...R.tasks],comments:[...R.comments],asg:[...R.asg],ttag:[...R.ttag],dep:[...R.dep],stars:[...R.stars],ws:R.ws}));return{teams:new Map(c.teams),members:new Map(c.members),tags:new Map(c.tags),projects:new Map(c.projects),tasks:new Map(c.tasks),comments:new Map(c.comments),asg:new Map(c.asg),ttag:new Map(c.ttag),dep:new Map(c.dep),stars:new Set(c.stars),ws:c.ws}};
+const sigOf=R=>JSON.stringify([...R.teams],0)+JSON.stringify([...R.members])+JSON.stringify([...R.tags])+JSON.stringify([...R.projects])+JSON.stringify([...R.tasks])+JSON.stringify([...R.comments])+JSON.stringify([...R.asg])+JSON.stringify([...R.ttag])+JSON.stringify([...R.dep])+JSON.stringify([...R.stars].sort())+JSON.stringify([...R.pacc])+JSON.stringify(R.ws);
+const cloneRows=R=>{const c=JSON.parse(JSON.stringify({teams:[...R.teams],members:[...R.members],tags:[...R.tags],projects:[...R.projects],tasks:[...R.tasks],comments:[...R.comments],asg:[...R.asg],ttag:[...R.ttag],dep:[...R.dep],stars:[...R.stars],pacc:[...R.pacc],ws:R.ws}));return{teams:new Map(c.teams),members:new Map(c.members),tags:new Map(c.tags),projects:new Map(c.projects),tasks:new Map(c.tasks),comments:new Map(c.comments),asg:new Map(c.asg),ttag:new Map(c.ttag),dep:new Map(c.dep),stars:new Set(c.stars),pacc:new Map(c.pacc),ws:c.ws}};
 const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
 const inList=ids=>'in.('+ids.join(',')+')';
 let denied=false;
@@ -2453,12 +2509,12 @@ async function syncTable(t,cur,base){
   }
 }
 async function delRows(t,ids){for(const c of chunk(ids,100)){const r=await sbFetch(`/rest/v1/${t}?id=${inList(c)}`,{method:'DELETE',prefer:'return=representation'});if(!r||r.length<c.length)denied=true}}
-async function syncLinks(t,cur,base,col,tasksCur){
+async function syncLinks(t,cur,base,col,tasksCur,key='task_id'){
   const ch=[];cur.forEach((arr,id)=>{if(!tasksCur.has(id))return;const b=base.get(id)||[];if(JSON.stringify(arr)!==JSON.stringify(b))ch.push(id)});
   if(!ch.length)return;
   for(const c of chunk(ch,100)){
-    if(c.some(id=>(base.get(id)||[]).length))await sbFetch(`/rest/v1/${t}?task_id=${inList(c)}`,{method:'DELETE',prefer:'return=minimal'});
-    const rows=[];c.forEach(id=>cur.get(id).forEach(v=>rows.push({task_id:id,[col]:v})));
+    if(c.some(id=>(base.get(id)||[]).length))await sbFetch(`/rest/v1/${t}?${key}=${inList(c)}`,{method:'DELETE',prefer:'return=minimal'});
+    const rows=[];c.forEach(id=>cur.get(id).forEach(v=>rows.push({[key]:id,[col]:v})));
     for(const r of chunk(rows,300))await sbFetch(`/rest/v1/${t}`,{method:'POST',body:r,prefer:'return=minimal'});
   }
 }
@@ -2481,6 +2537,7 @@ async function pushNow(){
     await syncTable('tags',cur.tags,b.tags);
     await syncTable('projects',cur.projects,b.projects);
     if(JSON.stringify(cur.ws)!==JSON.stringify(b.ws))await sbFetch('/rest/v1/workspace?id=eq.1',{method:'PATCH',body:cur.ws,prefer:'return=minimal'});
+    await syncLinks('project_access',cur.pacc,b.pacc,'member_id',cur.projects,'project_id');
     await syncTable('tasks',cur.tasks,b.tasks);
     await syncLinks('task_assignees',cur.asg,b.asg,'member_id',cur.tasks);
     await syncLinks('task_tags',cur.ttag,b.ttag,'tag_id',cur.tasks);
@@ -2574,7 +2631,7 @@ function memberCardCloud(m,adm){
     <div class="mx">${you?'<span class="st" style="color:var(--ac);border-color:var(--ac)">você</span>':''}<span class="st" style="color:${st[1]};border-color:${st[1]}">${st[0]}</span>${m.team?`<span class="st" style="color:var(--mu);border-color:var(--bd)">${esc((S.teams.find(t=>t.id===m.team)||{}).name||'equipe')}</span>`:''}${last?`<span style="color:var(--mu);font-size:12px">último acesso ${last}</span>`:''}<span style="color:var(--mu);font-size:12px">capacidade <input data-mcap="${m.id}" type="number" min="1" max="80" value="${m.cap||40}" style="width:58px;padding:2px 6px" ${adm?'':'disabled'}> h/sem</span>${adm?'<span class="sws">'+COLORS.map(c=>`<span class="sw ${c===m.color?'on':''}" data-mc="${m.id}|${c}" style="background:${c}"></span>`).join('')+'</span>':''}</div>
    </div>
    <div class="mr"><button class="rolebtn" data-pop="r:${m.id}" ${adm?'':'disabled'}><span>${ROLES[r].n}</span><span>▾</span></button>
-    ${adm?`<div class="mact">${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${m.access&&!you?'<button data-crevoke="'+m.id+'">Revogar acesso</button>':''}${you?'':'<button class="ghost" data-sdel="'+m.id+'" title="Remover membro">🗑</button>'}</div>`:''}
+    ${adm?`<div class="mact">${r!=='admin'?`<button data-mproj="${m.id}" title="Escolher quais projetos esta pessoa enxerga">Projetos${r==='limited'||r==='guest'?' ('+S.projects.filter(p=>(p.access||[]).includes(m.id)).length+')':''}</button>`:''}${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${m.access&&!you?'<button data-crevoke="'+m.id+'">Revogar acesso</button>':''}${you?'':'<button class="ghost" data-sdel="'+m.id+'" title="Remover membro">🗑</button>'}</div>`:''}
    </div></div>`;
 }
 const cloudAccountHTML=()=>`<label>Conta</label><div class="hint" style="margin:0 0 8px">Conectado como <b>${esc((sess&&sess.user&&sess.user.email)||(cloud.me&&cloud.me.email)||'')}</b> · perfil <b>${ROLES[role()].n}</b>.</div><div style="display:flex;gap:8px"><button data-cloud="pw">Alterar senha</button><button data-cloud="out">Sair</button></div>`;
@@ -2604,7 +2661,10 @@ document.addEventListener('click',async e=>{
     const em=$('#iv_email').value.trim(),nm=$('#iv_name').value.trim(),rl=$('#iv_role').value;
     if(!validEmail(em)){toast('Digite um e-mail válido');return}
     const bt=$('#iv_go');bt.disabled=true;bt.textContent='Enviando…';
-    const res=await cloudInvite(em,nm,rl,window._ivTeam);inviteResult(res,em);return}
+    const pids=[...document.querySelectorAll('.iv_p:checked')].map(x=>x.value);
+    const res=await cloudInvite(em,nm,rl,window._ivTeam);
+    if((res.ok||res.fallback)&&pids.length){const m=S.members.find(x=>(x.email||'').toLowerCase()===em.toLowerCase());if(m){pids.forEach(pid=>{const p=S.projects.find(x=>x.id===pid);if(p&&!(p.access||[]).includes(m.id))p.access=[...(p.access||[]),m.id].sort()});save()}}
+    inviteResult(res,em);return}
   if(el=g('[data-cgrant]')){stop();const m=mem(el.dataset.cgrant);if(!m)return;if(!validEmail(m.email||'')){toast('Preencha um e-mail válido no cartão antes de dar acesso.');return}
     toast('Enviando convite…');const res=await cloudInvite(m.email,m.name,roleOfM(m),m.team);inviteResult(res,m.email);return}
   if(el=g('[data-cresend]')){stop();const m=mem(el.dataset.cresend);if(!m)return;
