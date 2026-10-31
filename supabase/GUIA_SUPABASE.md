@@ -129,6 +129,19 @@ Além do perfil (Administrador, Normal, Limitado, Convidado), cada projeto contr
 
 **Excluir uma pessoa no sistema (🗑 no cartão do membro) também exclui o login dela** em Authentication → Users. Isso acontece de dois jeitos que se complementam: o banco apaga o login automaticamente (gatilho criado pelo `supabase_setup.sql`) e a função `invite-user` (ação `delete`) faz o mesmo pelo servidor. Para ativar: rode o SQL de novo e **publique novamente** a função `invite-user` (Edge Functions → invite-user → Code → cole o novo `index.ts` → Deploy).
 
+## Parte E3 — Imagens nas tarefas e avisos por e-mail
+
+**Imagens (descrição da tarefa):** abra uma tarefa e, logo abaixo da descrição, cole (Ctrl+V), arraste ou clique em **Adicionar imagem**. As imagens aparecem como miniaturas; clique para ampliar (setas ← → navegam, Esc fecha). Cada tarefa aceita até 12 imagens (JPG, PNG, GIF ou WebP; fotos grandes são reduzidas automaticamente). Os arquivos ficam num bucket **privado** do Supabase Storage chamado `task-images`, e quem vê a imagem é quem vê o projeto. Para criar o bucket e as regras, rode o `supabase_setup.sql` de novo (seguro repetir).
+
+**Avisar por e-mail (botão "Avisar responsáveis" da tarefa):** escolha as pessoas, o assunto, um recado e o que vai junto (detalhes, comentários, imagens). O e-mail é montado pelo servidor com os dados reais da tarefa e leva um botão "Abrir tarefa no sistema". Para ativar o envio automático:
+1. Publique de novo a função `invite-user` (Edge Functions → invite-user → Code → cole o novo `index.ts` → Deploy).
+2. Em **Edge Functions → Secrets** crie:
+   - `SMTP_USER` = seu Gmail (ex.: `seu.email@gmail.com`)
+   - `SMTP_PASS` = a **senha de app** do Google (a mesma que você usou no SMTP do Auth)
+   - `SMTP_FROM` = `CS Infra <seu.email@gmail.com>` (opcional)
+   - `SMTP_HOST` (padrão `smtp.gmail.com`) e `SMTP_PORT` (padrão `465`) só se usar outro provedor.
+Enquanto isso não estiver configurado, o botão **Abrir no meu e-mail** continua funcionando (abre o seu programa de e-mail com a mensagem pronta).
+
 ## Parte F — Tirar o acesso de alguém
 - Pelo sistema (depois da integração) ou no SQL: `update public.members set status = 'blocked', access_enabled = false where email = 'fulano@empresa.com.br';`
 - Em **Authentication → Users** você também pode excluir o usuário (derruba as sessões).

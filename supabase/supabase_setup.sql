@@ -67,6 +67,8 @@ create table if not exists public.projects (
 
 -- Acesso por projeto: projeto "restrito" só aparece para administradores e para as pessoas listadas.
 alter table public.projects add column if not exists restricted boolean not null default false;
+-- Imagens anexadas à tarefa (lista de {p: caminho, n: nome, w, h}); os arquivos ficam no Storage (bucket task-images)
+alter table public.tasks add column if not exists attachments jsonb not null default '[]'::jsonb;
 
 create table if not exists public.tags (
   id          text primary key default substr(replace(gen_random_uuid()::text,'-',''),1,8),
@@ -475,6 +477,28 @@ create policy comments_delete on public.comments for delete to authenticated usi
 -- favoritas e preferências: pessoais
 create policy stars_all  on public.task_stars for all to authenticated using (user_id = auth.uid() and public.my_role() is not null) with check (user_id = auth.uid() and public.my_role() is not null);
 create policy prefs_all  on public.user_prefs for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- imagens das tarefas (Storage): bucket privado; caminho = <id do projeto>/<id da tarefa>/<arquivo>
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('task-images', 'task-images', false, 5242880, array['image/jpeg','image/png','image/gif','image/webp'])
+    on conflict (id) do update set public = false, file_size_limit = 5242880,
+      allowed_mime_types = array['image/jpeg','image/png','image/gif','image/webp'];
+    execute 'drop policy if exists ti_read on storage.objects';
+    execute 'drop policy if exists ti_insert on storage.objects';
+    execute 'drop policy if exists ti_delete on storage.objects';
+    execute $p$create policy ti_read on storage.objects for select to authenticated
+      using (bucket_id = 'task-images' and public.can_see_project((storage.foldername(name))[1]))$p$;
+    execute $p$create policy ti_insert on storage.objects for insert to authenticated
+      with check (bucket_id = 'task-images' and public.my_role() in ('admin','normal','limited')
+                  and public.can_see_project((storage.foldername(name))[1]))$p$;
+    execute $p$create policy ti_delete on storage.objects for delete to authenticated
+      using (bucket_id = 'task-images' and public.my_role() in ('admin','normal')
+             and public.can_see_project((storage.foldername(name))[1]))$p$;
+  end if;
+end $$;
 
 -- histórico: só administrador lê (ninguém escreve direto; só os gatilhos)
 create policy audit_read on public.audit_log for select to authenticated using (public.my_role() = 'admin');
