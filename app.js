@@ -355,7 +355,7 @@ function openTaskBase(id){
   <label>Comentários (${t.comments.length}) — atalho: c</label>
   <div>${t.comments.map(c=>`<div class="cmt"><b>${esc(c.by||'Você')}</b> <small style="color:var(--mu)">${new Date(c.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small> <button class="ghost" data-cdel="${c.id}" style="float:right;padding:0 6px">✕</button><div style="white-space:pre-wrap;margin-top:3px">${esc(c.text)}</div></div>`).join('')}</div>
   <textarea id="m_comment" rows="2" placeholder="Escreva um comentário — Enter envia, ⇧+Enter quebra a linha"></textarea>
-  <div class="acts"><span><button id="m_del" style="color:var(--red)">Excluir</button> <button id="m_mail">✉ Avisar responsáveis</button></span><span><button id="m_x">Fechar</button> <button class="pri" id="m_ok">Salvar</button></span></div>`;
+  <div class="acts"><span><button id="m_del" style="color:var(--red)">Excluir</button> <button id="m_mail">✉ Avisar responsáveis</button> <button id="m_link" title="Copiar link desta tarefa">🔗 Link</button></span><span><button id="m_x">Fechar</button> <button class="pri" id="m_ok">Salvar</button></span></div>`;
   $('#ov').classList.add('on');
   hydrateImgs();
 }
@@ -425,7 +425,7 @@ function mailDialog(title,to,sub,body,back){
 function mailText(t,o,note){
   const dt=dateTxt(t).replace('🔁 ','');
   const ppl=t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ');
-  const url=location.origin+'/?task='+t.id;
+  const url=location.origin+'/t/'+t.id;
   let s=(note?note+'\n\n':'Olá!\n\n')+`Tarefa: ${t.title}\nProjeto: ${(S.projects.find(p=>p.id===t.pid)||{}).name||''}`;
   if(o.det)s+=`\nStatus: ${stOf(t.status).n} | Prioridade: ${PR[t.prio]}${dt?'\nPrazo: '+dt:''}${ppl?'\nResponsáveis: '+ppl:''}${t.desc?'\n\n'+t.desc:''}`;
   if(o.com&&(t.comments||[]).length)s+='\n\nComentários:\n'+t.comments.slice(-5).map(c=>`- ${c.by||'Alguém'} (${new Date(c.ts).toLocaleDateString('pt-BR')}): ${c.text}`).join('\n');
@@ -586,6 +586,7 @@ document.addEventListener('click',e=>{
   if(g('#t_ok')||g('#g_ok')){closeModal();render();return}
   if(el=g('[data-t]')){if(editing)collect();openTask(el.dataset.t);return}
   if(g('#m_ok')||g('#m_x')){collect();closeModal();render();return}
+  if(g('#m_link')){copyLink(location.origin+'/t/'+editing);return}
   if(g('#m_mail')){collect();render();notifyDialog(editing);return}
   if(g('#m_del')){collect();const id=editing;ask('Excluir esta tarefa e todas as subtarefas?','',()=>{delTask(id);editing=null;render()},{confirm:1,ok:'Excluir',back:()=>openTask(id)});return}
 });
@@ -840,7 +841,7 @@ function openPalette(mode){
   const go=(v,extra)=>()=>{S.view=v;if(extra)extra();zoom=null;cur=null;sel=new Set()};
   const btn=id=>()=>setTimeout(()=>{const b=$(id);if(b)b.click()},0);
   const VIEWS=[['list','Lista','list'],['board','Quadro','board'],['cal','Calendário','calendar'],['gantt','Cronograma','gantt'],['people','Pessoas e carga','people'],['dash','Painel executivo','chart']];
-  const ACTS0=[['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
+  const ACTS0=[['Copiar link desta página','link',()=>copyLink(location.href)],['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
     ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Importar e exportar (Excel, PDF, CSV…)','download',()=>setTimeout(openDataHub,0)],['Atualizar dados agora','zap',()=>{if(CLOUD)pollPull(true);toast('Atualizando…')}],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
@@ -2698,7 +2699,7 @@ async function enterApp(){
   await pullAll(true);
   cloud.on=true;cloud.ready=true;
   loginShow(false);setSync('ok');
-  render();
+  if(ROUTER_ON&&!/^\/(index\.html)?$/.test(location.pathname)&&!new URLSearchParams(location.search).get('task'))applyRoute(location.pathname,true);else render();
   if(cloud.poll)clearInterval(cloud.poll);
   const tq=new URLSearchParams(location.search).get('task');if(tq){history.replaceState(null,'',location.pathname);if(byId(tq))setTimeout(()=>goTask(tq),300)}
   cloud.poll=setInterval(pollPull,6000);
@@ -3003,3 +3004,81 @@ if(CLOUD){const bu=$('#bUser');if(bu)bu.removeAttribute('data-pop')}
 toggleSide(document.body.classList.contains('sc'));
 render();
 if(CLOUD){loginShow(true);cloudBoot()}else{loginShow(false);if(!S.seen)setTimeout(openWelcome,350)}
+
+
+/* ===== links e navegação por endereço (/hoje, /p/projeto/quadro, /t/id, /config/membros) ===== */
+const ROUTER_ON=/^https?:$/.test(location.protocol);
+const VIEWPATH={list:'lista',board:'quadro',cal:'calendario',gantt:'cronograma',people:'pessoas',dash:'painel'};
+const PATHVIEW=Object.fromEntries(Object.entries(VIEWPATH).map(([k,v])=>[v,k]));
+const SMARTPATH={today:'hoje',week:'proximos',late:'atrasadas',mine:'minhas',star:'favoritas',blocked:'impedidas'};
+const PATHSMART=Object.fromEntries(Object.entries(SMARTPATH).map(([k,v])=>[v,k]));
+const slugify=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'projeto';
+function pslug(p){
+  const base=slugify(p.name);const same=S.projects.filter(x=>!x.virtual&&slugify(x.name)===base);
+  if(same.length<2)return base;
+  return base+'-'+(same.findIndex(x=>x.id===p.id)+1);
+}
+function currentPath(){
+  if(!(typeof cloud!=='undefined'&&cloud.ready))return null;
+  const M=$('#modal');
+  if($('#ov').classList.contains('on')&&M.dataset.kind==='task'&&editing&&byId(editing))return '/t/'+editing;
+  if(S.view==='settings')return '/config/'+(S.setTab||'membros');
+  if(S.view==='smart')return '/'+(SMARTPATH[S.smart||'today']||'hoje');
+  const p=proj();if(!p||p.virtual)return '/';
+  return '/p/'+pslug(p)+'/'+(VIEWPATH[S.view]||'lista');
+}
+const PAGETITLE={'/':'Início'};
+let routing=false,routeFirst=true;
+function syncURL(){
+  if(!ROUTER_ON||routing)return;
+  const path=currentPath();if(!path)return;
+  try{
+    if(path!==location.pathname){
+      const st={r:1};
+      if(routeFirst||location.pathname==='/'||/index\.html$/.test(location.pathname))history.replaceState(st,'',path+location.search.replace(/[?&]task=[^&]*/,''));else history.pushState(st,'',path);
+    }
+    routeFirst=false;
+    let lab;
+    if(path.startsWith('/t/')){const t=byId(editing);lab=t?t.title:'Tarefa'}
+    else if(path.startsWith('/config'))lab='Configurações';
+    else if(S.view==='smart'){const sm=SMARTS.find(x=>x[0]===S.smart)||SMARTS[0];lab=sm[1].replace(/^\S+\s/,'')}
+    else{const p=proj();lab=p&&!p.virtual?p.name:'Controle de Tarefas'}
+    document.title=lab+' — CS Infra';
+  }catch(e){}
+}
+function applyRoute(path,quiet){
+  const seg=String(path||'/').replace(/\/+$/,'').split('/').filter(Boolean).map(decodeURIComponent);
+  let msg='';
+  routing=true;
+  try{
+    if(typeof closeModal==='function'&&$('#ov').classList.contains('on'))closeModal();
+    adding=null;cur=null;sel=new Set();zoom=null;
+    const a=seg[0];
+    if(!a||a==='index.html'){/* início: mantém o que estava */}
+    else if(PATHSMART[a]){S.view='smart';S.smart=PATHSMART[a]}
+    else if(a==='config'||a==='configuracoes'){S.view='settings';if(seg[1])S.setTab=seg[1]}
+    else if(a==='p'){
+      const p=S.projects.find(x=>!x.virtual&&(pslug(x)===seg[1]||x.id===seg[1]));
+      if(p){S.cur=p.id;S.view=PATHVIEW[seg[2]]||'list'}else msg='Projeto não encontrado ou você não tem acesso a ele.';
+    }
+    else if(a==='t'){
+      const t=byId(seg[1]);
+      if(t){S.cur=t.pid;if(['smart','settings','dash'].includes(S.view))S.view='list';let q=t.parent;while(q){const x=byId(q);x.open=true;q=x.parent}cur=t.id;anchor=t.id;sel=new Set([t.id]);
+        routing=false;render();markSel(true);openTask(t.id);if(msg)toast(msg);return}
+      msg='Tarefa não encontrada ou você não tem acesso a ela.';
+    }
+    else msg='Endereço não reconhecido — abrindo o início.';
+  }finally{routing=false}
+  render();
+  if(msg)toast(msg);
+}
+async function copyLink(url){
+  try{await navigator.clipboard.writeText(url);toast('🔗 Link copiado')}
+  catch(e){const i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();try{document.execCommand('copy');toast('🔗 Link copiado')}catch(_){toast(url)}i.remove()}
+}
+if(ROUTER_ON){
+  const _render=render;render=function(){_render.apply(this,arguments);syncURL()};
+  const _openTask=openTask;openTask=function(){_openTask.apply(this,arguments);syncURL()};
+  const _closeModal=closeModal;closeModal=function(){_closeModal.apply(this,arguments);syncURL()};
+  window.addEventListener('popstate',()=>{if(cloud.ready)applyRoute(location.pathname,true)});
+}

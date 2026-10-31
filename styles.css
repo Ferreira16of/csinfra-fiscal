@@ -1106,3 +1106,4 @@ html{-webkit-text-size-adjust:100%}
 .modal{box-sizing:border-box;max-width:100%}
 @media(max-width:700px){.modal{overflow-x:hidden}.dhub{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:900px){#bHelp{display:none}.tabs button{padding:10px 9px}}
+@media(max-width:700px){#m_link{font-size:0;padding:8px 11px}#m_link::before{content:"🔗";font-size:14px}.acts #m_del{padding:8px 9px}}
