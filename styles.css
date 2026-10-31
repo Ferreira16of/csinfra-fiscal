@@ -1210,7 +1210,7 @@ html{-webkit-text-size-adjust:100%}
 @container main (max-width:760px){.col-i{display:none!important}}
 @container main (max-width:660px){.col-a{display:none!important}}
 @media(min-width:701px){
-  .outline{overflow:clip;max-width:none;min-width:100%;width:calc(var(--colsw,600px) + 420px)}
+  .outline{overflow:clip;max-width:none;min-width:100%;width:calc(var(--colsw,600px) + 350px)}
   .outline .row{min-width:calc(var(--colsw,600px) + 330px)}
   .outline .row.hdr{position:sticky}
 }
@@ -1264,3 +1264,12 @@ html{-webkit-text-size-adjust:100%}
   .row.dd-before,.row.dd-after,.row.dd-child{background:var(--stk)!important}
 }
 @container main (max-width:900px){.outline{width:auto}}
+@media(min-width:701px) and (max-width:900px){.row>.gut{left:0}.row>.main{left:26px}}
+@media(min-width:701px){
+  .row.root>.grip{box-shadow:inset 4px 0 0 var(--ac)}
+  .row.cur:not(.root)>.grip{box-shadow:inset 3px 0 0 var(--ac)}
+}
+@media(min-width:701px) and (max-width:900px){
+  .row.root>.gut{box-shadow:inset 4px 0 0 var(--ac)}
+  .row.cur:not(.root)>.gut{box-shadow:inset 3px 0 0 var(--ac)}
+}
