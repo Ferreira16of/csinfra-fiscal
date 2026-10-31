@@ -4,7 +4,7 @@
 <script>if(/^https?:$/.test(location.protocol))document.write('<base href="/">')</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Controle de Tarefas — CS Infra</title>
+<title>Controle de Atividades — CS Infra</title>
 <meta name="theme-color" content="#0f766e">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -16,9 +16,9 @@
 <button id="mnu" class="mnu" aria-label="Menu"><i data-i="menu"></i></button>
 <div id="scrim"></div>
 <aside id="side">
-  <div class="brand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div class="bt"><b id="brandName">CS Infra</b><small>Controle de Tarefas</small></div><button id="bCollapse" class="ibn" title="Recolher menu ([)"></button></div>
-  <button id="bPal" class="pal" title="Buscar projetos, tarefas e comandos (Ctrl+K)"><i data-i="search"></i><span>Buscar…</span><kbd>Ctrl K</kbd></button>
-  <button id="newTask"><i data-i="plus"></i><span>Nova tarefa</span><kbd>Q</kbd></button>
+  <div class="brand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div class="bt"><b id="brandName">CS Infra</b><small>Controle de Atividades</small></div><button id="bCollapse" class="ibn" title="Recolher menu ([)"></button></div>
+  <button id="bPal" class="pal" title="Buscar projetos, atividades e comandos (Ctrl+K)"><i data-i="search"></i><span>Buscar…</span><kbd>Ctrl K</kbd></button>
+  <button id="newTask"><i data-i="plus"></i><span>Nova atividade</span><kbd>Q</kbd></button>
   <nav class="snav">
     <div class="lbl">Visões</div>
     <div id="smarts"></div>
@@ -66,15 +66,15 @@
       <div id="fbar"><select id="fm"></select><select id="ft"></select><select id="fs"></select>
       <select id="fp"><option value="">Prioridade: todas</option><option value="3">Alta</option><option value="2">Média</option><option value="1">Baixa</option></select></div></div>
   </header>
-  <div class="t2"><div class="qa"><i data-i="plus"></i><input id="qa" autocomplete="off" placeholder="Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Maria #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div><div id="qaprev"></div></div>
+  <div class="t2"><div class="qa"><i data-i="plus"></i><input id="qa" autocomplete="off" placeholder="Adicionar atividade — ex.: Enviar SPED amanhã 14h @Maria #fiscal !alta"><button class="pri" id="qaGo">Adicionar</button></div><div id="qaprev"></div></div>
   <div id="view"></div>
 </div>
 <div id="ov"><div class="modal" id="modal"></div></div>
 <div id="pop"></div>
 <div id="login"><div class="lwrap">
   <aside class="lside">
-    <div class="lbrand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div><b>Controle de Tarefas</b><small>CS Infra</small></div></div>
-    <h1>Gestão de tarefas com visão executiva.</h1>
+    <div class="lbrand"><img class="lgo" src="assets/logo-mark.png" srcset="assets/logo-mark@2x.png 2x" alt="CS Infra" width="38" height="38"><div><b>Controle de Atividades</b><small>CS Infra</small></div></div>
+    <h1>Gestão de atividades com visão executiva.</h1>
     <p>Projetos, prazos e responsáveis em um só lugar, sincronizados em tempo real para toda a equipe.</p>
     <ul>
       <li><i data-i="board"></i><span><b>Lista, quadro, calendário e Gantt</b><em>A visão certa para cada reunião</em></span></li>

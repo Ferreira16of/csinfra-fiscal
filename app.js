@@ -50,7 +50,7 @@ function seed(){
     T(con.id,'PLANNING - Retificação EFD Contribuições',{assignees:[w],tags:[tw,tf],prio:3,est:4,star:true,due:addDays(-10)}),
     T(con.id,'Exemplo: reunião com cliente',{assignees:[w],tags:[tw],status:'review',est:2,start:addDays(1),startTime:'09:00',due:addDays(1),dueTime:'10:30'}),
     T(con.id,'Exemplo: relatório mensal',{status:'done',doneAt:Date.now()-2*864e5,doneLog:[Date.now()-2*864e5],assignees:[w],tags:[tw]}),
-    T(con.id,'Exemplo: tarefa impedida',{status:'blocked',prio:3,est:2,due:addDays(5)})]};
+    T(con.id,'Exemplo: atividade impedida',{status:'blocked',prio:3,est:2,due:addDays(5)})]};
   const f=x=>S.tasks.find(t=>t.title.startsWith(x));
   f('Exemplo: revisar backups').deps=[f('Exemplo: atualizar servidores').id];
 }
@@ -104,7 +104,7 @@ function setStatus(t,st){
   const was=t.status==='done';
   if(st==='done'&&!was){
     t.doneLog.push(Date.now());
-    if(hasRep(t)&&(t.due||t.start)){const nx=advance(t);t.status='todo';t.doneAt=null;toast('🔁 Tarefa recorrente concluída — próxima data: '+fmtD(nx));return}
+    if(hasRep(t)&&(t.due||t.start)){const nx=advance(t);t.status='todo';t.doneAt=null;toast('🔁 Atividade recorrente concluída — próxima data: '+fmtD(nx));return}
     t.doneAt=Date.now();
   }
   if(st!=='done'&&was){t.doneLog.pop();t.doneAt=null}
@@ -115,7 +115,7 @@ function completeTask(t,checked){
   if(checked){
     setStatus(t,'done');
     let n=0;ds.forEach(x=>{if(x.status!=='done'){setStatus(x,'done');n++}});
-    if(n)toast('✔ '+n+' subtarefa(s) também concluída(s)');
+    if(n)toast('✔ '+n+' subatividade(s) também concluída(s)');
   }else{
     setStatus(t,'todo');
     if(S.rules&&S.rules.parentDone)ds.forEach(x=>{if(x.status==='done')setStatus(x,'todo')});
@@ -140,7 +140,7 @@ function match(t){
   if(fm==='none'&&t.assignees.length)return false;
   if(fm&&fm!=='none'&&!t.assignees.includes(fm))return false;
   if(q){const nm=t.assignees.map(a=>(mem(a)||{}).name||'').join(' ')+' '+t.tags.map(a=>(tagOf(a)||{}).name||'').join(' ');
-    if(!(t.title+' '+t.desc+' '+nm+' '+(t.comments||[]).map(c=>c.text).join(' ')).toLowerCase().includes(q))return false}
+    if(!(t.id+' '+t.title+' '+t.desc+' '+nm+' '+(t.comments||[]).map(c=>c.text).join(' ')).toLowerCase().includes(q))return false}
   return true;
 }
 const matchTree=t=>match(t)||desc(t.id).some(match);
@@ -174,7 +174,7 @@ function fillFilters(){
 }
 /* ---------- LIST (outline) ---------- */
 function addRow(pid,depth){
-  return `<div class="row addrow"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:${depth*24+16}px"><input data-addin="${pid}" placeholder="Nova tarefa — Enter adiciona, Esc fecha"></div></div>`;
+  return `<div class="row addrow"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:${depth*24+16}px"><input data-addin="${pid}" placeholder="Nova atividade — Enter adiciona, Esc fecha"></div></div>`;
 }
 /* ---------- BOARD ---------- */
 function board(){
@@ -185,7 +185,7 @@ function board(){
     const ts=leaves.filter(t=>t.status===s.id&&match(t));
     h+=`<div class="col" data-st="${s.id}"><div class="ch"><i style="background:${s.c}"></i>${s.n}<span class="n">${ts.length}</span></div><div class="cb">`+
     ts.map(t=>{const par=t.parent?byId(t.parent):null,dt=dateTxt(t);
-      return `<div class="card p${t.prio}" draggable="true" data-t="${t.id}"><button class="cdel" data-qdel="${t.id}" title="Excluir tarefa">${ic('trash',14)}</button>${par?`<small>${esc(par.title)}</small>`:''}<div>${esc(t.title)}</div>
+      return `<div class="card p${t.prio}" draggable="true" data-t="${t.id}"><button class="cdel" data-qdel="${t.id}" title="Excluir atividade">${ic('trash',14)}</button>${par?`<small>${esc(par.title)}</small>`:''}<div>${esc(t.title)}</div>
       <div class="cm">${(t.imgs||[]).length?`<span class="imgc">${ic('image',13)}${t.imgs.length}</span>`:''}${avs(t)}${tagChips(t)}${dt?`<span class="${dueCls(t)}">📅 ${dt}</span>`:''}</div></div>`}).join('')+
     `</div></div>`;
   });
@@ -207,8 +207,8 @@ function dashBase(){
   const kpi=(v,l,c='')=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`;
   let h=`<div class="dh"><h3>Visão executiva<small>${all?'Todos os projetos':esc(proj().name)}</small></h3>
    <div class="seg"><button data-ds="cur" class="${!all?'on':''}">Este projeto</button><button data-ds="all" class="${all?'on':''}">Todos os projetos</button></div></div>`;
-  h+=`<div class="kpis">${kpi(L.length,'Tarefas (itens de trabalho)')}${kpi(pct+'%','Concluído ('+done.length+' de '+L.length+')','g')}${kpi(open.filter(t=>t.status==='doing').length,'Em andamento')}${kpi(late.length,'Atrasadas','r')}${kpi(soon.length,'Vencem em 7 dias','a')}${kpi(blocked.length,'Impedidas','r')}${kpi(noOwner.length,'Sem responsável','a')}${kpi(noDue.length,'Sem prazo')}</div>`;
-  if(!L.length){$('#view').innerHTML=h+'<div class="empty">Sem tarefas para exibir.</div>';return}
+  h+=`<div class="kpis">${kpi(L.length,'Atividades (itens de trabalho)')}${kpi(pct+'%','Concluído ('+done.length+' de '+L.length+')','g')}${kpi(open.filter(t=>t.status==='doing').length,'Em andamento')}${kpi(late.length,'Atrasadas','r')}${kpi(soon.length,'Vencem em 7 dias','a')}${kpi(blocked.length,'Impedidas','r')}${kpi(noOwner.length,'Sem responsável','a')}${kpi(noDue.length,'Sem prazo')}</div>`;
+  if(!L.length){$('#view').innerHTML=h+'<div class="empty">Sem atividades para exibir.</div>';return}
 
   const C=2*Math.PI*40;let off=0,segs='';
   ST.forEach(s=>{const n=L.filter(t=>t.status===s.id).length;if(!n)return;const len=n/L.length*C;
@@ -220,11 +220,11 @@ function dashBase(){
   const rows=owners.map(o=>({...o,ts:L.filter(t=>o.id?t.assignees.includes(o.id):!t.assignees.length)})).filter(o=>o.ts.length);
   const mx=Math.max(1,...rows.map(o=>o.ts.length));
   const carga=rows.map(o=>{const lt=o.ts.filter(isLate).length;
-    return `<div class="hb"><span class="nm"><span class="ac" style="background:${o.c}">${esc(o.n)}</span></span><span class="tr" style="width:${o.ts.length/mx*100}%;flex:none;min-width:30px;max-width:calc(100% - 210px)">${ST.map(s=>{const n=o.ts.filter(t=>t.status===s.id).length;return n?`<i title="${s.n}: ${n}" style="background:${s.c};width:${n/o.ts.length*100}%"></i>`:''}).join('')}</span><span class="nn">${o.ts.length} tarefa(s)${lt?`<br><span style="color:var(--red)">${lt} atrasada(s)</span>`:''}</span></div>`}).join('')||'<div class="empty">—</div>';
+    return `<div class="hb"><span class="nm"><span class="ac" style="background:${o.c}">${esc(o.n)}</span></span><span class="tr" style="width:${o.ts.length/mx*100}%;flex:none;min-width:30px;max-width:calc(100% - 210px)">${ST.map(s=>{const n=o.ts.filter(t=>t.status===s.id).length;return n?`<i title="${s.n}: ${n}" style="background:${s.c};width:${n/o.ts.length*100}%"></i>`:''}).join('')}</span><span class="nn">${o.ts.length} atividade(s)${lt?`<br><span style="color:var(--red)">${lt} atrasada(s)</span>`:''}</span></div>`}).join('')||'<div class="empty">—</div>';
 
   const trows=S.tags.map(g=>({g,ts:open.filter(t=>t.tags.includes(g.id))})).filter(r=>r.ts.length);
   const tmx=Math.max(1,...trows.map(r=>r.ts.length));
-  const porTag=trows.map(r=>`<div class="hb"><span class="nm"><span class="ac" style="background:${r.g.color}">${esc(r.g.name)}</span></span><span class="tr"><i style="background:${r.g.color};width:${r.ts.length/tmx*100}%"></i></span><span class="nn">${r.ts.length} aberta(s)${r.ts.filter(isLate).length?`<br><span style="color:var(--red)">${r.ts.filter(isLate).length} atras.</span>`:''}</span></div>`).join('')||'<div style="color:var(--mu)">Nenhuma tarefa aberta com etiqueta.</div>';
+  const porTag=trows.map(r=>`<div class="hb"><span class="nm"><span class="ac" style="background:${r.g.color}">${esc(r.g.name)}</span></span><span class="tr"><i style="background:${r.g.color};width:${r.ts.length/tmx*100}%"></i></span><span class="nn">${r.ts.length} aberta(s)${r.ts.filter(isLate).length?`<br><span style="color:var(--red)">${r.ts.filter(isLate).length} atras.</span>`:''}</span></div>`).join('')||'<div style="color:var(--mu)">Nenhuma atividade aberta com etiqueta.</div>';
 
   const pmx=Math.max(1,...[1,2,3].map(p=>open.filter(t=>t.prio===p).length));
   const prio=[3,2,1].map(p=>{const n=open.filter(t=>t.prio===p).length;const c={3:'#ff5b8a',2:'#f2a93b',1:'#6b87a8'}[p];
@@ -253,9 +253,9 @@ function dashBase(){
   h+=`<div class="grid"><div class="card2"><h4>Status</h4>${donut}</div><div class="card2"><h4>Carga por responsável</h4>${carga}</div><div class="card2"><h4>Abertas por etiqueta</h4>${porTag}</div></div>
   <div class="grid"><div class="card2"><h4>Abertas por prioridade</h4>${prio}</div><div class="card2"><h4>Vencimentos (abertas)</h4>${prazos}</div><div class="card2"><h4>Concluídas por semana</h4>${thr}</div></div>
   <div class="grid"><div class="card2" style="grid-column:1/-1"><h4>Progresso por ${all?'projeto':'seção'}</h4>${secs||'—'}</div></div>
-  <div class="grid"><div class="card2"><h4 style="color:var(--red)">Atrasadas (${late.length})</h4>${tbl(late.sort(byDue),'Nenhuma tarefa atrasada 🎉')}</div>
+  <div class="grid"><div class="card2"><h4 style="color:var(--red)">Atrasadas (${late.length})</h4>${tbl(late.sort(byDue),'Nenhuma atividade atrasada 🎉')}</div>
   <div class="card2"><h4 style="color:var(--amb)">Vencem nos próximos 7 dias (${soon.length})</h4>${tbl(soon.sort(byDue),'Nada vencendo nesta semana.')}</div>
-  <div class="card2"><h4 style="color:var(--red)">Impedidas (${blocked.length})</h4>${tbl(blocked.sort(byDue),'Nenhuma tarefa impedida.')}</div></div>`;
+  <div class="card2"><h4 style="color:var(--red)">Impedidas (${blocked.length})</h4>${tbl(blocked.sort(byDue),'Nenhuma atividade impedida.')}</div></div>`;
   $('#view').innerHTML=h;
 }
 
@@ -281,7 +281,7 @@ function renderPop(anchor){
   }else if(pop.type==='j'){
     h='<div style="padding:4px 6px;color:var(--mu);font-size:12px">Mover para o projeto:</div>'+S.projects.map(p=>`<label class="pl" tabindex="0" data-pj="${p.id}">📁 ${esc(p.name)}${p.id===t.pid?' ✓':''}</label>`).join('');
   }else if(pop.type==='m'){
-    h=[['edit','✎ Editar nome','F2'],['panel','⤢ Abrir painel de detalhes','Espaço'],['pop:a','Definir responsável','@'],['pop:s','Definir estado','?'],['pop:t','Definir etiqueta','#'],['pop:d','Definir datas / prazo','&lt;'],['pop:p','Definir prioridade','!'],['pop:j','Mover para outro projeto','&gt;'],['addsub','Adicionar subtarefa','⇧+Enter'],['sublist','Adicionar sublista','l'],['comment','Comentar','c'],['done','Concluir / reabrir','⇧+C'],['copy','Copiar','Ctrl+C'],['cut','Recortar','Ctrl+X'],['paste','Colar','Ctrl+V'],['indent','Tornar subtarefa da anterior','Alt+P'],['outdent','Promover um nível','Ctrl+←'],['section','Transformar em seção','Ctrl+S'],['milestone','Marco','Ctrl+Alt+M'],['star','★ Favoritar','*'],['zoom','Zoom na tarefa','z'],['info','ID e detalhes','i'],['del','🗑 Excluir','Ctrl+Del']].map(m=>`<label class="pl" tabindex="0" data-mact="${m[0]}"><span style="flex:1">${m[1]}</span><kbd>${m[2]}</kbd></label>`).join('');
+    h=[['edit','✎ Editar nome','F2'],['panel','⤢ Abrir painel de detalhes','Espaço'],['pop:a','Definir responsável','@'],['pop:s','Definir estado','?'],['pop:t','Definir etiqueta','#'],['pop:d','Definir datas / prazo','&lt;'],['pop:p','Definir prioridade','!'],['pop:j','Mover para outro projeto','&gt;'],['addsub','Adicionar subatividade','⇧+Enter'],['sublist','Adicionar sublista','l'],['comment','Comentar','c'],['done','Concluir / reabrir','⇧+C'],['copy','Copiar','Ctrl+C'],['cut','Recortar','Ctrl+X'],['paste','Colar','Ctrl+V'],['indent','Tornar subatividade da anterior','Alt+P'],['outdent','Promover um nível','Ctrl+←'],['section','Transformar em seção','Ctrl+S'],['milestone','Marco','Ctrl+Alt+M'],['star','★ Favoritar','*'],['zoom','Zoom na atividade','z'],['info','ID e detalhes','i'],['del','🗑 Excluir','Ctrl+Del']].map(m=>`<label class="pl" tabindex="0" data-mact="${m[0]}"><span style="flex:1">${m[1]}</span><kbd>${m[2]}</kbd></label>`).join('');
   }else if(pop.type==='d'){
     const r=t.repeat||{freq:'',every:1};
     h=`<label class="k" style="margin-top:2px">Início (data e hora)</label><div class="dg"><input type="date" data-pf="start" value="${t.start}"><input type="time" data-pf="startTime" value="${t.startTime}"></div>
@@ -329,7 +329,7 @@ function openTaskBase(id){
   <div class="g3">
     <div><label>Status</label><select id="m_st">${ST.map(s=>`<option value="${s.id}" ${s.id===t.status?'selected':''}>${s.n}</option>`).join('')}</select></div>
     <div><label>Prioridade</label><select id="m_prio">${[1,2,3].map(n=>`<option value="${n}" ${t.prio==n?'selected':''}>${PR[n]}</option>`).join('')}</select></div>
-    <div><label>Tarefa pai</label><select id="m_par"><option value="">(raiz do projeto)</option>${ordered.map(x=>`<option value="${x.id}" ${x.id===t.parent?'selected':''}>${esc('— '.repeat(depthOf(x))+x.title)}</option>`).join('')}</select></div>
+    <div><label>Atividade pai</label><select id="m_par"><option value="">(raiz do projeto)</option>${ordered.map(x=>`<option value="${x.id}" ${x.id===t.parent?'selected':''}>${esc('— '.repeat(depthOf(x))+x.title)}</option>`).join('')}</select></div>
   </div>
   <div class="g4">
     <div><label>Início — data</label><input type="date" id="m_start" value="${t.start}"></div>
@@ -349,13 +349,13 @@ function openTaskBase(id){
   <div class="pick" id="m_tg">${S.tags.map(g=>`<span class="ac ${t.tags.includes(g.id)?'on':''}" data-pg="${g.id}" style="background:${g.color}">${esc(g.name)}</span>`).join('')}<input id="m_newtag" placeholder="+ nova etiqueta (Enter)" style="width:190px"></div>
   <label>Descrição / observações</label><textarea id="m_desc" rows="4">${esc(t.desc)}</textarea>
   ${CLOUD?`<div class="galwrap" id="m_gw"><div class="gal" id="m_gal">${galHTML(t)}</div>${canImg(t)?`<button type="button" class="gadd" id="m_addimg">${ic('image',16)} Adicionar imagem</button><input type="file" id="m_file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>`:''}</div>${canImg(t)?'<div class="hint">Cole com Ctrl+V, arraste para cá ou clique em “Adicionar imagem”.</div>':''}`:''}
-  <label>Subtarefas</label>
+  <label>Subatividades</label>
   <div class="sub2">${ks.map(k=>`<div class="row ${k.status==='done'?'done':''}"><div class="main"><input type="checkbox" data-mck="${k.id}" ${k.status==='done'?'checked':''}><span class="tt" data-t="${k.id}" style="cursor:pointer">${esc(k.title)}</span></div><div class="rt"><span class="col-a" style="display:flex">${avs(k)}</span><span class="col-d ${dueCls(k)}" style="width:150px">${dateTxt(k)}</span></div></div>`).join('')}
-  <div style="padding:6px 8px"><input id="m_sub" placeholder="+ Nova subtarefa (Enter)"></div></div>
+  <div style="padding:6px 8px"><input id="m_sub" placeholder="+ Nova subatividade (Enter)"></div></div>
   <label>Comentários (${t.comments.length}) — atalho: c</label>
   <div>${t.comments.map(c=>`<div class="cmt"><b>${esc(c.by||'Você')}</b> <small style="color:var(--mu)">${new Date(c.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small> <button class="ghost" data-cdel="${c.id}" style="float:right;padding:0 6px">✕</button><div style="white-space:pre-wrap;margin-top:3px">${esc(c.text)}</div></div>`).join('')}</div>
   <textarea id="m_comment" rows="2" placeholder="Escreva um comentário — Enter envia, ⇧+Enter quebra a linha"></textarea>
-  <div class="acts"><span><button id="m_del" style="color:var(--red)">Excluir</button> <button id="m_mail">✉ Avisar responsáveis</button> <button id="m_link" title="Copiar link desta tarefa">🔗 Link</button></span><span><button id="m_x">Fechar</button> <button class="pri" id="m_ok">Salvar</button></span></div>`;
+  <div class="acts"><span><button id="m_del" style="color:var(--red)">Excluir</button> <button id="m_mail">✉ Avisar responsáveis</button> <button id="m_link" title="Copiar link desta atividade">🔗 Link</button></span><span><button id="m_x">Fechar</button> <button class="pri" id="m_ok">Salvar</button></span></div>`;
   $('#ov').classList.add('on');
   hydrateImgs();
 }
@@ -379,7 +379,7 @@ function quickDelete(id){
   const n=desc(id).length;
   delTask(id);if(cur===id)cur=null;sel.delete(id);if(zoom===id)zoom=null;
   save();render();
-  toast('Tarefa excluída'+(n?` (e ${n} subtarefa${n>1?'s':''})`:''),()=>{if(hist.length>1){restore(hist.length-1);save()}});
+  toast('Atividade excluída'+(n?` (e ${n} subatividade${n>1?'s':''})`:''),()=>{if(hist.length>1){restore(hist.length-1);save()}});
 }
 function delTask(id){const ids=[id,...desc(id).map(d=>d.id)];
   const files=CLOUD?S.tasks.filter(t=>ids.includes(t.id)).flatMap(t=>(t.imgs||[]).map(g=>g.p)):[];
@@ -426,7 +426,7 @@ function mailText(t,o,note){
   const dt=dateTxt(t).replace('🔁 ','');
   const ppl=t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ');
   const url=location.origin+'/t/'+t.id;
-  let s=(note?note+'\n\n':'Olá!\n\n')+`Tarefa: ${t.title}\nProjeto: ${(S.projects.find(p=>p.id===t.pid)||{}).name||''}`;
+  let s=(note?note+'\n\n':'Olá!\n\n')+`Atividade: ${t.title}\nProjeto: ${(S.projects.find(p=>p.id===t.pid)||{}).name||''}`;
   if(o.det)s+=`\nStatus: ${stOf(t.status).n} | Prioridade: ${PR[t.prio]}${dt?'\nPrazo: '+dt:''}${ppl?'\nResponsáveis: '+ppl:''}${t.desc?'\n\n'+t.desc:''}`;
   if(o.com&&(t.comments||[]).length)s+='\n\nComentários:\n'+t.comments.slice(-5).map(c=>`- ${c.by||'Alguém'} (${new Date(c.ts).toLocaleDateString('pt-BR')}): ${c.text}`).join('\n');
   if(o.img&&(t.imgs||[]).length)s+=`\n\n${t.imgs.length} imagem(ns) anexada(s) — veja no sistema.`;
@@ -439,7 +439,7 @@ function notifyDialog(id){
   const M=$('#modal');M.dataset.kind='notify';M.style.width='';editing=null;closePop();window._ntId=id;
   M.innerHTML=`<h3>Avisar por e-mail</h3><div class="hint" style="margin:-6px 0 4px">${esc(t.title)}</div>
   <label>Para quem</label><div class="alist" style="max-height:210px;overflow:auto">${cands.map(m=>`<label class="arow"><input type="checkbox" class="nt_to" value="${m.id}" ${pre.has(m.id)?'checked':''}><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span class="an"><b>${esc(m.name)}</b><small>${esc(m.email)}</small></span>${pre.has(m.id)?'<em>responsável</em>':''}</label>`).join('')||'<div class="hint" style="padding:14px">Ninguém tem e-mail cadastrado. Adicione em Configurações → Membros.</div>'}</div>
-  <label>Assunto</label><input id="nt_subj" value="${esc('Tarefa: '+t.title)}" maxlength="150">
+  <label>Assunto</label><input id="nt_subj" value="${esc('Atividade: '+t.title)}" maxlength="150">
   <label>Recado (opcional)</label><textarea id="nt_note" rows="3" placeholder="Escreva um recado para quem vai receber…"></textarea>
   <label>Enviar junto</label>
   <div class="nopts"><label class="chk"><input type="checkbox" id="nt_det" checked> Detalhes (status, prazo, descrição)</label><label class="chk"><input type="checkbox" id="nt_com" ${ncom?'checked':'disabled'}> Comentários (${ncom})</label><label class="chk"><input type="checkbox" id="nt_img" ${nimg?'checked':'disabled'}> Imagens (${nimg})</label></div>
@@ -480,7 +480,7 @@ function openTags(){
   $('#modal').innerHTML=`<h3>🏷 Etiquetas</h3>
   ${S.tags.map(g=>`<div style="display:flex;gap:10px;align-items:center;margin:8px 0"><span class="ac" style="background:${g.color};width:90px;max-width:90px;text-align:center">${esc(g.name)}</span><input data-gn="${g.id}" value="${esc(g.name)}" style="flex:1">
    <span style="white-space:nowrap">${COLORS.map(c=>`<span class="sw ${c===g.color?'on':''}" data-gc="${g.id}|${c}" style="background:${c}"></span>`).join('')}</span>
-   <small style="color:var(--mu);width:60px">${S.tasks.filter(t=>t.tags.includes(g.id)).length} tarefa(s)</small><button class="ghost" data-gd="${g.id}" title="Excluir etiqueta">🗑</button></div>`).join('')||'<div style="color:var(--mu)">Nenhuma etiqueta ainda.</div>'}
+   <small style="color:var(--mu);width:60px">${S.tasks.filter(t=>t.tags.includes(g.id)).length} atividade(s)</small><button class="ghost" data-gd="${g.id}" title="Excluir etiqueta">🗑</button></div>`).join('')||'<div style="color:var(--mu)">Nenhuma etiqueta ainda.</div>'}
   <input id="newTag" placeholder="+ Nova etiqueta (Enter)" style="margin-top:10px">
   <div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
   $('#ov').classList.add('on');
@@ -558,6 +558,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(el=g('[data-pop]')){const[ty,id]=el.dataset.pop.split(':');if(pop&&pop.type===ty&&pop.id===id)closePop();else openPop(ty,id,el);return}
+  if(el=g('[data-cid]')){copyLink(el.dataset.cid,'ID '+el.dataset.cid+' copiado');return}
   if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
   if(el=g('[data-ds]')){S.dash=el.dataset.ds;render();return}
@@ -588,7 +589,7 @@ document.addEventListener('click',e=>{
   if(g('#m_ok')||g('#m_x')){collect();closeModal();render();return}
   if(g('#m_link')){copyLink(location.origin+'/t/'+editing);return}
   if(g('#m_mail')){collect();render();notifyDialog(editing);return}
-  if(g('#m_del')){collect();const id=editing;ask('Excluir esta tarefa e todas as subtarefas?','',()=>{delTask(id);editing=null;render()},{confirm:1,ok:'Excluir',back:()=>openTask(id)});return}
+  if(g('#m_del')){collect();const id=editing;ask('Excluir esta atividade e todas as subatividades?','',()=>{delTask(id);editing=null;render()},{confirm:1,ok:'Excluir',back:()=>openTask(id)});return}
 });
 document.addEventListener('change',e=>{
   const c=e.target.dataset,tg=e.target;
@@ -646,7 +647,7 @@ $('#bPal').onclick=()=>openPalette();
 $('#pedit').onclick=()=>renameProj();
 $('#delProj').onclick=()=>{
   if(S.projects.length<2){ask('Mantenha ao menos um projeto.','',()=>{},{confirm:1,noCancel:1});return}
-  ask('Excluir o projeto "'+proj().name+'" e todas as suas tarefas?','',()=>{const id=proj().id;S.tasks=S.tasks.filter(t=>t.pid!==id);S.projects=S.projects.filter(p=>p.id!==id);S.cur=S.projects[0].id;render()},{confirm:1,ok:'Excluir'})};
+  ask('Excluir o projeto "'+proj().name+'" e todas as suas atividades?','',()=>{const id=proj().id;S.tasks=S.tasks.filter(t=>t.pid!==id);S.projects=S.projects.filter(p=>p.id!==id);S.cur=S.projects[0].id;render()},{confirm:1,ok:'Excluir'})};
 $('#bExp').onclick=()=>ask('Exportar JSON — copie (Ctrl+C) e salve em um arquivo .json',JSON.stringify(S,null,1),()=>{},{text:1,ro:1,ok:'Fechar',noCancel:1});
 $('#bCsv').onclick=()=>ask('Exportar CSV (separador “;”) — copie e cole em um arquivo .csv ou no Excel',csv(),()=>{},{text:1,ro:1,ok:'Fechar',noCancel:1});
 $('#bImp').onclick=()=>ask('Importar — cole o JSON exportado (substitui os dados atuais)','',v=>{
@@ -663,16 +664,16 @@ document.addEventListener('drop',e=>{const c=e.target.closest&&e.target.closest(
 let cur=null,anchor=null,sel=new Set(),zoom=null,clip=null,lvl=null,hist=[];
 
 const HELP=[
-['Navegar',[['↑ , ↓ , PgUp , PgDn , Home , End','Mover o cursor entre as tarefas'],['Tab , ⇧+Tab','Próxima / anterior'],['Ctrl+⇧+↑ , Ctrl+⇧+↓ , Ctrl+⇧+← , Ctrl+⇧+→','Mover-se no Quadro entre cartões e colunas']]],
-['Reduzir ou expandir tarefas',[['← , →','Recolher / expandir (← vai ao pai; → entra na 1ª subtarefa)'],['⇧+← , ⇧+→','Recolher / expandir todas as subtarefas'],['o','Alternar recolher / expandir'],['⇧+Alt+← , ⇧+Alt+→','Reduzir / expandir o projeto por nível']]],
-['Selecionar várias tarefas',[['⇧+↑ , ⇧+↓ , ⇧+PgUp , ⇧+PgDn','Estender a seleção'],['Ctrl+Clique , ⇧+Clique','Alternar / selecionar intervalo'],['Ctrl+A','Selecionar tudo'],['Esc','Limpar a seleção']]],
-['Recuar tarefa no modo de edição',[['Tab , ⇧+Tab','Ao editar o nome na lista: recuar / avançar nível']]],
-['Mover tarefas',[['Arrastar ⋮⋮','Mover com o mouse: borda de cima/baixo = mesmo nível · meio = vira subtarefa'],['Ctrl+↑ , Ctrl+↓','Subir / descer entre irmãs'],['Ctrl+→ , Ctrl+←','Recuar (vira subtarefa) / promover'],['Ctrl+PgUp , Ctrl+PgDn','Para o início / fim (o navegador pode capturar)']]],
-['Administrar tarefa selecionada',[['@','Definir responsável'],['?','Definir estado'],['#','Definir etiqueta (tag)'],['<','Definir datas / prazo / repetição'],['!','Definir prioridade'],['>','Mover para outro projeto'],['⇧+F10 , Menu','Menu de contexto (botão direito também)']]],
-['Editar',[['F2 , Alt+Enter','Editar nome da tarefa'],['d , Ctrl+D','Editar descrição']]],
-['Criar',[['q','Ir para a barra de adição rápida (linguagem natural)'],['t','Nova tarefa no primeiro nível'],['Enter','Nova tarefa (no mesmo nível)'],['⇧+Enter','Nova subtarefa'],['l','Adicionar sublista (seção filha)']]],
-['Ações sobre as selecionadas',[['Ctrl+Del','Excluir'],['c','Comentar'],['Ctrl+M','Auto-atribuir (defina “eu” em Equipe 👤)'],['Ctrl+X , Ctrl+C , Ctrl+V','Cortar / copiar / colar'],['Ctrl+E','Selecionar todas as subtarefas'],['Alt+P','Tornar subtarefa da anterior'],['Ctrl+S','Transformar em seção'],['Ctrl+Alt+M','Transformar em marco'],['⇧+C , Ctrl+/','Concluir / reabrir'],['i','Mostrar ID e detalhes'],['*','Favoritar']]],
-['Visualizar',[['=','Minhas tarefas (filtro por “eu”)'],['Ctrl+K , Ctrl+B','Busca rápida: projetos, tarefas, pessoas e comandos'],['s','Pesquisar tarefas e comentários'],['Espaço','Abrir / fechar o painel de detalhes'],['[ , ]','Recolher / expandir o menu lateral'],['( , )','Alternar entre as vistas'],['1 , 2 , 3 , 4 , 5 , 6','Lista, Quadro, Calendário, Cronograma, Pessoas, Painel'],['Ctrl+.','Tela cheia'],['z','Zoom na tarefa selecionada'],['a , ⇧+Esc','Menos zoom']]],
+['Navegar',[['↑ , ↓ , PgUp , PgDn , Home , End','Mover o cursor entre as atividades'],['← , →','Na lista: mover entre as colunas da linha (← no nome recolhe / vai ao pai; → num grupo fechado expande)'],['Enter , F2','Editar a coluna marcada (no nome: renomear; nas outras: abre o seletor de responsável, etiqueta, status ou datas)'],['Espaço','Abrir / fechar o painel da atividade'],['Esc','Sai da coluna marcada / limpa a seleção'],['Tab , ⇧+Tab','Próxima / anterior'],['Ctrl+⇧+↑ , Ctrl+⇧+↓ , Ctrl+⇧+← , Ctrl+⇧+→','Mover-se no Quadro entre cartões e colunas']]],
+['Reduzir ou expandir atividades',[['← , →','Recolher / expandir (← vai ao pai; → entra na 1ª subatividade)'],['⇧+← , ⇧+→','Recolher / expandir todas as subatividades'],['o','Alternar recolher / expandir'],['⇧+Alt+← , ⇧+Alt+→','Reduzir / expandir o projeto por nível']]],
+['Selecionar várias atividades',[['⇧+↑ , ⇧+↓ , ⇧+PgUp , ⇧+PgDn','Estender a seleção'],['Ctrl+Clique , ⇧+Clique','Alternar / selecionar intervalo'],['Ctrl+A','Selecionar tudo'],['Esc','Limpar a seleção']]],
+['Recuar atividade no modo de edição',[['Tab , ⇧+Tab','Ao editar o nome na lista: recuar / avançar nível']]],
+['Mover atividades',[['Arrastar ⋮⋮','Mover com o mouse: borda de cima/baixo = mesmo nível · meio = vira subatividade'],['Ctrl+↑ , Ctrl+↓','Subir / descer entre irmãs'],['Ctrl+→ , Ctrl+←','Recuar (vira subatividade) / promover'],['Ctrl+PgUp , Ctrl+PgDn','Para o início / fim (o navegador pode capturar)']]],
+['Administrar atividade selecionada',[['@','Definir responsável'],['?','Definir estado'],['#','Definir etiqueta (tag)'],['<','Definir datas / prazo / repetição'],['!','Definir prioridade'],['>','Mover para outro projeto'],['⇧+F10 , Menu','Menu de contexto (botão direito também)']]],
+['Editar',[['F2 , Alt+Enter','Editar nome da atividade (F2 numa coluna marcada edita a coluna)'],['d , Ctrl+D','Editar descrição']]],
+['Criar',[['q','Ir para a barra de adição rápida (linguagem natural)'],['t','Nova atividade no primeiro nível'],['Ctrl+Enter , Insert','Nova atividade (no mesmo nível) — com nada selecionado, Enter também cria'],['⇧+Enter','Nova subatividade'],['l','Adicionar sublista (seção filha)']]],
+['Ações sobre as selecionadas',[['Ctrl+Del','Excluir'],['c','Comentar'],['Ctrl+M','Auto-atribuir (defina “eu” em Equipe 👤)'],['Ctrl+X , Ctrl+C , Ctrl+V','Cortar / copiar / colar'],['Ctrl+E','Selecionar todas as subatividades'],['Alt+P','Tornar subatividade da anterior'],['Ctrl+S','Transformar em seção'],['Ctrl+Alt+M','Transformar em marco'],['⇧+C , Ctrl+/','Concluir / reabrir'],['i','Mostrar ID e detalhes'],['*','Favoritar']]],
+['Visualizar',[['=','Minhas atividades (filtro por “eu”)'],['Ctrl+K , Ctrl+B','Busca rápida: projetos, atividades, pessoas e comandos'],['s','Pesquisar atividades e comentários'],['Espaço','Abrir / fechar o painel de detalhes'],['[ , ]','Recolher / expandir o menu lateral'],['( , )','Alternar entre as vistas'],['1 , 2 , 3 , 4 , 5 , 6','Lista, Quadro, Calendário, Cronograma, Pessoas, Painel'],['Ctrl+.','Tela cheia'],['z','Zoom na atividade selecionada'],['a , ⇧+Esc','Menos zoom']]],
 ['Outros',[['Ctrl+Z','Lista de operações para desfazer'],['Alt+Q','Citar o texto selecionado no comentário (painel aberto)'],['Ctrl+P','Imprimir (impressão do navegador, com layout próprio)'],['F1','Esta ajuda']]]
 ];
 const K=s=>s.split(' , ').map(x=>`<kbd>${esc(x)}</kbd>`).join(' ');
@@ -680,6 +681,8 @@ const K=s=>s.split(' , ').map(x=>`<kbd>${esc(x)}</kbd>`).join(' ');
 const navIds=()=>[...document.querySelectorAll(S.view==='board'?'#view .card':'#view [data-row]')].map(e=>e.dataset.row||e.dataset.t);
 function markSel(scroll){
   document.querySelectorAll('#view [data-row],#view .card').forEach(el=>{const id=el.dataset.row||el.dataset.t;el.classList.toggle('sel',sel.has(id));el.classList.toggle('cur',id===cur)});
+  document.querySelectorAll('#view .cellsel').forEach(x=>x.classList.remove('cellsel'));
+  if(ccol&&cur&&(S.view==='list'||S.view==='smart')){const row=document.querySelector(`#view [data-row="${cur}"]`);const c=row&&CELLS.find(c=>c[0]===ccol);const el=c&&row.querySelector(c[1]);if(el&&el.getClientRects().length)el.classList.add('cellsel');else if(row&&ccol!=='tt'){ccol=null}}
   if(scroll&&cur){const el=document.querySelector(`#view [data-row="${cur}"],#view .card[data-t="${cur}"]`);if(el)el.scrollIntoView({block:'nearest'})}
 }
 function setCur(id,extend){
@@ -705,6 +708,19 @@ function boardStep(dx,dy){
   setCur(cols[ci][ri]);
 }
 function selectAll(){const ids=navIds();if(!ids.length)return;sel=new Set(ids);cur=cur||ids[0];anchor=ids[0];markSel()}
+let ccol=null;
+const CELLS=[['tt','.tt'],['id','.col-id'],['a','.col-a'],['t','.col-t'],['s','.col-s'],['i','.col-i'],['d','.col-d'],['u','.col-u']];
+function cellVisible(row,k){const sel=CELLS.find(c=>c[0]===k)[1],el=row.querySelector(sel);return !!el&&el.getClientRects().length>0}
+function visCells(){const row=document.querySelector(`#view [data-row="${cur}"]`);if(!row)return['tt'];return CELLS.map(c=>c[0]).filter(k=>cellVisible(row,k))}
+function cellMove(d){
+  const v=visCells();let i=v.indexOf(ccol||'tt');i=Math.max(0,Math.min(v.length-1,i+d));ccol=v[i];markSel(true);
+}
+function editCell(){
+  const k=ccol||'tt';
+  if(k==='tt'){act('edit');return}
+  if(k==='id'){const t=byId(cur);if(t)copyLink(t.id,'ID '+t.id+' copiado');return}
+  popKey({a:'a',t:'t',s:'s',i:'d',d:'d',u:'d'}[k]);
+}
 function leftKey(){const t=byId(cur);if(!t)return;if(kidsOf(t.id).length&&t.open!==false){t.open=false;render()}else if(t.parent&&navIds().includes(t.parent))setCur(t.parent)}
 function rightKey(){const t=byId(cur);if(!t)return;const ks=kidsOf(t.id);if(!ks.length)return;if(t.open===false){t.open=true;render()}else if(navIds().includes(ks[0].id))setCur(ks[0].id)}
 function subtreeOpen(open){targets().forEach(i=>[byId(i),...desc(i)].forEach(x=>x.open=open));render()}
@@ -722,7 +738,7 @@ function moveToProject(ids,pid){
   const tops=ids.map(byId).filter(Boolean);if(!tops.length)return;
   tops.forEach(t=>{[t,...desc(t.id)].forEach(x=>x.pid=pid);t.parent=null});
   const name=(S.projects.find(p=>p.id===pid)||{}).name;
-  cur=null;sel=new Set();render();toast(tops.length+' tarefa(s) movida(s) para “'+name+'”');
+  cur=null;sel=new Set();render();toast(tops.length+' atividade(s) movida(s) para “'+name+'”');
 }
 function cloneTree(id,parent,pid){
   const out=[];
@@ -736,7 +752,7 @@ function pasteClip(){
   let tops=[];
   if(clip.mode==='cut'){
     const objs=clip.ids.map(byId).filter(Boolean);
-    if(ref&&objs.some(o=>o===ref||desc(o.id).some(d=>d===ref))){toast('Não é possível colar dentro da própria tarefa');return}
+    if(ref&&objs.some(o=>o===ref||desc(o.id).some(d=>d===ref))){toast('Não é possível colar dentro da própria atividade');return}
     const moved=objs.flatMap(o=>[o,...desc(o.id)]);
     S.tasks=S.tasks.filter(x=>!moved.includes(x));
     moved.forEach(x=>x.pid=pid);objs.forEach(o=>o.parent=parent);
@@ -749,14 +765,14 @@ function pasteClip(){
   }
   if(parent&&byId(parent))byId(parent).open=true;
   sel=new Set(tops.map(t=>t.id));cur=tops[0].id;anchor=cur;
-  render();markSel(true);toast(tops.length+' tarefa(s) coladas');
+  render();markSel(true);toast(tops.length+' atividade(s) coladas');
 }
 
 /* ----- popover por teclado ----- */
 function ptargets(){if(!pop)return [];const ids=(sel.size>1&&sel.has(pop.id))?[...sel]:[pop.id];return ids.map(byId).filter(Boolean)}
 function popKey(type){
   const id=cur||targets()[0];
-  if(!id||!byId(id)){toast('Selecione uma tarefa (clique ou use ↑ ↓)');return}
+  if(!id||!byId(id)){toast('Selecione uma atividade (clique ou use ↑ ↓)');return}
   if(!cur){cur=id;sel=new Set([id])}
   const el=document.querySelector(`#view [data-pop="${type}:${id}"]`)||document.querySelector(`#view [data-row="${id}"],#view .card[data-t="${id}"]`);
   if(!el){toast('Mude para a visão Lista ou Quadro');return}
@@ -769,7 +785,7 @@ function act(name){
   if(name.startsWith('pop:')){popKey(name.slice(4));return}
   const tg=targets(),first=cur||tg[0];
   if(!actAllowed(name,tg,first))return;
-  const need=()=>{if(!first||!byId(first)){toast('Selecione uma tarefa (clique ou use ↑ ↓)');return false}return true};
+  const need=()=>{if(!first||!byId(first)){toast('Selecione uma atividade (clique ou use ↑ ↓)');return false}return true};
   const needSel=()=>{if(!tg.length){need();return false}return true};
   switch(name){
     case 'edit':{if(!need())return;const sp=document.querySelector(`#view [data-ie="${first}"]`);sp?startEdit(sp):openTask(first);return}
@@ -780,15 +796,15 @@ function act(name){
     case 'add':{S.view='list';const t=first&&byId(first);adding=t?(t.id===zoom?t.id:(t.parent||(zoom||'root'))):(zoom||'root');render();return}
     case 'addsub':{if(!need())return;S.view='list';adding=first;byId(first).open=true;render();return}
     case 'sublist':{if(!need())return;S.view='list';const p=byId(first);const n=mkTask({pid:p.pid,parent:p.id,title:'Nova sublista',sec:true});S.tasks.push(n);p.open=true;cur=n.id;anchor=n.id;sel=new Set([n.id]);render();const sp=document.querySelector(`[data-ie="${n.id}"]`);if(sp)startEdit(sp);return}
-    case 'del':{if(!needSel())return;const tops=topT();ask(`Excluir ${tops.length} tarefa(s) selecionada(s) e todas as suas subtarefas?`,'',()=>{tops.forEach(delTask);sel=new Set();cur=null;render()},{confirm:1,ok:'Excluir'});return}
+    case 'del':{if(!needSel())return;const tops=topT();ask(`Excluir ${tops.length} atividade(s) selecionada(s) e todas as suas subatividades?`,'',()=>{tops.forEach(delTask);sel=new Set();cur=null;render()},{confirm:1,ok:'Excluir'});return}
     case 'done':{if(!needSel())return;const all=tg.every(i=>byId(i).status==='done');tg.forEach(i=>completeTask(byId(i),!all));render();return}
     case 'self':{if(!needSel())return;if(!S.me||!mem(S.me)){toast('Defina quem é você em Equipe (botão 👤)');openTeam();return}
       const all=tg.every(i=>byId(i).assignees.includes(S.me));
       tg.forEach(i=>{const t=byId(i);t.assignees=all?t.assignees.filter(x=>x!==S.me):[...new Set([...t.assignees,S.me])]});render();toast(all?'Removido de você':'Atribuído a você');return}
-    case 'copy':case 'cut':{if(!needSel())return;clip={mode:name,ids:topT()};toast((name==='copy'?'Copiadas ':'Recortadas ')+clip.ids.length+' tarefa(s) — Ctrl+V cola');return}
+    case 'copy':case 'cut':{if(!needSel())return;clip={mode:name,ids:topT()};toast((name==='copy'?'Copiadas ':'Recortadas ')+clip.ids.length+' atividade(s) — Ctrl+V cola');return}
     case 'paste':pasteClip();return;
     case 'selsub':{if(!needSel())return;const s=new Set(tg);tg.forEach(i=>desc(i).forEach(d=>s.add(d.id)));sel=s;markSel();return}
-    case 'indent':{if(!needSel())return;let n=0;topT().forEach(i=>{if(indent(i))n++});if(!n)toast('Não há tarefa anterior no mesmo nível para recuar');render();return}
+    case 'indent':{if(!needSel())return;let n=0;topT().forEach(i=>{if(indent(i))n++});if(!n)toast('Não há atividade anterior no mesmo nível para recuar');render();return}
     case 'outdent':{if(!needSel())return;let n=0;topT().reverse().forEach(i=>{if(outdent(i))n++});if(!n)toast('Já está no primeiro nível');render();return}
     case 'mup':{if(!needSel())return;topT().forEach(i=>move(i,-1));render();markSel(true);return}
     case 'mdown':{if(!needSel())return;topT().reverse().forEach(i=>move(i,1));render();markSel(true);return}
@@ -801,7 +817,7 @@ function act(name){
     case 'zoom':{if(!need())return;zoom=first;S.view='list';render();toast('Zoom ativo — “a” ou ⇧+Esc para sair');return}
     case 'unzoom':{if(!zoom)return;const z=byId(zoom);zoom=(z&&z.parent&&byId(z.parent))?z.parent:null;render();return}
     case 'mine':{if(!S.me||!mem(S.me)){toast('Defina quem é você em Equipe (botão 👤)');openTeam();return}
-      const f=$('#fm');f.value=f.value===S.me?'':S.me;if(S.view==='dash')S.view='list';render();toast(f.value?'Minhas tarefas: filtro ligado':'Minhas tarefas: filtro desligado');return}
+      const f=$('#fm');f.value=f.value===S.me?'':S.me;if(S.view==='dash')S.view='list';render();toast(f.value?'Minhas atividades: filtro ligado':'Minhas atividades: filtro desligado');return}
     case 'star':{if(!needSel())return;const all=tg.every(i=>byId(i).star);tg.forEach(i=>byId(i).star=!all);render();return}
     case 'ctx':if(need())popKey('m');return;
   }
@@ -811,7 +827,7 @@ function infoDialog(id){
   const t=byId(id),p=[];let x=t;while(x.parent){x=byId(x.parent);p.unshift(x.title)}
   const row=(a,b)=>`<tr><td style="color:var(--mu);width:150px">${a}</td><td>${b}</td></tr>`;
   const lastDone=t.doneLog.length?new Date(t.doneLog[t.doneLog.length-1]).toLocaleString('pt-BR'):'—';
-  $('#modal').innerHTML=`<h3>ℹ Detalhes da tarefa</h3><table>${row('ID',`<code>${t.id}</code>`)}${row('Título',esc(t.title))}${row('Caminho',esc(p.join(' › ')||'(raiz)'))}${row('Projeto',esc((S.projects.find(q=>q.id===t.pid)||{}).name||''))}${row('Status',stOf(t.status).n)}${row('Prioridade',PR[t.prio])}${row('Datas',esc(dateTxt(t)||'—'))}${row('Repetição',esc(repLabel(t)||'—'))}${row('Responsáveis',esc(t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Etiquetas',esc(t.tags.map(a=>(tagOf(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Subtarefas',desc(id).length)}${row('Comentários',t.comments.length)}${row('Criada em',new Date(t.created).toLocaleString('pt-BR'))}${row('Concluída (vezes)',t.doneLog.length+' · última: '+lastDone)}</table><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
+  $('#modal').innerHTML=`<h3>ℹ Detalhes da atividade</h3><table>${row('ID',`<code>${t.id}</code>`)}${row('Título',esc(t.title))}${row('Caminho',esc(p.join(' › ')||'(raiz)'))}${row('Projeto',esc((S.projects.find(q=>q.id===t.pid)||{}).name||''))}${row('Status',stOf(t.status).n)}${row('Prioridade',PR[t.prio])}${row('Datas',esc(dateTxt(t)||'—'))}${row('Repetição',esc(repLabel(t)||'—'))}${row('Responsáveis',esc(t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Etiquetas',esc(t.tags.map(a=>(tagOf(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Subatividades',desc(id).length)}${row('Comentários',t.comments.length)}${row('Criada em',new Date(t.created).toLocaleString('pt-BR'))}${row('Concluída (vezes)',t.doneLog.length+' · última: '+lastDone)}</table><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
   $('#ov').classList.add('on');
 }
 function addComment(){
@@ -834,18 +850,18 @@ function goTask(id){
 }
 function openPalette(mode){
   editing=null;closePop();const M=$('#modal');M.dataset.kind='pal';M.style.width='';
-  const ph=mode==='proj'?'Trocar de projeto…':'Buscar projetos, tarefas, pessoas ou comandos…';
+  const ph=mode==='proj'?'Trocar de projeto…':'Buscar projetos, atividades, pessoas ou comandos…';
   M.innerHTML=`<div class="pk"><div class="pk-in">${ic('search')}<input id="pl_q" placeholder="${ph}" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div><div id="pl_l" class="pk-l"></div><div class="pk-f"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> fechar</span></div></div>`;
   $('#ov').classList.add('on');
   let items=[],idx=0;
   const go=(v,extra)=>()=>{S.view=v;if(extra)extra();zoom=null;cur=null;sel=new Set()};
   const btn=id=>()=>setTimeout(()=>{const b=$(id);if(b)b.click()},0);
   const VIEWS=[['list','Lista','list'],['board','Quadro','board'],['cal','Calendário','calendar'],['gantt','Cronograma','gantt'],['people','Pessoas e carga','people'],['dash','Painel executivo','chart']];
-  const ACTS0=[['Copiar link desta página','link',()=>copyLink(location.href)],['Nova tarefa','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
+  const ACTS0=[['Copiar link desta página','link',()=>copyLink(location.href)],['Nova atividade','plus',()=>{if(['dash','settings','people','smart'].includes(S.view))S.view='list';setTimeout(()=>{const q=$('#qa');if(q)q.focus()},60)}],
     ['Novo projeto','plus',btn('#addProj')],['Renomear projeto atual','list',()=>setTimeout(renameProj,0)],['Excluir projeto atual','trash',btn('#delProj')],
     ['Configurações','sliders',btn('#bSet')],['Membros e convites','people',btn('#bTeam')],['Etiquetas','tag',btn('#bTags')],['Automações','zap',btn('#bRules')],
     ['Tema: Claro','moon',()=>setTheme('light')],['Tema: Escuro','moon',()=>setTheme('dark')],['Tema: CS Infra','moon',()=>setTheme('cs')],['Importar e exportar (Excel, PDF, CSV…)','download',()=>setTimeout(openDataHub,0)],['Atualizar dados agora','zap',()=>{if(CLOUD)pollPull(true);toast('Atualizando…')}],['Ajuda e atalhos','help',()=>setTimeout(()=>toggleHelp(),0)]];
-  const PK={'Nova tarefa':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules'};
+  const PK={'Nova atividade':'add','Novo projeto':'project','Renomear projeto atual':'project','Excluir projeto atual':'delProject','Membros e convites':'members','Etiquetas':'tags','Automações':'rules'};
   const ACTS=ACTS0.filter(a=>!PK[a[0]]||can(PK[a[0]]));
   if(CLOUD)ACTS.push(['Sair da conta','lock',()=>setTimeout(()=>cloudLogout(),0)]);
   const draw=()=>{
@@ -859,7 +875,7 @@ function openPalette(mode){
       ACTS.filter(a=>has(a[0])).forEach(a=>items.push({g:'Ações',ic:a[1],l:a[0],r:'',f:a[2]}));
       S.members.filter(m=>q&&has(m.name+' '+(m.email||''))).forEach(m=>items.push({g:'Pessoas',ic:'user',l:m.name,r:m.email||'',f:()=>{$('#fm').value=m.id;if(['dash','settings','smart'].includes(S.view))S.view='list'}}));
       S.tags.filter(g=>q&&has(g.name)).forEach(g=>items.push({g:'Etiquetas',ic:'tag',l:g.name,r:'',f:()=>{$('#ft').value=g.id;if(['dash','settings','smart'].includes(S.view))S.view='list'}}));
-      if(q)S.tasks.filter(t=>!t.sec&&(has(t.title)||(t.comments||[]).some(c=>c.text.toLowerCase().includes(q)))).slice(0,12).forEach(t=>{const p=S.projects.find(x=>x.id===t.pid);items.push({g:'Tarefas',ic:'check',l:t.title,r:p?p.name:'',f:()=>goTask(t.id)})});
+      if(q)S.tasks.filter(t=>!t.sec&&(has(t.title)||(t.comments||[]).some(c=>c.text.toLowerCase().includes(q)))).slice(0,12).forEach(t=>{const p=S.projects.find(x=>x.id===t.pid);items.push({g:'Atividades',ic:'check',l:t.title,r:p?p.name:'',f:()=>goTask(t.id)})});
     }
     items=items.slice(0,60);idx=Math.min(idx,Math.max(0,items.length-1));
     let h='',last='';
@@ -891,12 +907,12 @@ function diffLabel(a,b){
   bm.forEach((t,id)=>{if(!am.has(id))add++;else if(am.get(id)!==JSON.stringify(t))chg.push(t)});
   am.forEach((_,id)=>{if(!bm.has(id))del++});
   const p=[];
-  if(add)p.push('Adicionou '+add+' tarefa(s)');if(del)p.push('Excluiu '+del+' tarefa(s)');
-  if(chg.length)p.push(chg.length===1?'Editou “'+chg[0].title.slice(0,40)+'”':'Editou '+chg.length+' tarefas');
+  if(add)p.push('Adicionou '+add+' atividade(s)');if(del)p.push('Excluiu '+del+' atividade(s)');
+  if(chg.length)p.push(chg.length===1?'Editou “'+chg[0].title.slice(0,40)+'”':'Editou '+chg.length+' atividades');
   if(JSON.stringify(A.members)!==JSON.stringify(B.members))p.push('Equipe');
   if(JSON.stringify(A.tags)!==JSON.stringify(B.tags))p.push('Etiquetas');
   if(JSON.stringify(A.projects)!==JSON.stringify(B.projects))p.push('Projetos');
-  if(!p.length&&A.tasks.map(t=>t.id).join()!==B.tasks.map(t=>t.id).join())p.push('Moveu tarefas');
+  if(!p.length&&A.tasks.map(t=>t.id).join()!==B.tasks.map(t=>t.id).join())p.push('Moveu atividades');
   return p.join(' · ')||'Alteração';
 }
 function pushHist(){
@@ -963,7 +979,9 @@ function kbd(e){
   }
   if(typing)return;
   if(k==='Escape'&&sh){eat();act('unzoom');return}
-  if(k==='F2'){eat();act('edit');return}
+  if(k==='F2'){eat();if(ccol&&ccol!=='tt'&&['list','smart'].includes(S.view))editCell();else act('edit');return}
+  if(k==='Escape'&&ccol){ccol=null;markSel()}
+  if(k==='Insert'){eat();act('add');return}
   if((k==='F10'&&sh)||k==='ContextMenu'){eat();act('ctx');return}
   const list=['list','board','smart'].includes(S.view);
   if(ctrl&&alt){if(L==='m'){eat();act('milestone')}return}
@@ -974,6 +992,7 @@ function kbd(e){
       return;
     }
     switch(L){
+      case 'Enter':eat();act('add');return;
       case 'a':if(list){eat();selectAll()}return;
       case 'e':eat();act('selsub');return;
       case 'd':eat();act('desc');return;
@@ -1010,14 +1029,19 @@ function kbd(e){
       eat();
       if(S.view==='board'){boardStep(k==='ArrowLeft'?-1:1,0);return}
       if(sh){subtreeOpen(k==='ArrowRight');return}
+      if(cur&&byId(cur)){
+        const tcur=byId(cur),hasK=kidsOf(tcur.id).length>0;
+        if(k==='ArrowRight'){if((!ccol||ccol==='tt')&&hasK&&tcur.open===false){rightKey();return}cellMove(1);return}
+        if(ccol&&ccol!=='tt'){cellMove(-1);return}
+        leftKey();return}
       k==='ArrowLeft'?leftKey():rightKey();return}
   }
   if(k==='*'){eat();act('star');return}
   if(k==='C'&&sh){eat();act('done');return}
   const pk={'@':'a','?':'s','#':'t','<':'d','!':'p','>':'j'}[k];
   if(pk){eat();popKey(pk);return}
-  if(k==='Enter'){if(t.tagName==='BUTTON'||t.tagName==='A')return;eat();act(sh?'addsub':'add');return}
-  if(k===' '){if(t.tagName==='BUTTON')return;eat();if(cur)openTask(cur);else toast('Selecione uma tarefa (clique ou use ↑ ↓)');return}
+  if(k==='Enter'){if(t.tagName==='BUTTON'||t.tagName==='A')return;eat();if(sh){act('addsub');return}if(cur&&byId(cur)&&['list','smart'].includes(S.view)){editCell();return}act('add');return}
+  if(k===' '){if(t.tagName==='BUTTON')return;eat();if(cur)openTask(cur);else toast('Selecione uma atividade (clique ou use ↑ ↓)');return}
   if(k===']'||k==='['){eat();toggleSide();return}
   if(k==='('||k===')'){eat();cycleView(k===')'?1:-1);return}
   if(k==='='){eat();act('mine');return}
@@ -1134,12 +1158,12 @@ const QF={all:()=>true,
   done:t=>t.status==='done'};
 const qfPred=k=>QF[k]||QF.all;
 const CHIPS=[['all','Todas'],['today','Hoje'],['week','7 dias'],['late','Atrasadas'],['mine','Minhas'],['blocked','Impedidas'],['star','★ Favoritas'],['done','Concluídas']];
-const SMARTS=[['today','🗓 Hoje','calendar'],['week','📅 Próximos 7 dias','gantt'],['late','⚠ Atrasadas','alert'],['mine','👤 Minhas tarefas','user'],['star','★ Favoritas','star'],['blocked','🚧 Impedidas','ban']];
-const EMPTY={today:'Nenhuma tarefa vence hoje nem está atrasada.',week:'Nada vence nos próximos 7 dias.',late:'Nenhuma tarefa atrasada. Bom trabalho!',mine:'Você não tem tarefas abertas atribuídas.',star:'Marque tarefas com ★ (tecla *) para vê-las aqui.',blocked:'Nenhuma tarefa impedida.'};
+const SMARTS=[['today','🗓 Hoje','calendar'],['week','📅 Próximos 7 dias','gantt'],['late','⚠ Atrasadas','alert'],['mine','👤 Minhas atividades','user'],['star','★ Favoritas','star'],['blocked','🚧 Impedidas','ban']];
+const EMPTY={today:'Nenhuma atividade vence hoje nem está atrasada.',week:'Nada vence nos próximos 7 dias.',late:'Nenhuma atividade atrasada. Bom trabalho!',mine:'Você não tem atividades abertas atribuídas.',star:'Marque atividades com ★ (tecla *) para vê-las aqui.',blocked:'Nenhuma atividade impedida.'};
 const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 
 /* ----- renderização principal ----- */
-/* ----- imagens da tarefa (Supabase Storage) ----- */
+/* ----- imagens da atividade (Supabase Storage) ----- */
 const IMGB='task-images',imgCache=new Map(),MAXIMG=12;
 const canImg=t=>!!(CLOUD&&t&&canEdit(t)&&role()!=='guest');
 const authHdr=async()=>{if(sess&&sess.expires_at&&Date.now()/1000>sess.expires_at-30)await refreshSession();return{apikey:SB.key,Authorization:'Bearer '+((sess&&sess.access_token)||SB.key)}};
@@ -1178,14 +1202,14 @@ function refreshGal(){const t=byId(editing),g=$('#m_gal');if(!t||!g)return;g.inn
 async function addFiles(files){
   const t=byId(editing);if(!t||!canImg(t))return;
   files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;
-  const room=MAXIMG-(t.imgs||[]).length;if(room<=0){toast('Limite de '+MAXIMG+' imagens por tarefa.');return}
+  const room=MAXIMG-(t.imgs||[]).length;if(room<=0){toast('Limite de '+MAXIMG+' imagens por atividade.');return}
   const g=$('#m_gal');let ok=0;
   for(const f of files.slice(0,room)){
     const ph=document.createElement('figure');ph.className='gi up';ph.innerHTML='<span class="spin"></span>';if(g)g.appendChild(ph);
     try{const r=await uploadImg(t,f);t.imgs=[...(t.imgs||[]),r];ok++}catch(e){toast('⚠ '+trErr(e.message))}
     ph.remove();
   }
-  if(files.length>room)toast('Só cabem '+MAXIMG+' imagens por tarefa.');
+  if(files.length>room)toast('Só cabem '+MAXIMG+' imagens por atividade.');
   if(ok){refreshGal();save();render();toast(ok===1?'Imagem adicionada':ok+' imagens adicionadas')}
 }
 async function openLB(tid,idx){
@@ -1260,17 +1284,17 @@ function render(){
   const lf=ptasks().filter(isLeaf),dn=lf.filter(t=>t.status==='done').length,lt=lf.filter(isLate).length,op=lf.length-dn,pct=lf.length?Math.round(dn/lf.length*100):0;
   const sm=SMARTS.find(s=>s[0]===S.smart)||SMARTS[0];
   $('#pname').textContent=smart?sm[1].replace(/^\S+\s/,''):P.name;
-  $('#pname').title=smart?'Visão inteligente: reúne tarefas de todos os projetos':'Duplo clique para renomear';
+  $('#pname').title=smart?'Visão inteligente: reúne atividades de todos os projetos':'Duplo clique para renomear';
   $('#pedit').style.display=(smart||V==='settings'||P.virtual)?'none':'';
   const pd=$('#pdot');pd.style.display=(smart||V==='settings')?'none':'';pd.style.background=pcol(P);
-  $('#subline').innerHTML=smart?'<span>Reúne as tarefas de todos os projetos</span>':`<b>${pct}%</b> concluído <span class="pbar"><i style="width:${pct}%"></i></span> <span>${op} abertas</span>${lt?`<span class="late">· ${lt} atrasada(s)</span>`:''}`;
+  $('#subline').innerHTML=smart?'<span>Reúne as atividades de todos os projetos</span>':`<b>${pct}%</b> concluído <span class="pbar"><i style="width:${pct}%"></i></span> <span>${op} abertas</span>${lt?`<span class="late">· ${lt} atrasada(s)</span>`:''}`;
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
   setHTML('#smarts',SMARTS.filter(s=>['today','week','late','mine'].includes(s[0])).map(([k,l,i])=>{const n=k==='late'?all.filter(qfPred(k)).length:0;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="bad">${n}</small>`:''}</div>`}).join(''));
   setHTML('#projs',S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}</div>`).join(''));
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
-  $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as tarefas concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
+  $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as atividades concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
   $('#bFilt').innerHTML=ic('filter')+'<span class="bl">Filtros</span>'+(nf?` <span class="badge" style="position:static;margin-left:4px">${nf}</span>`:'');
   $('#bTheme').innerHTML=ic(S.theme==='dark'?'sun':'moon');
@@ -1286,33 +1310,48 @@ function render(){
 /* ----- lista em árvore (com modo plano para as visões inteligentes) ----- */
 function listHeader(n){
   return `<div class="row hdr"><span class="grip" style="visibility:hidden"></span><span class="gut"></span>
-   <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Tarefa <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span></div>
-   <div class="rt"><span class="hc col-a">Resp.</span><span class="hc col-t">Etiquetas</span><span class="hc col-s">Status</span><span class="hc col-d">Prazo</span></div></div>`;
+   <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Atividade <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span></div>
+   <div class="rt"><span class="hc col-id">ID</span><span class="hc col-a">Resp.</span><span class="hc col-t">Etiquetas</span><span class="hc col-s">Status</span><span class="hc col-i">Início</span><span class="hc col-d">Conclusão</span><span class="hc col-u">Duração</span></div></div>`;
+}
+function dateCols(t){
+  const tm=x=>x?`<small>${x}</small>`:'';
+  const own=t.start||t.due,leaf=isLeaf(t);
+  const sp=own||leaf?null:tspan(t);
+  const a=own?t.start:(sp&&sp[0]),b=own?t.due:(sp&&sp[1]);
+  let u='';
+  if(a&&b){
+    if(a===b&&t.startTime&&t.dueTime&&own){const m=(+t.dueTime.slice(0,2)*60+ +t.dueTime.slice(3))-(+t.startTime.slice(0,2)*60+ +t.startTime.slice(3));u=m>0?fmtDur(m*60000):'1 d'}
+    else u=(diffDays(a,b)+1)+' d';
+  }
+  return{i:a?fmtS(a)+(own?tm(t.startTime):''):'',d:(hasRep(t)?'🔁 ':'')+(b?fmtS(b)+(own?tm(t.dueTime):''):''),u,agg:!own&&!!sp};
 }
 function rowHTML(t,depth,flat){
   const ks=flat?[]:kidsOf(t.id),pr=flat?null:prog(t),done=t.status==='done',f=filtering();
   const shown=(f||S.hideDone)?ks.filter(matchTree):ks;
   const open=f||t.open!==false;
-  const dt=dateTxt(t),blocked=!done&&depsBlocked(t);
+  const dt=dateTxt(t),ds=dateCols(t),blocked=!done&&depsBlocked(t);
   const rootish=!flat&&(depth===0||t.sec);
   let path='';if(flat){const p=[];let x=t;while(x.parent){x=byId(x.parent);p.unshift(x.title)}if(p.length)path=`<span class="bcs">${esc(p.join(' › '))}</span>`}
   const wait=(t.deps||[]).map(byId).filter(x=>x&&x.status!=='done').map(x=>x.title).join(', ');
-  let h=`<div class="row ${rootish?'root':''} ${done?'done':''}" data-row="${t.id}">
-   <span class="grip" ${flat?'style="visibility:hidden"':'title="Arraste para mover (acima/abaixo = mesmo nível · no meio = subtarefa)"'}>⋮⋮</span><span class="gut p${t.prio}" data-pr="${t.id}" title="Prioridade ${PR[t.prio]} — clique para alterar">${{3:'↑',2:'–',1:'↓'}[t.prio]}</span>
-   <div class="main" style="padding-left:${flat?4:depth*24}px">
+  let h=`<div class="row ${rootish?'root':''} ${!rootish&&ks.length?'par':''} ${depth>0&&!flat?'sub':''} ${done?'done':''}" data-row="${t.id}" data-d="${flat?0:depth}">
+   <span class="grip" ${flat?'style="visibility:hidden"':'title="Arraste para mover (acima/abaixo = mesmo nível · no meio = subatividade)"'}>⋮⋮</span><span class="gut p${t.prio}" data-pr="${t.id}" title="Prioridade ${PR[t.prio]} — clique para alterar">${{3:'↑',2:'–',1:'↓'}[t.prio]}</span>
+   <div class="main" style="padding-left:${flat?4:depth*24}px;--d:${flat?0:depth}">
     <span class="tg" ${flat?'':`data-tg="${t.id}"`}>${ks.length?(open?'▾':'▸'):''}</span>
-    <input type="checkbox" data-ck="${t.id}" ${done?'checked':''} ${ks.length&&!done&&desc(t.id).some(x=>x.status==='done')?'data-part="1"':''} title="${ks.length?'Concluir esta tarefa e todas as subtarefas':'Concluir'}">
+    <input type="checkbox" data-ck="${t.id}" ${done?'checked':''} ${ks.length&&!done&&desc(t.id).some(x=>x.status==='done')?'data-part="1"':''} title="${ks.length?'Concluir esta atividade e todas as subatividades':'Concluir'}">
     ${t.ms?'<span style="color:var(--amb)" title="Marco">◆</span>':''}<span class="tt" data-ie="${t.id}" title="Clique para editar o nome">${esc(t.title)}</span>
     ${(t.imgs||[]).length?`<span class="imgc" title="${t.imgs.length} imagem(ns)">${ic('image',13)}${t.imgs.length}</span>`:''}${t.star?`<span class="star" data-star="${t.id}" title="Favorita">★</span>`:''}${blocked?`<span class="lk" title="Aguardando: ${esc(wait)}">🔒</span>`:''}${t.timerStart?'<span class="tim" title="Cronômetro em andamento">⏱</span>':''}${t.comments.length?`<span class="pg" title="Comentários">💬${t.comments.length}</span>`:''}
     ${pr?`<span class="pg">${pr[0]}/${pr[1]}</span><span class="bar"><i style="width:${pr[1]?pr[0]/pr[1]*100:0}%"></i></span>`:''}${path}
     <button class="op" data-t="${t.id}" title="Abrir painel de edição (Espaço)">⤢ abrir</button>
-    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button><button class="hdel" data-qdel="${t.id}" title="Excluir tarefa">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subtarefa">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
+    <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button><button class="hdel" data-qdel="${t.id}" title="Excluir atividade">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subatividade">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
    </div>
    <div class="rt">
+    <span class="cell col-id" data-cid="${t.id}" title="ID ${t.id} — clique para copiar">${t.sec&&!t.parent?'':esc(t.id)}</span>
     <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
     <span class="cell col-t ${t.tags.length?'':'e'}" data-pop="t:${t.id}" title="Etiquetas">${tagChips(t)}</span>
     <span class="cell col-s" data-pop="s:${t.id}" title="Status">${stChip(t)}</span>
-    <span class="cell col-d ${dueCls(t)} ${dt?'':'e'}" data-pop="d:${t.id}" title="${esc((dt||'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${dt}</span>
+    <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Data de início">${ds.i}</span>
+    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Data de conclusão':'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
+    <span class="cell col-u ${ds.u?'':'e'}" data-pop="d:${t.id}" title="Duração (início → conclusão, contando os dois dias)">${ds.u}</span>
    </div></div>`;
   if(open){
     shown.forEach(k=>h+=rowHTML(k,depth+1));
@@ -1326,14 +1365,14 @@ function list(){
   const vis=(filtering()||S.hideDone)?roots.filter(matchTree):roots;
   let h=zoom?zoomBar():'';
   h+=`<div class="outline">`+listHeader(ptasks().length);
-  const emptyMsg=noProj()?`<div class="empty"><b>Nenhum projeto liberado para você</b>Peça a um administrador para incluir você em um projeto.<br>Assim que ele liberar, o projeto aparece aqui sozinho.</div>`:(!can('add')&&!ptasks().length)?`<div class="empty"><b>Nenhuma tarefa neste projeto ainda</b>Seu perfil é somente leitura/comentário.</div>`:!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @${exName()} #fiscal !alta">Enviar SPED amanhã 14h @${exName()} #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma tarefa encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
+  const emptyMsg=noProj()?`<div class="empty"><b>Nenhum projeto liberado para você</b>Peça a um administrador para incluir você em um projeto.<br>Assim que ele liberar, o projeto aparece aqui sozinho.</div>`:(!can('add')&&!ptasks().length)?`<div class="empty"><b>Nenhuma atividade neste projeto ainda</b>Seu perfil é somente leitura/comentário.</div>`:!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @${exName()} #fiscal !alta">Enviar SPED amanhã 14h @${exName()} #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma atividade encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
   h+=vis.map(t=>rowHTML(t,0)).join('')||emptyMsg;
-  h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / tarefa</button></div></div>`);
+  h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / atividade</button></div></div>`);
   $('#view').innerHTML=h+'</div>';
 }
 function smartView(){
   const key=S.smart||'today',pred=qfPred(key);
-  if(key==='mine'&&!S.me){$('#view').innerHTML=`<div class="empty"><b>Quem é você?</b>Para ver “Minhas tarefas”, marque seu nome em <button id="goTeam">👥 Equipe</button> usando o botão 👤.</div>`;return}
+  if(key==='mine'&&!S.me){$('#view').innerHTML=`<div class="empty"><b>Quem é você?</b>Para ver “Minhas atividades”, marque seu nome em <button id="goTeam">👥 Equipe</button> usando o botão 👤.</div>`;return}
   const ts=S.tasks.filter(t=>isLeaf(t)&&pred(t)&&match(t)).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')||b.prio-a.prio);
   const groups=S.projects.map(p=>[p,ts.filter(t=>t.pid===p.id)]).filter(g=>g[1].length);
   let h='<div class="outline">'+listHeader(ts.length);
@@ -1344,6 +1383,24 @@ function smartView(){
 /* ----- adição rápida em linguagem natural ----- */
 const WD={domingo:0,segunda:1,terca:2,quarta:3,quinta:4,sexta:5,sabado:6};
 const nextWd=w=>plus(today(),((w-new Date().getDay()+7)%7)||7);
+/* @pessoa: só vale o nome exato escolhido na lista (nada de adivinhar pelo começo do nome) */
+const nameParts=m=>norm(m.name).split(/\s+/).filter(Boolean);
+const emailLocal=m=>norm(m.email||'').split('@')[0];
+function handleOf(m){
+  const p=nameParts(m),first=p[0]||emailLocal(m)||'pessoa';
+  if(S.members.filter(x=>x.id!==m.id&&(nameParts(x)[0]||'')===first).length===0)return first;
+  const two=p.slice(0,2).join('.');
+  if(S.members.filter(x=>x.id!==m.id&&nameParts(x).slice(0,2).join('.')===two).length===0)return two;
+  return emailLocal(m)||two;
+}
+function memberByHandle(q){
+  q=norm(q);
+  const exact=S.members.filter(m=>handleOf(m)===q);if(exact.length===1)return exact[0];
+  const alt=S.members.filter(m=>emailLocal(m)===q||norm(m.email||'')===q||nameParts(m).join('.')===q||nameParts(m).join('-')===q||nameParts(m).join('_')===q);
+  if(alt.length===1)return alt[0];
+  const fn=S.members.filter(m=>nameParts(m)[0]===q);
+  return fn.length===1?fn[0]:null;
+}
 function parseQuick(raw){
   let s=raw.trim(),n=norm(s);
   const o={assignees:[],tags:[],prio:2,due:'',dueTime:'',repeat:null},left=[];
@@ -1353,7 +1410,7 @@ function parseQuick(raw){
   while(r=take(/(^|\s)!(media|p2)(?=\s|$)/))o.prio=2;
   while(r=take(/(^|\s)!(baixa|p3)(?=\s|$)/))o.prio=1;
   while(r=take(/(^|\s)@([a-z0-9._-]+)(?=\s|$)/)){
-    const q=r.m[2],mm=S.members.find(x=>norm(x.name).split(' ').some(w=>w.startsWith(q))||norm(x.email||'').startsWith(q));
+    const mm=memberByHandle(r.m[2]);
     if(mm){if(!o.assignees.includes(mm.id))o.assignees.push(mm.id)}else left.push(r.orig.trim());
   }
   while(r=take(/(^|\s)#([a-z0-9._-]+)(?=\s|$)/)){const nm=r.orig.trim().slice(1),ex=S.tags.find(g=>norm(g.name)===norm(nm));o.tags.push(ex?ex.id:'new:'+nm)}
@@ -1403,7 +1460,7 @@ function quickAdd(txt){
   S.tasks.push(nt);
   if(S.view==='dash'||S.view==='smart')S.view='list';
   cur=nt.id;anchor=nt.id;sel=new Set([nt.id]);
-  render();markSel(true);toast('✔ Tarefa criada'+(o.due?' · 📅 '+fmtD(o.due)+(o.dueTime?' '+o.dueTime:''):''));
+  render();markSel(true);toast('✔ Atividade criada'+(o.due?' · 📅 '+fmtD(o.due)+(o.dueTime?' '+o.dueTime:''):''));
   return true;
 }
 
@@ -1417,10 +1474,10 @@ function calView(){
   const nodate=lf.filter(t=>!t.due&&t.status!=='done'),td=today();
   const chip=t=>`<div class="cc ${isLate(t)?'late':''} ${t.status==='done'?'done':''}" draggable="true" data-cd="${t.id}" data-t="${t.id}" title="${esc(t.title)}${t.dueTime?' — '+t.dueTime:''}"><i style="background:${stOf(t.status).c}"></i>${t.ms?'◆ ':''}${t.dueTime?`<b>${t.dueTime}</b>`:''} ${esc(t.title)}</div>`;
   const label=new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-  let h=`<div class="calhead"><button data-cal="-1">‹</button><button data-cal="0">Hoje</button><button data-cal="1">›</button><h3>${label[0].toUpperCase()+label.slice(1)}</h3><span class="hint">Arraste uma tarefa para outro dia para reagendar · passe o mouse sobre um dia e clique em + para criar</span></div>
+  let h=`<div class="calhead"><button data-cal="-1">‹</button><button data-cal="0">Hoje</button><button data-cal="1">›</button><h3>${label[0].toUpperCase()+label.slice(1)}</h3><span class="hint">Arraste uma atividade para outro dia para reagendar · passe o mouse sobre um dia e clique em + para criar</span></div>
   <div class="calwrap"><div class="cal">${['dom','seg','ter','qua','qui','sex','sáb'].map(d=>`<div class="cwd">${d}</div>`).join('')}`;
-  days.forEach(d=>{const k=ymd(d);h+=`<div class="cd ${d.getMonth()!==m-1?'off':''} ${k===td?'today':''}" data-day="${k}"><div class="cdn"><span>${d.getDate()}</span><button class="cadd" data-caladd="${k}" title="Nova tarefa neste dia">+</button></div>${(by[k]||[]).map(chip).join('')}</div>`});
-  h+=`</div><aside class="cside"><h4>Sem data (${nodate.length})</h4>${nodate.map(chip).join('')||'<div class="hint">Todas as tarefas abertas têm prazo ✔</div>'}<div class="hint" style="margin-top:10px">Arraste para um dia para definir o prazo.</div></aside></div>`;
+  days.forEach(d=>{const k=ymd(d);h+=`<div class="cd ${d.getMonth()!==m-1?'off':''} ${k===td?'today':''}" data-day="${k}"><div class="cdn"><span>${d.getDate()}</span><button class="cadd" data-caladd="${k}" title="Nova atividade neste dia">+</button></div>${(by[k]||[]).map(chip).join('')}</div>`});
+  h+=`</div><aside class="cside"><h4>Sem data (${nodate.length})</h4>${nodate.map(chip).join('')||'<div class="hint">Todas as atividades abertas têm prazo ✔</div>'}<div class="hint" style="margin-top:10px">Arraste para um dia para definir o prazo.</div></aside></div>`;
   $('#view').innerHTML=h;
 }
 let cdrag=null;
@@ -1481,7 +1538,7 @@ function gantt(){
     arrows+=`<path d="M${x1},${y1} h8 V${y2} H${x2-2}" fill="none" stroke="${bad?'#ff6b7a':'#8c96ab'}" stroke-width="1.6" marker-end="url(#ah)"/>`;
   }));
   const bar=`<div class="gbar2"><b>Cronograma</b><div class="tabs" style="padding:2px"><button data-gz="week" class="${S.gz==='week'?'on':''}">Semanas</button><button data-gz="month" class="${S.gz==='month'?'on':''}">Meses</button></div><button data-gtoday="1">Ir para hoje</button><span class="hint" style="margin:0">Arraste a barra para mover · arraste as bordas para mudar início/fim · setas ligam dependências (vermelha = conflito)</span></div>`;
-  $('#view').innerHTML=`<div class="gwrap">${bar}<div class="gscroll" id="gsc"><div class="gt"><div class="gl"><div class="gh1">Tarefa · datas</div>${left}</div><div class="gr" style="width:${W}px"><div class="gth" style="width:${W}px">${mo}${dy}</div>${right}<div class="gnow" style="left:${X(td)+px/2}px"></div><svg class="gsvg" width="${W}" height="${rows.length*36}"><defs><marker id="ah" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#8c96ab"/></marker></defs>${arrows}</svg></div></div></div></div>`+(rows.length?'':'<div class="empty"><b>Sem tarefas para exibir</b>Adicione tarefas com datas para ver o cronograma.</div>');
+  $('#view').innerHTML=`<div class="gwrap">${bar}<div class="gscroll" id="gsc"><div class="gt"><div class="gl"><div class="gh1">Atividade · datas</div>${left}</div><div class="gr" style="width:${W}px"><div class="gth" style="width:${W}px">${mo}${dy}</div>${right}<div class="gnow" style="left:${X(td)+px/2}px"></div><svg class="gsvg" width="${W}" height="${rows.length*36}"><defs><marker id="ah" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#8c96ab"/></marker></defs>${arrows}</svg></div></div></div></div>`+(rows.length?'':'<div class="empty"><b>Sem atividades para exibir</b>Adicione atividades com datas para ver o cronograma.</div>');
   const sc=$('#gsc');
   if(sc){sc.scrollLeft=gScrollSet?gScroll:Math.max(0,X(td)-260);sc.onscroll=()=>{gScroll=sc.scrollLeft;gScrollSet=true}}
 }
@@ -1531,7 +1588,7 @@ function people(){
     });
   });
   const lab={late:'Atrasadas',later:'Depois',nodate:'Sem data'};
-  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Tarefa sem estimativa conta 1 h. A capacidade (h/semana) de cada pessoa é editada em Configurações → Membros. Clique numa célula para ver as tarefas.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
+  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Atividade sem estimativa conta 1 h. A capacidade (h/semana) de cada pessoa é editada em Configurações → Membros. Clique numa célula para ver as atividades.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
   P.forEach(p=>{
     const tot=Object.keys(grid).filter(k=>k.startsWith(p.id+'|')).reduce((a,k)=>a+grid[k].list.length,0);
     if(p.id==='none'&&!tot)return;
@@ -1539,7 +1596,7 @@ function people(){
     cols.forEach(c=>{
       const g=grid[p.id+'|'+c],hrs=g?g.h:0,r=hrs/p.cap;
       const lv=!g?0:c==='late'?4:(c==='later'||c==='nodate')?2:r<.5?1:r<=.9?2:r<=1.1?3:4;
-      h+=`<td><div class="wc l${lv}" ${g?`data-wl="${p.id}|${c}"`:''}>${g?(Math.round(hrs*10)/10)+'h':'—'}${g?`<small>${g.list.length} tarefa(s)</small>`:''}</div></td>`;
+      h+=`<td><div class="wc l${lv}" ${g?`data-wl="${p.id}|${c}"`:''}>${g?(Math.round(hrs*10)/10)+'h':'—'}${g?`<small>${g.list.length} atividade(s)</small>`:''}</div></td>`;
     });
     h+='</tr>';
   });
@@ -1558,7 +1615,7 @@ function wlDetail(key){
 /* ----- saúde (semáforo), resumo e painel extra ----- */
 function health(l){
   const op=l.filter(t=>t.status!=='done');
-  if(!l.length)return{c:'var(--mu)',l:'Sem tarefas'};
+  if(!l.length)return{c:'var(--mu)',l:'Sem atividades'};
   if(!op.length)return{c:'var(--ok)',l:'Concluída'};
   const late=op.filter(isLate).length,bl=op.filter(t=>QF.blocked(t)).length;
   if(late/op.length>=.2||late>=3)return{c:'var(--red)',l:'Em risco'};
@@ -1581,7 +1638,7 @@ function dashExtra(){
   const mxv=Math.max(1,...vals),Wc=520,Hc=130;
   const pts=vals.map((v,i)=>[10+i*(Wc-20)/29,Hc-12-v/mxv*(Hc-30)]);
   const line=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-  const evo=`<svg viewBox="0 0 ${Wc} ${Hc+14}" width="100%" style="max-height:170px"><polygon points="10,${Hc-12} ${line} ${Wc-10},${Hc-12}" style="fill:var(--ac);opacity:.15"/><polyline points="${line}" fill="none" style="stroke:var(--ac)" stroke-width="2.5" stroke-linejoin="round"/><text x="10" y="${Hc+8}" style="fill:var(--mu)" font-size="11">${days[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</text><text x="${Wc-10}" y="${Hc+8}" text-anchor="end" style="fill:var(--mu)" font-size="11">hoje · ${vals[29]} abertas</text><text x="10" y="12" style="fill:var(--mu)" font-size="11">máx. ${mxv}</text></svg><div class="hint">Tarefas abertas por dia, calculadas a partir das datas de criação e conclusão.</div>`;
+  const evo=`<svg viewBox="0 0 ${Wc} ${Hc+14}" width="100%" style="max-height:170px"><polygon points="10,${Hc-12} ${line} ${Wc-10},${Hc-12}" style="fill:var(--ac);opacity:.15"/><polyline points="${line}" fill="none" style="stroke:var(--ac)" stroke-width="2.5" stroke-linejoin="round"/><text x="10" y="${Hc+8}" style="fill:var(--mu)" font-size="11">${days[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</text><text x="${Wc-10}" y="${Hc+8}" text-anchor="end" style="fill:var(--mu)" font-size="11">hoje · ${vals[29]} abertas</text><text x="10" y="12" style="fill:var(--mu)" font-size="11">máx. ${mxv}</text></svg><div class="hint">Atividades abertas por dia, calculadas a partir das datas de criação e conclusão.</div>`;
   const est=op.reduce((a,t)=>a+(t.est||0),0),spent=L.reduce((a,t)=>a+(t.spent||0),0);
   const kpi=(v,l,c='')=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`;
   const waiting=op.filter(t=>depsBlocked(t)).length,ms=L.filter(t=>t.ms&&t.status!=='done').length;
@@ -1595,7 +1652,7 @@ function summaryText(){
   const pct=L.length?Math.round((L.length-op.length)/L.length*100):0;
   const nm=t=>'• '+t.title+(t.assignees.length?' ('+t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')+')':'')+(t.due?' — '+fmtD(t.due):'');
   const sec=(ttl,arr)=>arr.length?`\n${ttl} (${arr.length})\n`+arr.slice(0,10).map(nm).join('\n')+(arr.length>10?`\n… e mais ${arr.length-10}`:'')+'\n':'';
-  return `RESUMO EXECUTIVO — ${all?'Todos os projetos':proj().name}\n${new Date().toLocaleDateString('pt-BR',{dateStyle:'full'})}\n\nProgresso: ${pct}% (${L.length-op.length} de ${L.length} tarefas concluídas)\nEm andamento: ${op.filter(t=>t.status==='doing').length} · Atrasadas: ${late.length} · Vencem em 7 dias: ${soon.length} · Impedidas: ${bl.length}\nConcluídas nos últimos 7 dias: ${d7.length}\n`+sec('⚠ ATRASADAS',late)+sec('📅 PRÓXIMOS 7 DIAS',soon)+sec('🚧 IMPEDIDAS / AGUARDANDO',bl)+(S.me?'':'')+'\n— Gerado pelo Controle de Tarefas';
+  return `RESUMO EXECUTIVO — ${all?'Todos os projetos':proj().name}\n${new Date().toLocaleDateString('pt-BR',{dateStyle:'full'})}\n\nProgresso: ${pct}% (${L.length-op.length} de ${L.length} atividades concluídas)\nEm andamento: ${op.filter(t=>t.status==='doing').length} · Atrasadas: ${late.length} · Vencem em 7 dias: ${soon.length} · Impedidas: ${bl.length}\nConcluídas nos últimos 7 dias: ${d7.length}\n`+sec('⚠ ATRASADAS',late)+sec('📅 PRÓXIMOS 7 DIAS',soon)+sec('🚧 IMPEDIDAS / AGUARDANDO',bl)+(S.me?'':'')+'\n— Gerado pelo Controle de Atividades';
 }
 
 /* ----- alertas (sino) ----- */
@@ -1609,7 +1666,7 @@ function openAlerts(){
 }
 
 /* ----- automações ----- */
-const RULES=[['parentDone','Concluir a tarefa-mãe automaticamente','Quando todas as subtarefas são concluídas, a tarefa-mãe (ou seção) também vira “Concluído” — e reabre se uma subtarefa voltar.'],['lateHigh','Atrasou? Prioridade Alta','Tarefas atrasadas sobem sozinhas para prioridade Alta.'],['blockedTag','Marcar impedidas com a etiqueta “Impedido”','Ao mudar o status para “Impedido” a etiqueta é aplicada, e removida quando o status muda.'],['autoStart','Iniciar tarefas na data de início','Tarefas “A fazer” cuja data de início chegou passam para “Em andamento”.']];
+const RULES=[['parentDone','Concluir a atividade-mãe automaticamente','Quando todas as subatividades são concluídas, a atividade-mãe (ou seção) também vira “Concluído” — e reabre se uma subatividade voltar.'],['lateHigh','Atrasou? Prioridade Alta','Atividades atrasadas sobem sozinhas para prioridade Alta.'],['blockedTag','Marcar impedidas com a etiqueta “Impedido”','Ao mudar o status para “Impedido” a etiqueta é aplicada, e removida quando o status muda.'],['autoStart','Iniciar atividades na data de início','Atividades “A fazer” cuja data de início chegou passam para “Em andamento”.']];
 function runRules(){
   const R=S.rules||{};let ch=false;
   if(R.parentDone){S.tasks.filter(t=>!isLeaf(t)).sort((a,b)=>depthOf(b)-depthOf(a)).forEach(p=>{const ks=kidsOf(p.id),all=ks.every(k=>k.status==='done');if(all&&p.status!=='done'){setStatus(p,'done');ch=true}else if(!all&&p.status==='done'){p.status='doing';p.doneAt=null;ch=true}})}
@@ -1625,7 +1682,7 @@ function runRules(){
 function openRules(){
   if(!can('rules')){deny('rules');return}
   editing=null;closePop();const M=$('#modal');M.dataset.kind='rules';
-  M.innerHTML=`<h3>⚡ Automações</h3><div class="hint" >Regras “quando isso acontece, faça aquilo”. Ligue só as que fizerem sentido para você.</div>${RULES.map(r=>`<label class="rule" style="margin:0;font-size:14px;color:var(--tx);font-weight:400"><input type="checkbox" data-rule="${r[0]}" ${S.rules[r[0]]?'checked':''}><div><b>${r[1]}</b><small>${r[2]}</small></div></label>`).join('')}<div class="hint">Tarefas recorrentes já se reagendam sozinhas ao serem concluídas (defina em Prazo → Repetir).</div><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
+  M.innerHTML=`<h3>⚡ Automações</h3><div class="hint" >Regras “quando isso acontece, faça aquilo”. Ligue só as que fizerem sentido para você.</div>${RULES.map(r=>`<label class="rule" style="margin:0;font-size:14px;color:var(--tx);font-weight:400"><input type="checkbox" data-rule="${r[0]}" ${S.rules[r[0]]?'checked':''}><div><b>${r[1]}</b><small>${r[2]}</small></div></label>`).join('')}<div class="hint">Atividades recorrentes já se reagendam sozinhas ao serem concluídas (defina em Prazo → Repetir).</div><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
   $('#ov').classList.add('on');
 }
 
@@ -1667,7 +1724,7 @@ function createFromTemplate(name,id){
   S.cur=p.id;S.view='list';cur=null;sel=new Set();zoom=null;
 }
 
-/* ----- painel da tarefa: horas, favorita e dependências ----- */
+/* ----- painel da atividade: horas, favorita e dependências ----- */
 function wouldCycle(id,dep){const seen=new Set(),st=[dep];while(st.length){const x=st.pop();if(x===id)return true;if(seen.has(x))continue;seen.add(x);const t=byId(x);(t&&t.deps||[]).forEach(d=>st.push(d))}return false}
 function addDep(id,dep){const t=byId(id);if(!t||id===dep||t.deps.includes(dep)||wouldCycle(id,dep)){toast('Dependência inválida (criaria um ciclo)');return}t.deps.push(dep)}
 function depConflict(t){
@@ -1694,7 +1751,7 @@ function taskExtraHTML(t){
     <div><label>Registrado (h)</label><input id="m_spent" value="${t.spent?Math.round(t.spent*100)/100:''}" placeholder="0"></div>
     <div style="grid-column:span 2;align-self:end;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button id="m_timer">${t.timerStart?'⏹ Parar ('+fmtDur(Date.now()-t.timerStart)+')':'▶ Iniciar cronômetro'}</button><label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--tx)"><input type="checkbox" id="m_star" ${t.star?'checked':''}>★ Favorita</label></div>
   </div>
-  <label>Depende de (predecessoras) — a tarefa fica 🔒 até serem concluídas</label>
+  <label>Depende de (predecessoras) — a atividade fica 🔒 até serem concluídas</label>
   <div class="pick">${chips}<select id="m_dep" style="width:auto;max-width:300px"><option value="">+ adicionar dependência…</option>${opts}</select></div>
   ${cf?`<div class="hint" style="color:var(--red)">⚠ ${cf} <button id="m_resched">Reagendar após predecessoras</button></div>`:''}`;
 }
@@ -1704,13 +1761,13 @@ function guideHTML(){
   const ex=s=>`<span class="ex" data-qaex="${esc(s)}">${esc(s)}</span>`;
   return `<div class="steps">
    <div class="step"><b><span class="n">1</span>Adicione rápido</b><p>Use a barra no topo (tecla <kbd>q</kbd>). Escreva do jeito natural — datas, pessoas, etiquetas e prioridade são entendidos:</p>${ex('Enviar SPED amanhã 14h @${exName()} #fiscal !alta')}${ex('Revisar backups toda segunda')}${ex('Reunião com cliente 05/11 10h')}</div>
-   <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Tarefas podem ter subtarefas sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subtarefa. Clique no nome para renomear.</p></div>
+   <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Atividades podem ter subatividades sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subatividade. Clique no nome para renomear.</p></div>
    <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>Resp.</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
    <div class="step"><b><span class="n">4</span>Veja do jeito certo</b><p><b>Lista</b> (detalhe) · <b>Quadro</b> (fluxo) · <b>Calendário</b> (prazos) · <b>Cronograma</b> (Gantt com dependências) · <b>Pessoas</b> (carga de trabalho) · <b>Painel</b> (visão executiva).</p></div>
-   <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas tarefas</b> reúnem todos os projetos. O botão <b>Filtros</b> (acima da lista) filtra o projeto atual.</p></div>
+   <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas atividades</b> reúnem todos os projetos. O botão <b>Filtros</b> (acima da lista) filtra o projeto atual.</p></div>
    <div class="step"><b><span class="n">6</span>Acompanhe e reporte</b><p>🔔 mostra alertas. No <b>Painel</b>, use <b>Resumo executivo</b> para gerar o texto de status e enviar por e-mail.</p></div>
   </div>
-  <div class="hint" style="margin-top:14px"><b>Glossário:</b> <b>Seção</b> = grupo de tarefas (linha em destaque) · <b>Marco</b> ◆ = entrega-chave · <b>Dependência</b> 🔒 = só começa quando a predecessora termina · <b>Saúde</b> 🟢🟡🔴 = situação da seção no painel · <b>Automações</b> ⚡ = regras “quando… faça…” · <b>Perfis</b> = Administrador, Normal, Limitado e Convidado (⚙ Configurações).</div>`;
+  <div class="hint" style="margin-top:14px"><b>Glossário:</b> <b>Seção</b> = grupo de atividades (linha em destaque) · <b>Marco</b> ◆ = entrega-chave · <b>Dependência</b> 🔒 = só começa quando a predecessora termina · <b>Saúde</b> 🟢🟡🔴 = situação da seção no painel · <b>Automações</b> ⚡ = regras “quando… faça…” · <b>Perfis</b> = Administrador, Normal, Limitado e Convidado (⚙ Configurações).</div>`;
 }
 function toggleHelp(force){
   const M=$('#modal');
@@ -1719,12 +1776,12 @@ function toggleHelp(force){
   const tab=S.helpTab||'guia';
   M.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><h3 style="flex:1">❔ Ajuda</h3><button id="g_ok">Fechar (F1 / Esc)</button></div>
   <div class="tabs2"><button data-htab="guia" class="${tab==='guia'?'on':''}">Guia rápido</button><button data-htab="atalhos" class="${tab==='atalhos'?'on':''}">⌨ Atalhos de teclado</button></div>
-  ${tab==='guia'?guideHTML():`<div class="hk">${HELP.map(sec=>`<div class="hs"><h4>${sec[0]}</h4>${sec[1].map(r=>`<div class="hr"><span class="kk">${K(r[0])}</span><span>${esc(r[1])}</span></div>`).join('')}</div>`).join('')}</div><div class="hint">Os atalhos de uma tecla (t, d, c, o…) funcionam quando você não está digitando em um campo. Clique numa tarefa (ou use ↑ ↓) para selecioná-la.</div>`}`;
+  ${tab==='guia'?guideHTML():`<div class="hk">${HELP.map(sec=>`<div class="hs"><h4>${sec[0]}</h4>${sec[1].map(r=>`<div class="hr"><span class="kk">${K(r[0])}</span><span>${esc(r[1])}</span></div>`).join('')}</div>`).join('')}</div><div class="hint">Os atalhos de uma tecla (t, d, c, o…) funcionam quando você não está digitando em um campo. Clique numa atividade (ou use ↑ ↓) para selecioná-la.</div>`}`;
   $('#ov').classList.add('on');
 }
 function openWelcome(){
   S.seen=true;save();editing=null;closePop();const M=$('#modal');M.dataset.kind='welcome';M.style.width='min(900px,100%)';
-  M.innerHTML=`<h3 style="font-size:22px;margin-bottom:4px">👋 Bem-vindo ao seu Controle de Tarefas</h3><div class="hint" style="margin:0 0 14px">Reunimos o melhor de Planner, Todoist, Trello, Quire, Wrike e monday num só lugar. Em 1 minuto você já domina:</div>${guideHTML()}<div class="acts"><button id="w_keys">Ver atalhos de teclado</button><button class="pri" id="w_ok">Começar a usar</button></div>`;
+  M.innerHTML=`<h3 style="font-size:22px;margin-bottom:4px">👋 Bem-vindo ao seu Controle de Atividades</h3><div class="hint" style="margin:0 0 14px">Reunimos o melhor de Planner, Todoist, Trello, Quire, Wrike e monday num só lugar. Em 1 minuto você já domina:</div>${guideHTML()}<div class="acts"><button id="w_keys">Ver atalhos de teclado</button><button class="pri" id="w_ok">Começar a usar</button></div>`;
   $('#ov').classList.add('on');
 }
 
@@ -1734,7 +1791,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-star]')){const t=byId(el.dataset.star);if(t){t.star=!t.star;render()}return}
   if(el=g('[data-smart]')){S.view='smart';S.smart=el.dataset.smart;adding=null;cur=null;sel=new Set();render();return}
   if(el=g('[data-qf]')){S.qf=el.dataset.qf;render();return}
-  if(g('[data-hd]')){S.hideDone=!S.hideDone;render();toast(S.hideDone?'🙈 Tarefas concluídas ocultas':'👁 Tarefas concluídas visíveis');return}
+  if(g('[data-hd]')){S.hideDone=!S.hideDone;render();toast(S.hideDone?'🙈 Atividades concluídas ocultas':'👁 Atividades concluídas visíveis');return}
   if(g('#bFilt')){$('#fpanel').classList.toggle('open');return}
   if(g('#bBell')){openAlerts();return}
   if(g('#bTheme')){openMenu($('#bTheme'),themeItems());return}
@@ -1748,7 +1805,7 @@ document.addEventListener('click',e=>{
   if(g('#qaGo')){const i=$('#qa');if(quickAdd(i.value)){i.value='';quickPreview()}return}
   if(el=g('[data-qaex]')){if($('#ov').classList.contains('on')){closeModal();render()}const i=$('#qa');i.value=el.dataset.qaex;quickPreview();i.focus();return}
   if(el=g('[data-cal]')){const k=+el.dataset.cal;if(k===0)S.calMonth=today().slice(0,7);else{const [y,m]=S.calMonth.split('-').map(Number),d=new Date(y,m-1+k,1);S.calMonth=d.getFullYear()+'-'+pad(d.getMonth()+1)}render();return}
-  if(el=g('[data-caladd]')){const day=el.dataset.caladd;ask('Nova tarefa em '+fmtD(day),'',v=>{if(!v.trim())return false;const o=parseQuick(v);o.due=o.due||day;const P=proj();let inbox=S.tasks.find(t=>t.pid===P.id&&!t.parent&&t.sec&&/caixa de entrada/i.test(t.title));if(!inbox){inbox=mkTask({pid:P.id,parent:null,title:'📥 Caixa de entrada',sec:true});S.tasks.unshift(inbox)}S.tasks.push(mkTask({pid:P.id,parent:inbox.id,title:o.title,due:o.due,dueTime:o.dueTime,prio:o.prio,assignees:o.assignees,repeat:o.repeat,tags:o.tags.map(x=>x.startsWith('new:')?createTag(x.slice(4)).id:x)}));render()});return}
+  if(el=g('[data-caladd]')){const day=el.dataset.caladd;ask('Nova atividade em '+fmtD(day),'',v=>{if(!v.trim())return false;const o=parseQuick(v);o.due=o.due||day;const P=proj();let inbox=S.tasks.find(t=>t.pid===P.id&&!t.parent&&t.sec&&/caixa de entrada/i.test(t.title));if(!inbox){inbox=mkTask({pid:P.id,parent:null,title:'📥 Caixa de entrada',sec:true});S.tasks.unshift(inbox)}S.tasks.push(mkTask({pid:P.id,parent:inbox.id,title:o.title,due:o.due,dueTime:o.dueTime,prio:o.prio,assignees:o.assignees,repeat:o.repeat,tags:o.tags.map(x=>x.startsWith('new:')?createTag(x.slice(4)).id:x)}));render()});return}
   if(el=g('[data-gz]')){S.gz=el.dataset.gz;gScrollSet=false;render();return}
   if(g('[data-gtoday]')){gScrollSet=false;render();return}
   if(el=g('[data-wl]')){wlDetail(el.dataset.wl);return}
@@ -1803,15 +1860,15 @@ function dlBlob(name,blob){
 }
 const XLS_COLS=['ID','Projeto','Caminho','Título','Status','Prioridade','Responsáveis','Etiquetas','Início','Hora início','Prazo','Hora prazo','Repete','Estimativa (h)','Registrado (h)','Marco','Favorita','Concluída em','Descrição'];
 const XLS_W=[10,22,30,46,14,11,24,20,12,10,12,10,16,13,13,8,9,17,50];
-const HOWTO=[['Como importar tarefas pelo Excel'],[''],
- ['1. Preencha a aba “Tarefas”. Só o Título é obrigatório; as demais colunas são opcionais.'],
- ['2. Caminho: informe a seção/tarefa-mãe separando os níveis com “>”. Ex.: Fiscal > SPED. O que não existir é criado.'],
+const HOWTO=[['Como importar atividades pelo Excel'],[''],
+ ['1. Preencha a aba “Atividades”. Só o Título é obrigatório; as demais colunas são opcionais.'],
+ ['2. Caminho: informe a seção/atividade-mãe separando os níveis com “>”. Ex.: Fiscal > SPED. O que não existir é criado.'],
  ['3. Responsáveis e Etiquetas: separe vários com “;” (ponto e vírgula). Nomes novos são cadastrados automaticamente.'],
  ['4. Datas no formato dd/mm/aaaa e horas no formato hh:mm.'],
  ['5. Status: A fazer, Em andamento, Em revisão, Impedido ou Concluído. Prioridade: Baixa, Média ou Alta.'],
  ['6. Repete: Diariamente, Dias úteis, Semanalmente, Mensalmente, Anualmente ou “A cada 2 semanas”, “A cada 3 meses”…'],
  ['7. Marco e Favorita: escreva Sim para marcar.'],
- ['8. Coluna ID preenchida (arquivo exportado pelo sistema) = a tarefa é ATUALIZADA. ID vazio = tarefa NOVA (ou atualizada, se já existir uma com o mesmo título e caminho).'],
+ ['8. Coluna ID preenchida (arquivo exportado pelo sistema) = a atividade é ATUALIZADA. ID vazio = atividade NOVA (ou atualizada, se já existir uma com o mesmo título e caminho).'],
  ['9. No sistema: botão “Importar / Exportar” (acima da lista) → arraste o arquivo ou clique para escolher. Você vê uma prévia antes de confirmar.']];
 function sheetFrom(rows,widths,dateCols){
   const ws=XLSX.utils.aoa_to_sheet(rows,{cellDates:true});
@@ -1833,8 +1890,8 @@ function exportXlsx(scope){
   }));
   const ws=sheetFrom(rows,XLS_W,{17:'dd/mm/yyyy hh:mm'});
   ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length-1,c:XLS_COLS.length-1}})};
-  XLSX.utils.book_append_sheet(wb,ws,'Tarefas');
-  const res=[['Projeto','Tarefas','Concluídas','% concluído','Em andamento','Impedidas','Atrasadas','Horas estimadas','Horas registradas']];
+  XLSX.utils.book_append_sheet(wb,ws,'Atividades');
+  const res=[['Projeto','Atividades','Concluídas','% concluído','Em andamento','Impedidas','Atrasadas','Horas estimadas','Horas registradas']];
   let tt=[0,0,0,0,0,0,0];
   PS.forEach(p=>{const l=S.tasks.filter(t=>t.pid===p.id&&isLeaf(t)),d=l.filter(t=>t.status==='done').length,ip=l.filter(t=>t.status==='doing').length,bl=l.filter(t=>t.status==='blocked').length,lt=l.filter(isLate).length,he=l.filter(t=>t.status!=='done').reduce((a,t)=>a+(t.est||0),0),hs=l.reduce((a,t)=>a+(t.spent||0),0);
     res.push([p.name,l.length,d,l.length?d/l.length:0,ip,bl,lt,Math.round(he*10)/10,Math.round(hs*10)/10]);tt[0]+=l.length;tt[1]+=d;tt[2]+=ip;tt[3]+=bl;tt[4]+=lt;tt[5]+=he;tt[6]+=hs});
@@ -1846,7 +1903,7 @@ function exportXlsx(scope){
   XLSX.utils.book_append_sheet(wb,sheetFrom([['Etiqueta'],...S.tags.map(g=>[g.name])],[24]),'Etiquetas');
   XLSX.utils.book_append_sheet(wb,sheetFrom(HOWTO,[140]),'Como importar');
   const slug=scope==='cur'?'_'+proj().name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').slice(0,30):'';
-  saveWb(wb,'tarefas'+slug+'_'+today()+'.xlsx');
+  saveWb(wb,'atividades'+slug+'_'+today()+'.xlsx');
   toast('📊 Excel gerado — veja a pasta Downloads');
 }
 function exportTemplate(){
@@ -1856,17 +1913,17 @@ function exportTemplate(){
    ['','Operação CS Infra','Fiscal > SPED','Gerar SPED Fiscal','A fazer','Alta',(S.members[0]?S.members[0].name:'Pessoa 1')+'; '+(S.members[1]?S.members[1].name:'Pessoa 2'),'fiscal',xd(addDays(0)),'',xd(addDays(5)),'17:00','',2,'','','','','Conferir CFOP antes de transmitir'],
    ['','Operação CS Infra','Fiscal > SPED','Validar no PVA e transmitir','A fazer','Alta',(S.members[0]?S.members[0].name:'Pessoa 1'),'fiscal','','',xd(addDays(7)),'','',1,'','Sim','','',''],
    ['','Operação CS Infra','Rotinas','Revisar backups','Em andamento','Média',(S.members[S.members.length>1?1:0]?S.members[S.members.length>1?1:0].name:'Pessoa 1'),'infra','','',xd(addDays(3)),'','Semanalmente',1,'','','Sim','',''],
-   ['','','','Tarefa simples sem seção','','','','','','','','','','','','','','','']];
+   ['','','','Atividade simples sem seção','','','','','','','','','','','','','','','']];
   XLSX.utils.book_append_sheet(wb,sheetFrom(HOWTO,[140]),'Como importar');
-  XLSX.utils.book_append_sheet(wb,sheetFrom(ex,XLS_W),'Tarefas');
+  XLSX.utils.book_append_sheet(wb,sheetFrom(ex,XLS_W),'Atividades');
   XLSX.utils.book_append_sheet(wb,sheetFrom([['Status','Prioridade','Repete'],['A fazer','Baixa','Diariamente'],['Em andamento','Média','Dias úteis'],['Em revisão','Alta','Semanalmente'],['Impedido','','Mensalmente'],['Concluído','','Anualmente']],[16,12,16]),'Valores aceitos');
-  saveWb(wb,'modelo_importacao_tarefas.xlsx');
-  toast('📄 Modelo gerado — preencha a aba “Tarefas”');
+  saveWb(wb,'modelo_importacao_atividades.xlsx');
+  toast('📄 Modelo gerado — preencha a aba “Atividades”');
 }
 
 /* ----- importar ----- */
 const nh=h=>norm(h).replace(/\s+/g,' ').trim();
-const ALIAS={id:['id'],projeto:['projeto'],caminho:['caminho','secao','grupo','tarefa pai','pai'],titulo:['titulo','tarefa','nome','nome da tarefa','assunto'],status:['status','situacao','estado'],prio:['prioridade','prio'],resp:['responsaveis','responsavel','atribuido a','resp','dono'],tags:['etiquetas','etiqueta','tags','tag'],start:['inicio','data inicio','data de inicio'],stime:['hora inicio','hora de inicio'],due:['prazo','data fim','fim','vencimento','data limite','termino','entrega','finalizacao'],dtime:['hora prazo','hora fim','hora','hora de termino'],rep:['repete','recorrencia','repeticao'],est:['estimativa (h)','estimativa','horas estimadas'],spent:['registrado (h)','registrado','horas registradas'],ms:['marco'],star:['favorita','favorito'],desc:['descricao','observacoes','observacao','notas']};
+const ALIAS={id:['id'],projeto:['projeto'],caminho:['caminho','secao','grupo','atividade pai','tarefa pai','pai'],titulo:['titulo','atividade','tarefa','nome','nome da atividade','nome da tarefa','assunto'],status:['status','situacao','estado'],prio:['prioridade','prio'],resp:['responsaveis','responsavel','atribuido a','resp','dono'],tags:['etiquetas','etiqueta','tags','tag'],start:['inicio','data inicio','data de inicio'],stime:['hora inicio','hora de inicio'],due:['prazo','data fim','fim','vencimento','data limite','termino','entrega','finalizacao'],dtime:['hora prazo','hora fim','hora','hora de termino'],rep:['repete','recorrencia','repeticao'],est:['estimativa (h)','estimativa','horas estimadas'],spent:['registrado (h)','registrado','horas registradas'],ms:['marco'],star:['favorita','favorito'],desc:['descricao','observacoes','observacao','notas']};
 function pDate(v){
   if(v===''||v==null)return '';
   if(v instanceof Date)return ymd(v);
@@ -1902,7 +1959,7 @@ const yes=v=>/^(sim|s|x|1|true|yes|verdadeiro)$/i.test(String(v).trim());
 function findMember(n){const q=norm(n).trim();return S.members.find(m=>norm(m.name)===q||norm(m.email||'')===q||norm(m.name).split(' ')[0]===q)}
 function planImport(grid){
   const hi=grid.findIndex(r=>r.some(c=>ALIAS.titulo.includes(nh(c))));
-  if(hi<0)return{error:'Não encontrei a coluna “Título” (ou “Tarefa”). Use o modelo para garantir o formato.'};
+  if(hi<0)return{error:'Não encontrei a coluna “Título” (ou “Atividade”). Use o modelo para garantir o formato.'};
   const map={};grid[hi].forEach((h,i)=>{const k=Object.keys(ALIAS).find(k=>ALIAS[k].includes(nh(h)));if(k&&!(k in map))map[k]=i});
   const get=(r,k)=>map[k]===undefined?'':r[map[k]];
   const items=[],warn=[],newP=new Set(),newM=new Set(),newT=new Set();
@@ -1972,7 +2029,7 @@ function importPreview(plan,fname,sheet){
   if(plan.newM.size)ex.push('Pessoas novas: <b>'+[...plan.newM].map(esc).join(', ')+'</b>');
   if(plan.newT.size)ex.push('Etiquetas novas: <b>'+[...plan.newT].map(esc).join(', ')+'</b>');
   M.innerHTML=`<h3>📥 Importar do Excel</h3><div class="hint" style="margin:-4px 0 12px">Arquivo: <b>${esc(fname)}</b> · aba “${esc(sheet)}” · ${plan.items.length} linha(s) válida(s). Nada foi alterado ainda — confira e confirme.</div>
-  <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px"><div class="kpi g"><b>${cr}</b><span>tarefas novas</span></div><div class="kpi"><b>${up}</b><span>tarefas atualizadas</span></div><div class="kpi ${plan.warn.length?'a':''}"><b>${plan.warn.length}</b><span>avisos</span></div></div>
+  <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px"><div class="kpi g"><b>${cr}</b><span>atividades novas</span></div><div class="kpi"><b>${up}</b><span>atividades atualizadas</span></div><div class="kpi ${plan.warn.length?'a':''}"><b>${plan.warn.length}</b><span>avisos</span></div></div>
   ${ex.length?`<div class="hint" style="margin:0 0 8px">${ex.join(' · ')}</div>`:''}
   <label>Prévia (primeiras linhas)</label>
   <div class="sub2" style="max-height:260px;overflow:auto"><table>${plan.items.slice(0,14).map(i=>`<tr><td style="width:62px"><span class="st" style="color:${i.action==='create'?'var(--ok)':'var(--ac)'};border-color:${i.action==='create'?'var(--ok)':'var(--ac)'}">${i.action==='create'?'Nova':'Atualiza'}</span></td><td>${esc(i.title)}<span class="sub">${esc([i.project,...i.path].filter(Boolean).join(' › '))}</span></td><td style="width:100px;color:var(--mu)">${esc(i.f.due?fmtS(i.f.due):'')}</td></tr>`).join('')}</table></div>
@@ -1990,10 +2047,10 @@ async function importFile(f){
   if(!/\.(xlsx|xls|csv|txt)$/i.test(f.name)){toast('Use um arquivo Excel (.xlsx) ou CSV.');return}
   try{
     const wb=XLSX.read(await f.arrayBuffer(),{type:'array',codepage:65001});
-    const order=[...wb.SheetNames.filter(n=>/tarefa/i.test(n)),...wb.SheetNames.filter(n=>!/tarefa/i.test(n))];
+    const order=[...wb.SheetNames.filter(n=>/atividade|tarefa/i.test(n)),...wb.SheetNames.filter(n=>!/atividade|tarefa/i.test(n))];
     let grid=null,sheet='';
     for(const n of order){const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''});if(g.some(r=>r.some(c=>ALIAS.titulo.includes(nh(c))))){grid=g;sheet=n;break}}
-    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Tarefa”). Use o botão “Importar / Exportar” → Baixar modelo de planilha.','',()=>{},{confirm:1,noCancel:1});return}
+    if(!grid){ask('Não encontrei uma aba com a coluna “Título” (ou “Atividade”). Use o botão “Importar / Exportar” → Baixar modelo de planilha.','',()=>{},{confirm:1,noCancel:1});return}
     const plan=planImport(grid);
     if(plan.error){ask(plan.error,'',()=>{},{confirm:1,noCancel:1});return}
     importPreview(plan,f.name,sheet);
@@ -2003,9 +2060,9 @@ async function importFile(f){
 /* ----- central de importar / exportar ----- */
 function jsonBackup(){return JSON.stringify({exportedAt:new Date().toISOString(),org:S.org,members:S.members,tags:S.tags,projects:S.projects,tasks:S.tasks},null,1)}
 function restoreJson(f){
-  if(CLOUD){ask('Backups .json servem para guardar uma cópia dos dados. Para trazer tarefas de volta ao sistema online, use a planilha Excel (a prévia mostra o que será criado ou atualizado).','',()=>{},{confirm:1,noCancel:1});return}
+  if(CLOUD){ask('Backups .json servem para guardar uma cópia dos dados. Para trazer atividades de volta ao sistema online, use a planilha Excel (a prévia mostra o que será criado ou atualizado).','',()=>{},{confirm:1,noCancel:1});return}
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.projects||!d.tasks)throw 0;
-    ask('Restaurar este backup? Os dados atuais serão substituídos ('+d.tasks.length+' tarefas no arquivo).','',()=>{S=migrate(d);adding=null;render();toast('Backup restaurado')},{confirm:1,ok:'Restaurar'})}
+    ask('Restaurar este backup? Os dados atuais serão substituídos ('+d.tasks.length+' atividades no arquivo).','',()=>{S=migrate(d);adding=null;render();toast('Backup restaurado')},{confirm:1,ok:'Restaurar'})}
     catch(x){ask('Arquivo inválido. Nada foi alterado.','',()=>{},{confirm:1,noCancel:1})}};r.readAsText(f);
 }
 function openDataHub(){
@@ -2024,8 +2081,8 @@ function openDataHub(){
    <section><h4>${ic('upload',16)} Importar</h4>
     <div class="dz ${imp?'':'off'}" id="dz" tabindex="0">${ic('upload',28)}<b>Arraste a planilha aqui</b><span>ou clique para escolher · Excel (.xlsx) ou CSV</span></div>
     ${card('tpl','file','Baixar modelo de planilha','Já vem com exemplos e instruções')}
-    <ul class="dtips"><li>Só o <b>Título</b> é obrigatório.</li><li>Planilha exportada daqui, editada e reenviada <b>atualiza</b> as tarefas (coluna ID).</li><li>Pessoas e etiquetas novas são cadastradas.</li><li>Você vê uma <b>prévia</b> antes de confirmar.</li></ul>
-    ${imp?'':'<div class="hint" style="color:var(--amb)">Seu perfil não importa tarefas.</div>'}
+    <ul class="dtips"><li>Só o <b>Título</b> é obrigatório.</li><li>Planilha exportada daqui, editada e reenviada <b>atualiza</b> as atividades (coluna ID).</li><li>Pessoas e etiquetas novas são cadastradas.</li><li>Você vê uma <b>prévia</b> antes de confirmar.</li></ul>
+    ${imp?'':'<div class="hint" style="color:var(--amb)">Seu perfil não importa atividades.</div>'}
    </section>
   </div>
   <div class="acts"><span class="hint">Dica: você também pode soltar uma planilha em qualquer tela do sistema.</span><button class="pri" id="g_ok" type="button">Fechar</button></div>`;
@@ -2040,8 +2097,8 @@ document.addEventListener('click',e=>{
   if(k==='xlsx-all'){exportXlsx('all');return}
   if(k==='pdf'){openExportPdf();return}
   if(k==='tpl'){exportTemplate();return}
-  if(k==='csv'){dlBlob('tarefas_'+today()+'.csv',new Blob(['﻿'+csv()],{type:'text/csv;charset=utf-8'}));toast('CSV gerado — veja a pasta Downloads');return}
-  if(k==='json'){dlBlob('backup_tarefas_'+today()+'.json',new Blob([jsonBackup()],{type:'application/json'}));toast('Backup gerado — veja a pasta Downloads');return}
+  if(k==='csv'){dlBlob('atividades_'+today()+'.csv',new Blob(['﻿'+csv()],{type:'text/csv;charset=utf-8'}));toast('CSV gerado — veja a pasta Downloads');return}
+  if(k==='json'){dlBlob('backup_atividades_'+today()+'.json',new Blob([jsonBackup()],{type:'application/json'}));toast('Backup gerado — veja a pasta Downloads');return}
 },true);
 /* soltar planilha em qualquer lugar da tela */
 (()=>{let n=0;const on=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
@@ -2062,7 +2119,7 @@ function openExportPdf(){
   <label>Escopo do relatório</label>
   <label class="rule" style="margin:0;color:var(--tx);font-weight:400;font-size:14px"><input type="radio" name="pdfsc" value="cur" ${all?'':'checked'}><div><b>Este projeto</b><small>${esc(proj().name)}</small></div></label>
   <label class="rule" style="margin:0;color:var(--tx);font-weight:400;font-size:14px"><input type="radio" name="pdfsc" value="all" ${all?'checked':''}><div><b>Todos os projetos</b><small>${S.projects.length} projeto(s) somados</small></div></label>
-  <label class="rule" style="margin:0;color:var(--tx);font-weight:400;font-size:14px;border:0"><input type="checkbox" id="pdf_full"><div><b>Incluir lista completa de tarefas abertas</b><small>Acrescenta páginas com todas as tarefas em aberto</small></div></label>
+  <label class="rule" style="margin:0;color:var(--tx);font-weight:400;font-size:14px;border:0"><input type="checkbox" id="pdf_full"><div><b>Incluir lista completa de atividades abertas</b><small>Acrescenta páginas com todas as atividades em aberto</small></div></label>
   <div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="pdf_go">Gerar PDF</button></span></div>`;
   $('#ov').classList.add('on');
 }
@@ -2083,7 +2140,7 @@ function exportPdf(opts){
   const rr=(x,yy,w,h,fill,line,r)=>{doc.setFillColor(...fill);doc.setDrawColor(...(line||fill));doc.setLineWidth(.6);doc.roundedRect(x,yy,w,h,r||6,r||6,line?'FD':'F')};
   const poly=(pts,fill)=>{doc.setFillColor(...fill);doc.lines(pts.slice(1).map((p,i)=>[p[0]-pts[i][0],p[1]-pts[i][1]]),pts[0][0],pts[0][1],[1,1],'F',true)};
   const card=(x,yy,w,h,title)=>{rr(x,yy,w,h,[255,255,255],BD);tx(title.toUpperCase(),x+12,yy+17,8,1,MU)};
-  const ragOf=l=>{const op2=l.filter(t=>t.status!=='done');if(!l.length)return[MU,'Sem tarefas'];if(!op2.length)return[OK,'Concluida'];const lt=op2.filter(isLate).length,b=op2.filter(QF.blocked).length;if(lt/op2.length>=.2||lt>=3)return[RD,'Em risco'];if(lt||b)return[AM,'Atencao'];return[OK,'No prazo']};
+  const ragOf=l=>{const op2=l.filter(t=>t.status!=='done');if(!l.length)return[MU,'Sem atividades'];if(!op2.length)return[OK,'Concluida'];const lt=op2.filter(isLate).length,b=op2.filter(QF.blocked).length;if(lt/op2.length>=.2||lt>=3)return[RD,'Em risco'];if(lt||b)return[AM,'Atencao'];return[OK,'No prazo']};
   const nameOwners=t=>t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')||'-';
   const scopeName=all?'Todos os projetos':proj().name;
   let y=0;
@@ -2092,21 +2149,21 @@ function exportPdf(opts){
   /* cabeçalho */
   doc.setFillColor(...NAVY);doc.rect(0,0,W,84,'F');
   doc.setFillColor(...AC);doc.rect(0,84,W,3,'F');
-  tx('Relatorio Executivo de Tarefas'.replace('Relatorio','Relatório'),M,40,21,1,[255,255,255]);
+  tx('Relatorio Executivo de Atividades'.replace('Relatorio','Relatório'),M,40,21,1,[255,255,255]);
   tx(scopeName,M,60,11.5,0,[190,205,235]);
   tx('Gerado em '+new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),W-M,40,9,0,[190,205,235],'right');
-  tx('CS Infra - Controle de Tarefas',W-M,60,9,0,[190,205,235],'right');
+  tx('CS Infra - Controle de Atividades',W-M,60,9,0,[190,205,235],'right');
   y=104;
 
   /* KPIs */
-  const kp=[[L.length,'Tarefas (itens de trabalho)',TX],[pct+'%','Concluido ('+dn.length+' de '+L.length+')',OK],[op.filter(t=>t.status==='doing').length,'Em andamento',TX],[late.length,'Atrasadas',late.length?RD:TX],[soon.length,'Vencem em 7 dias',soon.length?AM:TX],[bl.length,'Impedidas / aguardando',bl.length?RD:TX],[op.filter(t=>!t.assignees.length).length,'Sem responsavel',AM],[Math.round(op.reduce((a,t)=>a+(t.est||0),0)*10)/10+' h','Horas estimadas (abertas)',TX]];
+  const kp=[[L.length,'Atividades (itens de trabalho)',TX],[pct+'%','Concluido ('+dn.length+' de '+L.length+')',OK],[op.filter(t=>t.status==='doing').length,'Em andamento',TX],[late.length,'Atrasadas',late.length?RD:TX],[soon.length,'Vencem em 7 dias',soon.length?AM:TX],[bl.length,'Impedidas / aguardando',bl.length?RD:TX],[op.filter(t=>!t.assignees.length).length,'Sem responsavel',AM],[Math.round(op.reduce((a,t)=>a+(t.est||0),0)*10)/10+' h','Horas estimadas (abertas)',TX]];
   const kw=(CW-30)/4;
   kp.forEach((k,i)=>{const x=M+(i%4)*(kw+10),yy=y+Math.floor(i/4)*62;rr(x,yy,kw,52,BG,BD);tx(k[0],x+12,yy+27,20,1,k[2]);tx(k[1].replace('Concluido','Concluído').replace('responsavel','responsável'),x+12,yy+42,8.5,0,MU)});
   y+=62*2+4;
 
   /* status + saúde */
   const hw=(CW-10)/2,ch=158;
-  card(M,y,hw,ch,'Status das tarefas');
+  card(M,y,hw,ch,'Status das atividades');
   const parts=ST.map(s=>({v:L.filter(t=>t.status===s.id).length,c:C(s.c),n:s.n})).filter(p=>p.v>0);
   const cx=M+66,cy=y+ch/2+8,ro=48,ri=30;
   if(parts.length===1){doc.setFillColor(...parts[0].c);doc.circle(cx,cy,ro,'F');doc.setFillColor(255,255,255);doc.circle(cx,cy,ri,'F')}
@@ -2122,22 +2179,22 @@ function exportPdf(opts){
   /* carga por responsável */
   const owners=[...S.members.map(m=>({n:m.name,c:C(m.color),id:m.id})),{n:'Sem responsável',c:MU,id:null}].map(o=>({...o,ts:L.filter(t=>o.id?t.assignees.includes(o.id):!t.assignees.length)})).filter(o=>o.ts.length).slice(0,8);
   const oh=34+owners.length*22+6;ensure(oh);
-  card(M,y,CW,oh,'Carga por responsável (tarefas por status)');
+  card(M,y,CW,oh,'Carga por responsável (atividades por status)');
   const mxo=Math.max(1,...owners.map(o=>o.ts.length)),bx=M+130,bw=CW-130-150;
   owners.forEach((o,i)=>{const yy=y+40+i*22;doc.setFillColor(...o.c);doc.circle(M+18,yy-3,4,'F');tx(fit(o.n,100),M+28,yy,9.5,0,TX);
     let x=bx;const full=bw*o.ts.length/mxo;ST.forEach(s=>{const n=o.ts.filter(t=>t.status===s.id).length;if(!n)return;const w=full*n/o.ts.length;doc.setFillColor(...C(s.c));doc.rect(x,yy-9,Math.max(w,1),11,'F');x+=w});
-    const lt=o.ts.filter(isLate).length;tx(o.ts.length+' tarefa(s)'+(lt?' · '+lt+' atrasada(s)':''),M+CW-12,yy,8.5,0,lt?RD:MU,'right')});
+    const lt=o.ts.filter(isLate).length;tx(o.ts.length+' atividade(s)'+(lt?' · '+lt+' atrasada(s)':''),M+CW-12,yy,8.5,0,lt?RD:MU,'right')});
   if(!owners.length)tx('Sem dados',M+12,y+44,9,0,MU);
   y+=oh+10;
 
   /* vencimentos + evolução */
   const gh=150;ensure(gh);
-  card(M,y,hw,gh,'Vencimentos (tarefas abertas)');
+  card(M,y,hw,gh,'Vencimentos (atividades abertas)');
   const bk=[['Atrasadas',t=>isLate(t),RD],['0-7 dias',t=>!isLate(t)&&dayDiff(t.due)<=7,AM],['8-14',t=>dayDiff(t.due)>7&&dayDiff(t.due)<=14,AC],['15-30',t=>dayDiff(t.due)>14&&dayDiff(t.due)<=30,[59,130,246]],['> 30',t=>dayDiff(t.due)>30,MU]];
   const bv=bk.map(b=>op.filter(t=>t.due&&b[1](t)).length).concat([op.filter(t=>!t.due).length]);
   const bmx=Math.max(1,...bv),cw2=(hw-24)/6;
   bv.forEach((v,i)=>{const h=v/bmx*72,x=M+12+i*cw2+cw2*.15,w=cw2*.7;doc.setFillColor(...(i<5?bk[i][2]:[140,148,165]));doc.rect(x,y+gh-30-h,w,Math.max(h,1.5),'F');tx(String(v),x+w/2,y+gh-34-h,9,1,TX,'center');tx(i<5?bk[i][0]:'Sem prazo',x+w/2,y+gh-14,7,0,MU,'center')});
-  const ex=M+hw+10;card(ex,y,hw,gh,'Evolução: tarefas abertas (30 dias)');
+  const ex=M+hw+10;card(ex,y,hw,gh,'Evolução: atividades abertas (30 dias)');
   const days=[...Array(30)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(29-i));d.setHours(23,59,59,999);return d});
   const vals=days.map(d=>L.filter(t=>t.created<=d.getTime()&&!(t.status==='done'&&t.doneAt&&t.doneAt<=d.getTime())).length),mxv=Math.max(1,...vals);
   const ax=ex+14,aw=hw-28,ay=y+34,ah=gh-62,pts=vals.map((v,i)=>[ax+i*aw/29,ay+ah-v/mxv*ah]);
@@ -2164,7 +2221,7 @@ function exportPdf(opts){
     y+=10;
   };
   const pth=t=>{const p=[];let x=t;while(x.parent){x=byId(x.parent);p.unshift(x.title)}return p.slice(-1)[0]||''};
-  const baseCols=[{h:'TAREFA',w:CW-300,f:t=>[t.title+(pth(t)?'  ('+pth(t)+')':'')]},{h:'RESPONSÁVEL',w:130,f:t=>[nameOwners(t)]},{h:'PRAZO',w:70,f:t=>[(t.due?fmtS(t.due):'-')+(t.dueTime?' '+t.dueTime:''),isLate(t)?RD:TX],b:1},{h:'STATUS',w:100,f:t=>[stOf(t.status).n]}];
+  const baseCols=[{h:'ATIVIDADE',w:CW-300,f:t=>[t.title+(pth(t)?'  ('+pth(t)+')':'')]},{h:'RESPONSÁVEL',w:130,f:t=>[nameOwners(t)]},{h:'PRAZO',w:70,f:t=>[(t.due?fmtS(t.due):'-')+(t.dueTime?' '+t.dueTime:''),isLate(t)?RD:TX],b:1},{h:'STATUS',w:100,f:t=>[stOf(t.status).n]}];
   doc.addPage();y=M;
   table('Atrasadas',RD,late.sort((a,b)=>(a.due||'').localeCompare(b.due||'')),baseCols);
   table('Vencem nos próximos 7 dias',AM,soon,baseCols);
@@ -2173,11 +2230,11 @@ function exportPdf(opts){
     doc.addPage();y=M;
     const ord=[];pids.forEach(pid=>treeOrder(pid).forEach(id=>ord.push(byId(id))));
     const lst=ord.filter(t=>isLeaf(t)&&t.status!=='done');
-    table('Lista completa de tarefas abertas',AC,lst,[{h:'TAREFA',w:CW-300,f:t=>[(all?(S.projects.find(p=>p.id===t.pid)||{}).name+' > ':'')+(pth(t)?pth(t)+' > ':'')+t.title]},baseCols[1],baseCols[2],baseCols[3]]);
+    table('Lista completa de atividades abertas',AC,lst,[{h:'ATIVIDADE',w:CW-300,f:t=>[(all?(S.projects.find(p=>p.id===t.pid)||{}).name+' > ':'')+(pth(t)?pth(t)+' > ':'')+t.title]},baseCols[1],baseCols[2],baseCols[3]]);
   }
   /* rodapé */
   const n=doc.getNumberOfPages();
-  for(let i=1;i<=n;i++){doc.setPage(i);doc.setDrawColor(...BD);doc.setLineWidth(.6);doc.line(M,H-30,W-M,H-30);tx('Controle de Tarefas - CS Infra  |  Relatório executivo  |  '+scopeName,M,H-18,7.5,0,MU);tx('Página '+i+' de '+n,W-M,H-18,7.5,0,MU,'right')}
+  for(let i=1;i<=n;i++){doc.setPage(i);doc.setDrawColor(...BD);doc.setLineWidth(.6);doc.line(M,H-30,W-M,H-30);tx('Controle de Atividades - CS Infra  |  Relatório executivo  |  '+scopeName,M,H-18,7.5,0,MU);tx('Página '+i+' de '+n,W-M,H-18,7.5,0,MU,'right')}
   dlBlob('relatorio_executivo_'+today()+'.pdf',doc.output('blob'));
   toast('📄 PDF gerado — veja a pasta Downloads');
 }
@@ -2196,9 +2253,9 @@ $('#xlsIn').onchange=onXlsFile;
 
 /* ====================== CONFIGURAÇÕES, MEMBROS E PERFIS ====================== */
 const ROLES={
-  admin:{n:'Administrador',d:'Pode gerenciar todas as tarefas e membros neste projeto.'},
-  normal:{n:'Normal',d:'Pode adicionar e editar todas as tarefas e gerenciar o projeto, exceto seus usuários ou excluí-lo.'},
-  limited:{n:'Limitado',d:'Pode adicionar tarefas e gerenciar as tarefas atribuídas a si, exceto excluir.'},
+  admin:{n:'Administrador',d:'Pode gerenciar todas as atividades e membros neste projeto.'},
+  normal:{n:'Normal',d:'Pode adicionar e editar todas as atividades e gerenciar o projeto, exceto seus usuários ou excluí-lo.'},
+  limited:{n:'Limitado',d:'Pode adicionar atividades e gerenciar as atividades atribuídas a si, exceto excluir.'},
   guest:{n:'Convidado',d:'Pode ler e postar comentários.'}};
 const PERM={
   admin:{add:1,editAll:1,del:1,tags:1,rules:1,project:1,delProject:1,members:1,import:1,comment:1},
@@ -2210,7 +2267,7 @@ const role=()=>roleOfM(mem(S.me));
 const noProj=()=>{try{return CLOUD&&proj().virtual&&!PERM[role()].project}catch(e){return false}};
 const can=p=>!!PERM[role()][p]&&!(p==='add'&&noProj());
 const canEdit=t=>{if(!t)return false;const P=PERM[role()];if(P.editAll)return true;if(P.own)return t.assignees.includes(S.me)||t.by===S.me;return false};
-const DENY={add:'não pode criar tarefas.',edit:'só pode editar tarefas atribuídas a você ou criadas por você.',del:'não pode excluir.',tags:'não pode gerenciar etiquetas.',rules:'não pode gerenciar automações.',project:'não pode gerenciar o projeto.',delProject:'só administradores excluem projetos.',members:'só administradores gerenciam membros e configurações.',import:'não pode importar tarefas.'};
+const DENY={add:'não pode criar atividades.',edit:'só pode editar atividades atribuídas a você ou criadas por você.',del:'não pode excluir.',tags:'não pode gerenciar etiquetas.',rules:'não pode gerenciar automações.',project:'não pode gerenciar o projeto.',delProject:'só administradores excluem projetos.',members:'só administradores gerenciam membros e configurações.',import:'não pode importar atividades.'};
 function deny(k){if(k==='add'&&noProj()){toast('Ainda não há projetos. Peça a um administrador para criar o primeiro.');return}toast('🔒 Perfil '+ROLES[role()].n+': '+(DENY[k]||'ação não permitida.'))}
 const ADDA=['add','addroot','addsub','sublist','paste'],EDITA=['edit','done','self','indent','outdent','mup','mdown','mtop','mbottom','section','milestone','star','cut'];
 function actAllowed(name,tg,first){
@@ -2227,10 +2284,10 @@ function applyRoleUI(){
   set('#bRules',can('rules'),'Seu perfil não gerencia automações');
   set('#addProj',can('project'),'Seu perfil não cria projetos');
   set('#delProj',can('delProject'),'Somente administradores excluem projetos');
-  set('#bXlsIn',can('import'),'Seu perfil não importa tarefas');
-  set('#qaGo',can('add'),'Seu perfil não cria tarefas');
-  set('#newTask',can('add'),'Seu perfil não cria tarefas');
-  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?('Adicionar tarefa — ex.: Enviar SPED amanhã 14h @'+exName()+' #fiscal !alta'):noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
+  set('#bXlsIn',can('import'),'Seu perfil não importa atividades');
+  set('#qaGo',can('add'),'Seu perfil não cria atividades');
+  set('#newTask',can('add'),'Seu perfil não cria atividades');
+  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?('Adicionar atividade — ex.: Enviar SPED amanhã 14h @'+exName()+' #fiscal !alta'):noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
   const m=mem(S.me),u=$('#bUser');
   u.innerHTML=m?`<span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">${esc(m.name)}</b><small style="color:var(--mu);font-size:10.5px">${ROLES[role()].n}</small></span>`:`<span class="av" style="background:#667085;border-color:transparent">?</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">Quem é você?</b><small style="color:var(--mu);font-size:10.5px">Administrador (sem login)</small></span>`;
   $('#brandName').textContent=(S.org||'CS Infra');
@@ -2259,7 +2316,7 @@ function setRole(mid,r){
   m.role=r;save();closePop();render();toast(m.name+' agora é '+ROLES[r].n);
 }
 
-/* ----- painel da tarefa em modo leitura ----- */
+/* ----- painel da atividade em modo leitura ----- */
 function openTask(id){
   openTaskBase(id);
   const t=byId(id);if(!t)return;
@@ -2270,7 +2327,7 @@ function openTask(id){
   ['m_ok','m_del','m_mail'].forEach(i=>{const e=$('#'+i);if(e)e.style.display='none'});
   const sb=$('#m_sub');if(sb)sb.parentElement.style.display='none';
   const nt=$('#m_newtag');if(nt)nt.style.display='none';
-  M.insertAdjacentHTML('afterbegin',`<div class="hint" style="background:var(--ac2);color:var(--ac);border-radius:8px;padding:8px 12px;margin:0 0 10px;font-weight:600">🔒 Somente leitura — perfil ${ROLES[role()].n}: ${role()==='guest'?'você pode ler e comentar.':'você edita apenas tarefas atribuídas a você ou criadas por você. Comentar é permitido.'}</div>`);
+  M.insertAdjacentHTML('afterbegin',`<div class="hint" style="background:var(--ac2);color:var(--ac);border-radius:8px;padding:8px 12px;margin:0 0 10px;font-weight:600">🔒 Somente leitura — perfil ${ROLES[role()].n}: ${role()==='guest'?'você pode ler e comentar.':'você edita apenas atividades atribuídas a você ou criadas por você. Comentar é permitido.'}</div>`);
 }
 
 /* ----- bloqueios (fase de captura, antes dos demais tratadores) ----- */
@@ -2307,10 +2364,10 @@ function openTeam(){openSettings('membros')}
 function inviteDialog(m){
   const link=S.link?`\n\nAcesse o sistema: ${S.link}`:'';
   mailDialog('Convite por e-mail',[m.email],`Convite: ${proj().name}`,
-   `Olá${m.name&&m.name!==m.email?', '+m.name:''}!\n\nVocê foi convidado(a) para colaborar no projeto "${proj().name}" no Controle de Tarefas.\n\nSeu perfil: ${ROLES[roleOfM(m)].n} — ${ROLES[roleOfM(m)].d}${link}`,()=>{closeModal();openSettings('membros')});
+   `Olá${m.name&&m.name!==m.email?', '+m.name:''}!\n\nVocê foi convidado(a) para colaborar no projeto "${proj().name}" no Controle de Atividades.\n\nSeu perfil: ${ROLES[roleOfM(m)].n} — ${ROLES[roleOfM(m)].d}${link}`,()=>{closeModal();openSettings('membros')});
 }
 const SETTABS=[['geral','Geral'],['membros','Membros'],['equipes','Equipes externas'],['links','Links compartilhados'],['props','Propriedades'],['opcoes','Opções']];
-const PERMROWS=[['Ver tarefas, projetos e painéis',()=>1],['Comentar',r=>PERM[r].comment],['Criar tarefas',r=>PERM[r].add],['Editar tarefas atribuídas a si ou criadas por si',r=>PERM[r].own||PERM[r].editAll],['Editar qualquer tarefa',r=>PERM[r].editAll],['Excluir tarefas',r=>PERM[r].del],['Etiquetas, automações, modelos e importação Excel',r=>PERM[r].tags&&PERM[r].import],['Gerenciar membros e configurações',r=>PERM[r].members],['Excluir projeto',r=>PERM[r].delProject]];
+const PERMROWS=[['Ver atividades, projetos e painéis',()=>1],['Comentar',r=>PERM[r].comment],['Criar atividades',r=>PERM[r].add],['Editar atividades atribuídas a si ou criadas por si',r=>PERM[r].own||PERM[r].editAll],['Editar qualquer atividade',r=>PERM[r].editAll],['Excluir atividades',r=>PERM[r].del],['Etiquetas, automações, modelos e importação Excel',r=>PERM[r].tags&&PERM[r].import],['Gerenciar membros e configurações',r=>PERM[r].members],['Excluir projeto',r=>PERM[r].delProject]];
 function memberCard(m,adm){
   if(CLOUD)return memberCardCloud(m,adm);
   const r=roleOfM(m),you=S.me===m.id;
@@ -2337,7 +2394,7 @@ function settings(){
   const row=(l,h,c)=>`<div class="frow"><div class="fl"><label>${l}</label>${h?`<span>${h}</span>`:''}</div><div class="fc">${c}</div></div>`;
   let b='';
   if(tab==='membros'){
-    const act=adm?`<button class="pri" data-act3="invite">${ic('plus',16)} Convidar</button>${CLOUD?`<button data-act3="addperson" title="Pessoa que só aparece para atribuir tarefas, sem login">Pessoa sem acesso</button>`:''}`:'';
+    const act=adm?`<button class="pri" data-act3="invite">${ic('plus',16)} Convidar</button>${CLOUD?`<button data-act3="addperson" title="Pessoa que só aparece para atribuir atividades, sem login">Pessoa sem acesso</button>`:''}`:'';
     b=ro+card(`Membros <span class="cnt">${S.members.length}</span>`,'Quem pode entrar no sistema e com qual perfil.',S.members.map(m=>memberCard(m,adm)).join(''),'',act)+
     card('Perfis e permissões','O que cada perfil pode fazer.',`<table class="perm"><tr><th></th>${Object.keys(ROLES).map(k=>`<th>${ROLES[k].n}</th>`).join('')}</tr>${PERMROWS.map(r=>`<tr><td>${r[0]}</td>${Object.keys(ROLES).map(k=>`<td>${r[1](k)?'<span style="color:var(--ok)">✔</span>':'<span style="color:var(--mu)">—</span>'}</td>`).join('')}</tr>`).join('')}</table>${CLOUD?'<div class="hint" style="margin-top:12px">As permissões são aplicadas também no banco de dados (não só na tela).</div>':'<div class="hint" style="margin-top:12px">⚠ Sem login em servidor, este controle vale apenas na interface.</div>'}`);
   }else if(tab==='equipes'){
@@ -2359,9 +2416,9 @@ function settings(){
       card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
   }else if(tab==='opcoes'){
     b=card('Aparência','Escolha o tema do sistema. Fica salvo neste navegador.',themePicker())+
-      card('Dados e backup','Exporte suas tarefas ou traga tarefas de uma planilha.',`<div class="btns"><button class="pri" data-act3="hub">${ic('download',16)} Importar e exportar</button>`)+
+      card('Dados e backup','Exporte suas atividades ou traga atividades de uma planilha.',`<div class="btns"><button class="pri" data-act3="hub">${ic('download',16)} Importar e exportar</button>`)+
       card('Ajuda','',`<div class="btns"><button data-act3="welcome">Rever guia de boas-vindas</button><button data-act3="keys">Atalhos de teclado</button></div>`)+
-      card('Zona de risco','Ações que apagam dados.',`<div class="btns"><button data-act3="rmex" ${prj?'':'disabled'}>Remover tarefas de exemplo</button><button data-act3="delproj" style="color:var(--red)" ${can('delProject')?'':'disabled'}>Excluir este projeto</button></div>`,'danger');
+      card('Zona de risco','Ações que apagam dados.',`<div class="btns"><button data-act3="rmex" ${prj?'':'disabled'}>Remover atividades de exemplo</button><button data-act3="delproj" style="color:var(--red)" ${can('delProject')?'':'disabled'}>Excluir este projeto</button></div>`,'danger');
   }else{
     const m=mem(S.me);
     b=ro+card('Organização','',row('Nome da organização','Aparece no topo do menu',`<input data-gorg="1" value="${esc(S.org||'CS Infra')}" ${adm?'':'disabled'}>`))+
@@ -2372,7 +2429,7 @@ function settings(){
   $('#view').innerHTML=`<div class="setpg"><header class="sph"><h1>Configurações</h1><p>Perfis, equipe, aparência e dados do sistema.</p></header><div class="setwrap">${nav}<div class="setmain">${b}</div></div></div>`;
 }
 
-/* ----- remover pessoa: o que fazer com as tarefas dela ----- */
+/* ----- remover pessoa: o que fazer com as atividades dela ----- */
 async function flushSync(){
   if(!CLOUD||!cloud.ready)return;
   clearTimeout(cloud.timer);cloud.timer=null;
@@ -2399,11 +2456,11 @@ function removeMemberDialog(m){
   const extra=excl.reduce((n,t)=>n+desc(t.id).filter(d=>!(d.assignees||[]).includes(m.id)).length,0);
   const M=$('#modal');M.dataset.kind='rmm';M.style.width='';editing=null;closePop();window._rmId=m.id;
   M.innerHTML=`<h3>Remover ${esc(m.name)}</h3>
-  <div class="hint" style="margin:-6px 0 12px"><b>${mine.length}</b> tarefa${mine.length>1?'s':''} no nome dela${mine.length>excl.length?` (${mine.length-excl.length} compartilhada${mine.length-excl.length>1?'s':''} com outras pessoas)`:''}. O que fazer com elas?</div>
-  <label class="opt"><input type="radio" name="rm_mode" value="move" checked><span><b>Passar para outra(s) pessoa(s)</b><small>As tarefas continuam, com os novos responsáveis.</small></span></label>
-  <div class="alist" id="rm_who" style="margin:4px 0 10px;max-height:190px;overflow:auto">${others.map(x=>`<label class="arow"><input type="checkbox" class="rm_to" value="${x.id}"><span class="av" style="background:${x.color};border-color:transparent">${esc(ini(x.name))}</span><span class="an"><b>${esc(x.name)}</b><small>${esc(x.email||'sem e-mail')}</small></span>${roleBadge(x)}</label>`).join('')||'<div class="hint" style="padding:14px">Não há outra pessoa para receber as tarefas.</div>'}</div>
-  <label class="opt"><input type="radio" name="rm_mode" value="del"><span><b>Excluir as tarefas</b><small>${excl.length?`Apaga ${excl.length} tarefa${excl.length>1?'s':''} que ${excl.length>1?'são só dela':'é só dela'}${extra?` e ${extra} subtarefa${extra>1?'s':''} de outras pessoas`:''}. Nas compartilhadas ela só deixa de ser responsável.`:'Não há tarefas só dela; nas compartilhadas ela apenas deixa de ser responsável.'}</small></span></label>
-  <label class="opt"><input type="radio" name="rm_mode" value="none"><span><b>Deixar sem responsável</b><small>As tarefas continuam, sem ninguém atribuído.</small></span></label>
+  <div class="hint" style="margin:-6px 0 12px"><b>${mine.length}</b> atividade${mine.length>1?'s':''} no nome dela${mine.length>excl.length?` (${mine.length-excl.length} compartilhada${mine.length-excl.length>1?'s':''} com outras pessoas)`:''}. O que fazer com elas?</div>
+  <label class="opt"><input type="radio" name="rm_mode" value="move" checked><span><b>Passar para outra(s) pessoa(s)</b><small>As atividades continuam, com os novos responsáveis.</small></span></label>
+  <div class="alist" id="rm_who" style="margin:4px 0 10px;max-height:190px;overflow:auto">${others.map(x=>`<label class="arow"><input type="checkbox" class="rm_to" value="${x.id}"><span class="av" style="background:${x.color};border-color:transparent">${esc(ini(x.name))}</span><span class="an"><b>${esc(x.name)}</b><small>${esc(x.email||'sem e-mail')}</small></span>${roleBadge(x)}</label>`).join('')||'<div class="hint" style="padding:14px">Não há outra pessoa para receber as atividades.</div>'}</div>
+  <label class="opt"><input type="radio" name="rm_mode" value="del"><span><b>Excluir as atividades</b><small>${excl.length?`Apaga ${excl.length} atividade${excl.length>1?'s':''} que ${excl.length>1?'são só dela':'é só dela'}${extra?` e ${extra} subatividade${extra>1?'s':''} de outras pessoas`:''}. Nas compartilhadas ela só deixa de ser responsável.`:'Não há atividades só dela; nas compartilhadas ela apenas deixa de ser responsável.'}</small></span></label>
+  <label class="opt"><input type="radio" name="rm_mode" value="none"><span><b>Deixar sem responsável</b><small>As atividades continuam, sem ninguém atribuído.</small></span></label>
   ${loginNote}
   <div class="hint" id="rm_msg" style="color:var(--red)"></div>
   <div class="acts"><span></span><span><button id="g_ok" type="button">Cancelar</button> <button class="pri" id="rm_go" type="button" style="background:var(--red);border-color:var(--red)">Remover pessoa</button></span></div>`;
@@ -2415,7 +2472,7 @@ document.addEventListener('click',async e=>{
   const m=mem(window._rmId);if(!m)return;
   const mode=(document.querySelector('input[name=rm_mode]:checked')||{}).value||'move';
   const ids=[...document.querySelectorAll('.rm_to:checked')].map(x=>x.value);
-  if(mode==='move'&&!ids.length){$('#rm_msg').textContent='Escolha para quem passar as tarefas (ou use outra opção).';return}
+  if(mode==='move'&&!ids.length){$('#rm_msg').textContent='Escolha para quem passar as atividades (ou use outra opção).';return}
   b.disabled=true;b.textContent='Removendo…';
   const mine=S.tasks.filter(t=>(t.assignees||[]).includes(m.id));let moved=0,gone=0;
   if(mode==='move'){mine.forEach(t=>{t.assignees=[...new Set(t.assignees.filter(a=>a!==m.id).concat(ids))];moved++})}
@@ -2427,14 +2484,14 @@ document.addEventListener('click',async e=>{
   const r=await finishRemoveMember(m);
   if(r==='erro'){closeModal();render();return}
   closeModal();render();
-  toast(mode==='move'?`Pessoa removida; ${moved} tarefa${moved!==1?'s':''} passaram para ${ids.map(i=>(mem(i)||{}).name).filter(Boolean).join(', ')}`:mode==='del'?`Pessoa removida; ${gone} tarefa${gone!==1?'s':''} excluída${gone!==1?'s':''}`:'Pessoa removida; tarefas sem responsável');
+  toast(mode==='move'?`Pessoa removida; ${moved} atividade${moved!==1?'s':''} passaram para ${ids.map(i=>(mem(i)||{}).name).filter(Boolean).join(', ')}`:mode==='del'?`Pessoa removida; ${gone} atividade${gone!==1?'s':''} excluída${gone!==1?'s':''}`:'Pessoa removida; atividades sem responsável');
 },true);
 document.addEventListener('change',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('rm_to')){const r=document.querySelector('input[name=rm_mode][value=move]');if(r)r.checked=true}});
 
 /* ----- acesso por projeto ----- */
 const roleBadge=m=>`<span class="rb rb-${roleOfM(m)}">${ROLES[roleOfM(m)].n}</span>`;
 function projAccessNote(p){
-  if(p.restricted)return 'Somente administradores e as pessoas marcadas abaixo veem este projeto e suas tarefas.';
+  if(p.restricted)return 'Somente administradores e as pessoas marcadas abaixo veem este projeto e suas atividades.';
   return 'Todos os membros com perfil Administrador ou Normal veem este projeto. Pessoas de fora (Limitado e Convidado) só veem se estiverem marcadas abaixo.';
 }
 function accessCard(p,adm){
@@ -2523,9 +2580,9 @@ document.addEventListener('click',e=>{
     if(a==='welcome'){openWelcome();return}
     if(a==='keys'){S.helpTab='atalhos';toggleHelp(true);return}
     if(a==='delproj'){$('#delProj').click();return}
-    if(a==='rmex'){const ids=S.tasks.filter(t=>t.pid===proj().id&&/^Exemplo:/.test(t.title)).map(t=>t.id);ask('Remover '+ids.length+' tarefa(s) de exemplo deste projeto?','',()=>{ids.forEach(delTask);render();toast('Exemplos removidos')},{confirm:1,ok:'Remover'});return}
+    if(a==='rmex'){const ids=S.tasks.filter(t=>t.pid===proj().id&&/^Exemplo:/.test(t.title)).map(t=>t.id);ask('Remover '+ids.length+' atividade(s) de exemplo deste projeto?','',()=>{ids.forEach(delTask);render();toast('Exemplos removidos')},{confirm:1,ok:'Remover'});return}
   }
-  if(el=g('[data-linkrole]')){const k=el.dataset.linkrole,em=S.members.filter(m=>m.email).map(m=>m.email);mailDialog('Convite por link — perfil '+ROLES[k].n,[],'Convite: '+proj().name,`Olá!\n\nVocê foi convidado(a) para colaborar no projeto "${proj().name}" no Controle de Tarefas.\n\nSeu perfil será: ${ROLES[k].n} — ${ROLES[k].d}${S.link?'\n\nAcesse o sistema: '+S.link:''}`,()=>{closeModal();render()});return}
+  if(el=g('[data-linkrole]')){const k=el.dataset.linkrole,em=S.members.filter(m=>m.email).map(m=>m.email);mailDialog('Convite por link — perfil '+ROLES[k].n,[],'Convite: '+proj().name,`Olá!\n\nVocê foi convidado(a) para colaborar no projeto "${proj().name}" no Controle de Atividades.\n\nSeu perfil será: ${ROLES[k].n} — ${ROLES[k].d}${S.link?'\n\nAcesse o sistema: '+S.link:''}`,()=>{closeModal();render()});return}
   if(el=g('[data-teamdel]')){if(!can('members')){deny('members');return}const t=S.teams.find(x=>x.id===el.dataset.teamdel);ask('Excluir a equipe “'+t.name+'”? As pessoas continuam cadastradas, mas sem equipe.','',()=>{S.members.forEach(m=>{if(m.team===t.id)m.team=null});S.teams=S.teams.filter(x=>x.id!==t.id);render()},{confirm:1,ok:'Excluir'});return}
   if(el=g('[data-pcolor]')){if(!can('project')){deny('project');return}proj().color=el.dataset.pcolor;render();return}
   if(g('#iv_go')){
@@ -2887,7 +2944,7 @@ function maybeOfferMigration(){
   let L;try{L=migrate(JSON.parse(cloud.localCopy))}catch(e){return}
   if(!L||!L.tasks||!L.tasks.length)return;
   if(S.projects.some(p=>!p.virtual)||role()!=='admin')return;
-  ask(`Encontrei neste navegador ${L.tasks.length} tarefa(s) em ${L.projects.length} projeto(s). Enviar esses dados para o banco de dados (visível para toda a equipe)?`,'',()=>{migrateLocal(L)},{confirm:1,ok:'Enviar para o banco',back:()=>{localStorage.setItem('quire-migrated','1');closeModal()}});
+  ask(`Encontrei neste navegador ${L.tasks.length} atividade(s) em ${L.projects.length} projeto(s). Enviar esses dados para o banco de dados (visível para toda a equipe)?`,'',()=>{migrateLocal(L)},{confirm:1,ok:'Enviar para o banco',back:()=>{localStorage.setItem('quire-migrated','1');closeModal()}});
 }
 function migrateLocal(L){
   const myEm=((S.members.find(m=>m.id===S.me)||{}).email||'').toLowerCase(),map={};
@@ -2976,7 +3033,7 @@ document.addEventListener('click',async e=>{
   if(el=g('[data-cresend]')){stop();const m=mem(el.dataset.cresend);if(!m)return;
     try{const r=await fnCall({action:'resend',email:m.email,name:m.name,role:roleOfM(m)});toast((r&&r.message)||'Convite reenviado')}catch(x){if(fnMissing(x))inviteResult({fallback:true},m.email);else toast(trErr(x.message))}return}
   if(el=g('[data-crevoke]')){stop();const m=mem(el.dataset.crevoke);if(!m)return;
-    ask('Revogar o acesso de '+m.name+'? Ela deixa de conseguir entrar (os dados e tarefas dela continuam).','',async()=>{
+    ask('Revogar o acesso de '+m.name+'? Ela deixa de conseguir entrar (os dados e atividades dela continuam).','',async()=>{
       try{await fnCall({action:'revoke',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false,true)}
       catch(x){if(fnMissing(x)){m.access=false;m.status='blocked';cloudSchedule()}else{toast(trErr(x.message));return}}
       render();toast('Acesso revogado')},{confirm:1,ok:'Revogar acesso'});return}
@@ -2989,7 +3046,7 @@ document.addEventListener('click',e=>{
   if(!CLOUD)return;const el=e.target.closest('[data-act3="addperson"]');if(!el)return;
   e.preventDefault();e.stopImmediatePropagation();
   if(!can('members')){deny('members');return}
-  ask('Nome da pessoa (só para atribuir tarefas, sem acesso ao sistema)','',v=>{if(!v.trim())return false;S.members.push({id:uid(),name:v.trim(),email:'',color:COLORS[S.members.length%COLORS.length],cap:40,role:'limited',status:'active',access:false,team:null});render()});
+  ask('Nome da pessoa (só para atribuir atividades, sem acesso ao sistema)','',v=>{if(!v.trim())return false;S.members.push({id:uid(),name:v.trim(),email:'',color:COLORS[S.members.length%COLORS.length],cap:40,role:'limited',status:'active',access:false,team:null});render()});
 },true);
 
 pushHist();
@@ -3039,10 +3096,10 @@ function syncURL(){
     }
     routeFirst=false;
     let lab;
-    if(path.startsWith('/t/')){const t=byId(editing);lab=t?t.title:'Tarefa'}
+    if(path.startsWith('/t/')){const t=byId(editing);lab=t?t.title:'Atividade'}
     else if(path.startsWith('/config'))lab='Configurações';
     else if(S.view==='smart'){const sm=SMARTS.find(x=>x[0]===S.smart)||SMARTS[0];lab=sm[1].replace(/^\S+\s/,'')}
-    else{const p=proj();lab=p&&!p.virtual?p.name:'Controle de Tarefas'}
+    else{const p=proj();lab=p&&!p.virtual?p.name:'Controle de Atividades'}
     document.title=lab+' — CS Infra';
   }catch(e){}
 }
@@ -3065,16 +3122,17 @@ function applyRoute(path,quiet){
       const t=byId(seg[1]);
       if(t){S.cur=t.pid;if(['smart','settings','dash'].includes(S.view))S.view='list';let q=t.parent;while(q){const x=byId(q);x.open=true;q=x.parent}cur=t.id;anchor=t.id;sel=new Set([t.id]);
         routing=false;render();markSel(true);openTask(t.id);if(msg)toast(msg);return}
-      msg='Tarefa não encontrada ou você não tem acesso a ela.';
+      msg='Atividade não encontrada ou você não tem acesso a ela.';
     }
     else msg='Endereço não reconhecido — abrindo o início.';
   }finally{routing=false}
   render();
   if(msg)toast(msg);
 }
-async function copyLink(url){
-  try{await navigator.clipboard.writeText(url);toast('🔗 Link copiado')}
-  catch(e){const i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();try{document.execCommand('copy');toast('🔗 Link copiado')}catch(_){toast(url)}i.remove()}
+async function copyLink(url,msg){
+  msg=msg||'🔗 Link copiado';
+  try{await navigator.clipboard.writeText(url);toast(msg)}
+  catch(e){const i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();try{document.execCommand('copy');toast(msg)}catch(_){toast(url)}i.remove()}
 }
 if(ROUTER_ON){
   const _render=render;render=function(){_render.apply(this,arguments);syncURL()};
@@ -3082,3 +3140,48 @@ if(ROUTER_ON){
   const _closeModal=closeModal;closeModal=function(){_closeModal.apply(this,arguments);syncURL()};
   window.addEventListener('popstate',()=>{if(cloud.ready)applyRoute(location.pathname,true)});
 }
+
+{const _r3=render;render=function(){_r3.apply(this,arguments);try{markSel()}catch(e){}};}
+
+
+/* ===== autocomplete de @pessoa na barra de adição ===== */
+(function(){
+  let box=null,items=[],act=0,inp=null,tokStart=-1;
+  const hide=()=>{if(box){box.remove();box=null}items=[];inp=null};
+  function token(i){
+    const v=i.value,c=i.selectionStart,m=/(^|\s)@([^\s@]*)$/.exec(v.slice(0,c));
+    if(!m)return null;return{start:c-m[2].length-1,q:m[2],end:c};
+  }
+  function render(){
+    if(!box){box=document.createElement('div');box.id='mpop';box.setAttribute('role','listbox');document.body.appendChild(box)}
+    const r=inp.getBoundingClientRect();
+    box.style.left=Math.max(8,Math.min(r.left,innerWidth-308))+'px';box.style.top=(r.bottom+6)+'px';box.style.width=Math.min(300,innerWidth-16)+'px';
+    box.innerHTML=items.length?items.map((m,i)=>`<div class="mi2 ${i===act?'on':''}" role="option" data-mi="${i}"><span class="av" style="background:${m.color}">${esc(ini(m.name))}</span><span class="mt"><b>${esc(m.name)}</b><small>${esc(m.email||'sem e-mail')}</small></span><kbd>@${esc(handleOf(m))}</kbd></div>`).join('')+'<div class="mf">↑ ↓ escolhe · Enter / Tab insere · Esc fecha</div>':'<div class="mf">Nenhuma pessoa com esse nome</div>';
+  }
+  function update(i){
+    const t=token(i);if(!t){hide();return}
+    inp=i;tokStart=t.start;
+    const q=norm(t.q);
+    const sc=m=>{const n=norm(m.name),e=norm(m.email||'');if(!q)return 1;if(nameParts(m).some(w=>w.startsWith(q))||e.startsWith(q))return 0;if(n.includes(q)||e.includes(q))return 2;return 9};
+    items=S.members.filter(m=>sc(m)<9).sort((a,b)=>sc(a)-sc(b)||a.name.localeCompare(b.name)).slice(0,6);
+    act=0;render();
+  }
+  function pick(m){
+    const i=inp,t=token(i);if(!t||!m)return;
+    const v=i.value,ins='@'+handleOf(m)+' ';
+    i.value=v.slice(0,t.start)+ins+v.slice(t.end);
+    const p=t.start+ins.length;i.setSelectionRange(p,p);
+    hide();i.dispatchEvent(new Event('input',{bubbles:true}));i.focus();
+  }
+  document.addEventListener('input',e=>{if(e.target.id==='qa')update(e.target)},true);
+  document.addEventListener('click',e=>{if(e.target.id==='qa')update(e.target);else if(!e.target.closest('#mpop'))hide()},true);
+  document.addEventListener('mousedown',e=>{const el=e.target.closest&&e.target.closest('#mpop .mi2');if(el){e.preventDefault();e.stopPropagation();pick(items[+el.dataset.mi])}},true);
+  document.addEventListener('focusout',e=>{if(e.target.id==='qa')setTimeout(()=>{if(document.activeElement!==e.target)hide()},120)},true);
+  document.addEventListener('keydown',e=>{
+    if(!box||e.target!==inp)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!items.length)return;e.preventDefault();e.stopImmediatePropagation();act=(act+(e.key==='ArrowDown'?1:items.length-1))%items.length;render();return}
+    if((e.key==='Enter'||e.key==='Tab')&&items.length){e.preventDefault();e.stopImmediatePropagation();pick(items[act]);return}
+    if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();hide();return}
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='Home'||e.key==='End')setTimeout(()=>{if(inp)update(inp)},0);
+  },true);
+})();
