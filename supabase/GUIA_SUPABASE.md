@@ -127,6 +127,8 @@ Além do perfil (Administrador, Normal, Limitado, Convidado), cada projeto contr
 
 **Importante ao atualizar:** rode novamente o arquivo `supabase_setup.sql` inteiro no SQL Editor (é seguro repetir; não apaga dados). Ele cria a tabela `project_access`, a coluna `restricted` e as novas regras. Projetos já existentes continuam abertos para Administrador e Normal; **Limitado e Convidado deixam de ver projetos até você incluí-los**.
 
+**Excluir uma pessoa no sistema (🗑 no cartão do membro) também exclui o login dela** em Authentication → Users. Isso acontece de dois jeitos que se complementam: o banco apaga o login automaticamente (gatilho criado pelo `supabase_setup.sql`) e a função `invite-user` (ação `delete`) faz o mesmo pelo servidor. Para ativar: rode o SQL de novo e **publique novamente** a função `invite-user` (Edge Functions → invite-user → Code → cole o novo `index.ts` → Deploy).
+
 ## Parte F — Tirar o acesso de alguém
 - Pelo sistema (depois da integração) ou no SQL: `update public.members set status = 'blocked', access_enabled = false where email = 'fulano@empresa.com.br';`
 - Em **Authentication → Users** você também pode excluir o usuário (derruba as sessões).

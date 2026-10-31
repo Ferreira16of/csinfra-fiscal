@@ -333,6 +333,23 @@ create trigger keep_one_admin_upd before update on public.members for each row e
 drop trigger if exists keep_one_admin_del on public.members;
 create trigger keep_one_admin_del before delete on public.members for each row execute function public.keep_one_admin();
 
+-- Excluiu a pessoa no sistema → exclui também o login dela (Authentication → Users).
+-- (se o banco não permitir, só avisa; a função invite-user também faz isso pelo lado do servidor)
+create or replace function public.drop_auth_user() returns trigger
+language plpgsql security definer set search_path = public, auth as $$
+begin
+  begin
+    delete from auth.users
+     where (old.user_id is not null and id = old.user_id)
+        or (old.email is not null and lower(email) = lower(old.email));
+  exception when others then
+    raise warning 'Nao foi possivel excluir o login de %: %', old.email, sqlerrm;
+  end;
+  return old;
+end $$;
+drop trigger if exists drop_auth_user_del on public.members;
+create trigger drop_auth_user_del after delete on public.members for each row execute function public.drop_auth_user();
+
 -- Perfil "limitado" não pode trocar o autor nem mover a tarefa de projeto
 create or replace function public.protect_task_cols() returns trigger
 language plpgsql security definer set search_path = public as $$

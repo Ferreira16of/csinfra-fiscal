@@ -10,7 +10,7 @@
 //  Chamada (o app fará isso):
 //    POST {SUPABASE_URL}/functions/v1/invite-user
 //    Authorization: Bearer <token do usuário logado>
-//    { "action": "invite" | "resend" | "revoke",
+//    { "action": "invite" | "resend" | "revoke" | "delete",
 //      "email": "pessoa@empresa.com", "name": "Nome", "role": "normal", "team_id": null }
 // =====================================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -100,6 +100,28 @@ Deno.serve(async (req: Request) => {
     if (upErr) return json({ error: upErr.message }, 400)
     if (target.user_id) await admin.auth.admin.deleteUser(target.user_id)  // derruba as sessões
     return json({ ok: true, message: 'Acesso de ' + email + ' revogado.' })
+  }
+
+  if (action === 'delete') {
+    // Exclui a pessoa do sistema E do login (Authentication → Users)
+    const { data: target } = await admin.from('members').select('id, user_id').ilike('email', email).maybeSingle()
+    if (target && target.id === me.id) return json({ error: 'Você não pode excluir a si mesmo.' }, 400)
+    let uid: string | null = target?.user_id ?? null
+    if (target) {
+      // o banco recusa se este for o último administrador
+      const { error: delErr } = await admin.from('members').delete().eq('id', target.id)
+      if (delErr) return json({ error: delErr.message }, 400)
+    }
+    if (!uid) {
+      for (let page = 1; page <= 20 && !uid; page++) {
+        const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+        const u = data?.users?.find((x: any) => (x.email ?? '').toLowerCase() === email)
+        if (u) uid = u.id
+        if (!data?.users?.length || data.users.length < 200) break
+      }
+    }
+    if (uid) await admin.auth.admin.deleteUser(uid)
+    return json({ ok: true, message: email + ' foi removido(a) do sistema e do login.' })
   }
 
   return json({ error: 'Ação desconhecida.' }, 400)

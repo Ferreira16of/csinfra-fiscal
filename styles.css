@@ -894,3 +894,5 @@ body[data-sync=err] #bUser .av::after{background:var(--red)}
 #menu .mit:disabled:hover{background:transparent}
 body:is(.sc,.sca) #bUser::after{display:none}
 body:is(.sc,.sca) #syncst{display:none}
+
+.uhide{position:absolute!important;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}

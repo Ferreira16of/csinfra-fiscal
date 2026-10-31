@@ -1,4 +1,5 @@
 const $=s=>document.querySelector(s);
+const exName=()=>{try{const m=(typeof mem==='function'&&S.me&&mem(S.me))||S.members.find(x=>x.name&&!/^sem respons/i.test(x.name));return (m?m.name:'Maria').split(' ')[0].replace(/[^\p{L}\p{N}]/gu,'')||'Maria'}catch(e){return 'Maria'}};
 /* ----- ícones (traço, 24x24) ----- */
 const ICO={list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',board:'M4 4h6v16H4zM14 4h6v9h-6z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',gantt:'M3 5h9M7 12h10M13 19h8',people:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',chart:'M3 3v18h18M7 15l4-4 3 3 5-6',search:'M21 21l-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',filter:'M3 5h18l-7 8v6l-4-2v-4z',bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',moon:'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',plus:'M12 5v14M5 12h14',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',tag:'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',zap:'M13 2L3 14h9l-1 8 10-12h-9z',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',alert:'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',down:'M6 9l6 6 6-6',menu:'M3 6h18M3 12h18M3 18h18',db:'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',lock:'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',check:'M20 6L9 17l-5-5',x:'M18 6L6 18M6 6l12 12',cloud:'M18 10a6 6 0 0 0-11.5-1.5A4.5 4.5 0 0 0 7 18h11a4 4 0 0 0 0-8z',dots:'M5 12h.01M12 12h.01M19 12h.01',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',chevL:'M15 18l-6-6 6-6',chevR:'M9 18l6-6-6-6',sun:'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'};
 const ic=(n,s)=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"${s?` style="width:${s}px;height:${s}px"`:''}><path d="${ICO[n]||''}"/></svg>`;
@@ -40,8 +41,8 @@ function seed(){
   const T=(parent,title,o={})=>mkTask({pid:p,parent,title,created:Date.now()-21*864e5,...o});
   const s1=T(null,'Prioridades diárias'),tec=T(s1.id,'Tecnologia'),con=T(s1.id,'Consultorias');
   S={cur:p,view:'list',dash:'cur',link:'',me:'',
-   members:[{id:w,name:'Welinton',email:'',color:COLORS[3],status:'active'},{id:r,name:'Rafael',email:'',color:COLORS[0],status:'active'}],
-   tags:[{id:tr,name:'Rafael',color:COLORS[0]},{id:tw,name:'Welinton',color:COLORS[3]},{id:ti,name:'infra',color:COLORS[4]},{id:tf,name:'fiscal',color:COLORS[2]}],
+   members:[{id:w,name:'Maria',email:'',color:COLORS[3],status:'active'},{id:r,name:'João',email:'',color:COLORS[0],status:'active'}],
+   tags:[{id:tr,name:'João',color:COLORS[0]},{id:tw,name:'Maria',color:COLORS[3]},{id:ti,name:'infra',color:COLORS[4]},{id:tf,name:'fiscal',color:COLORS[2]}],
    projects:[{id:p,name:'Operação CS Infra'}],
    tasks:[s1,tec,con,
     T(tec.id,'Exemplo: atualizar servidores',{assignees:[r],tags:[tr,ti],status:'doing',est:6,start:addDays(-1),due:addDays(3),dueTime:'18:00'}),
@@ -1168,7 +1169,7 @@ function list(){
   const vis=(filtering()||S.hideDone)?roots.filter(matchTree):roots;
   let h=zoom?zoomBar():'';
   h+=`<div class="outline">`+listHeader(ptasks().length);
-  const emptyMsg=noProj()?`<div class="empty"><b>Nenhum projeto liberado para você</b>Peça a um administrador para incluir você em um projeto.<br>Assim que ele liberar, o projeto aparece aqui sozinho.</div>`:(!can('add')&&!ptasks().length)?`<div class="empty"><b>Nenhuma tarefa neste projeto ainda</b>Seu perfil é somente leitura/comentário.</div>`:!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @Rafael #fiscal !alta">Enviar SPED amanhã 14h @Rafael #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma tarefa encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
+  const emptyMsg=noProj()?`<div class="empty"><b>Nenhum projeto liberado para você</b>Peça a um administrador para incluir você em um projeto.<br>Assim que ele liberar, o projeto aparece aqui sozinho.</div>`:(!can('add')&&!ptasks().length)?`<div class="empty"><b>Nenhuma tarefa neste projeto ainda</b>Seu perfil é somente leitura/comentário.</div>`:!ptasks().length?`<div class="empty"><b>Projeto vazio — vamos começar?</b>Digite na barra acima, por exemplo:<br><span class="ex" data-qaex="Enviar SPED amanhã 14h @${exName()} #fiscal !alta">Enviar SPED amanhã 14h @${exName()} #fiscal !alta</span><span class="ex" data-qaex="Revisar backups toda segunda">Revisar backups toda segunda</span><br>ou crie um projeto pronto com <b style="display:inline">+ Projetos → modelos</b>.</div>`:`<div class="empty"><b>Nenhuma tarefa encontrada</b>Ajuste a busca ou os filtros rápidos acima.</div>`;
   h+=vis.map(t=>rowHTML(t,0)).join('')||emptyMsg;
   h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / tarefa</button></div></div>`);
   $('#view').innerHTML=h+'</div>';
@@ -1545,7 +1546,7 @@ function taskExtraHTML(t){
 function guideHTML(){
   const ex=s=>`<span class="ex" data-qaex="${esc(s)}">${esc(s)}</span>`;
   return `<div class="steps">
-   <div class="step"><b><span class="n">1</span>Adicione rápido</b><p>Use a barra no topo (tecla <kbd>q</kbd>). Escreva do jeito natural — datas, pessoas, etiquetas e prioridade são entendidos:</p>${ex('Enviar SPED amanhã 14h @Rafael #fiscal !alta')}${ex('Revisar backups toda segunda')}${ex('Reunião com cliente 05/11 10h')}</div>
+   <div class="step"><b><span class="n">1</span>Adicione rápido</b><p>Use a barra no topo (tecla <kbd>q</kbd>). Escreva do jeito natural — datas, pessoas, etiquetas e prioridade são entendidos:</p>${ex('Enviar SPED amanhã 14h @${exName()} #fiscal !alta')}${ex('Revisar backups toda segunda')}${ex('Reunião com cliente 05/11 10h')}</div>
    <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Tarefas podem ter subtarefas sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subtarefa. Clique no nome para renomear.</p></div>
    <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>Resp.</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
    <div class="step"><b><span class="n">4</span>Veja do jeito certo</b><p><b>Lista</b> (detalhe) · <b>Quadro</b> (fluxo) · <b>Calendário</b> (prazos) · <b>Cronograma</b> (Gantt com dependências) · <b>Pessoas</b> (carga de trabalho) · <b>Painel</b> (visão executiva).</p></div>
@@ -1692,9 +1693,9 @@ function exportTemplate(){
   if(!haveXLSX())return;
   const wb=XLSX.utils.book_new();
   const ex=[XLS_COLS,
-   ['','Operação CS Infra','Fiscal > SPED','Gerar SPED Fiscal','A fazer','Alta','Rafael; Welinton','fiscal',xd(addDays(0)),'',xd(addDays(5)),'17:00','',2,'','','','','Conferir CFOP antes de transmitir'],
-   ['','Operação CS Infra','Fiscal > SPED','Validar no PVA e transmitir','A fazer','Alta','Welinton','fiscal','','',xd(addDays(7)),'','',1,'','Sim','','',''],
-   ['','Operação CS Infra','Rotinas','Revisar backups','Em andamento','Média','Rafael','infra','','',xd(addDays(3)),'','Semanalmente',1,'','','Sim','',''],
+   ['','Operação CS Infra','Fiscal > SPED','Gerar SPED Fiscal','A fazer','Alta','João; Maria','fiscal',xd(addDays(0)),'',xd(addDays(5)),'17:00','',2,'','','','','Conferir CFOP antes de transmitir'],
+   ['','Operação CS Infra','Fiscal > SPED','Validar no PVA e transmitir','A fazer','Alta','Maria','fiscal','','',xd(addDays(7)),'','',1,'','Sim','','',''],
+   ['','Operação CS Infra','Rotinas','Revisar backups','Em andamento','Média','João','infra','','',xd(addDays(3)),'','Semanalmente',1,'','','Sim','',''],
    ['','','','Tarefa simples sem seção','','','','','','','','','','','','','','','']];
   XLSX.utils.book_append_sheet(wb,sheetFrom(HOWTO,[140]),'Como importar');
   XLSX.utils.book_append_sheet(wb,sheetFrom(ex,XLS_W),'Tarefas');
@@ -2012,7 +2013,7 @@ function applyRoleUI(){
   set('#bXlsIn',can('import'),'Seu perfil não importa tarefas');
   set('#qaGo',can('add'),'Seu perfil não cria tarefas');
   set('#newTask',can('add'),'Seu perfil não cria tarefas');
-  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?'Adicionar tarefa — ex.: Enviar SPED amanhã 14h @Rafael #fiscal !alta':noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
+  const qa=$('#qa');qa.disabled=!can('add');qa.placeholder=can('add')?('Adicionar tarefa — ex.: Enviar SPED amanhã 14h @'+exName()+' #fiscal !alta'):noProj()?'Ainda não há projetos — peça a um administrador para criar o primeiro':'Seu perfil ('+ROLES[role()].n+') só pode ler e comentar';
   const m=mem(S.me),u=$('#bUser');
   u.innerHTML=m?`<span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">${esc(m.name)}</b><small style="color:var(--mu);font-size:10.5px">${ROLES[role()].n}</small></span>`:`<span class="av" style="background:#667085;border-color:transparent">?</span><span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><b style="font-size:12.5px">Quem é você?</b><small style="color:var(--mu);font-size:10.5px">Administrador (sem login)</small></span>`;
   $('#brandName').textContent=(S.org||'CS Infra');
@@ -2232,7 +2233,13 @@ document.addEventListener('click',e=>{
     if(!can('members')){deny('members');return}
     const m=mem(el.dataset.sdel);if(!m)return;
     if(roleOfM(m)==='admin'&&S.members.filter(x=>roleOfM(x)==='admin').length<2){toast('Mantenha pelo menos um administrador.');return}
-    ask('Remover '+m.name+' da equipe? As atribuições dela nas tarefas serão limpas.','',()=>{S.members=S.members.filter(x=>x.id!==m.id);S.tasks.forEach(t=>t.assignees=t.assignees.filter(a=>a!==m.id));if(S.me===m.id)S.me='';render()},{confirm:1,ok:'Remover'});return}
+    const hasLogin=CLOUD&&m.access&&validEmail(m.email||'');
+    ask('Remover '+m.name+' do sistema? As atribuições dela nas tarefas serão limpas.'+(hasLogin?' O login dela (Authentication → Users do Supabase) também será excluído.':''),'',async()=>{
+      if(hasLogin){
+        try{await fnCall({action:'delete',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false);render();toast('Removido(a) do sistema e do login');return}
+        catch(x){if(!fnMissing(x)){toast(trErr(x.message));return}}
+      }
+      S.members=S.members.filter(x=>x.id!==m.id);S.tasks.forEach(t=>t.assignees=t.assignees.filter(a=>a!==m.id));if(S.me===m.id)S.me='';render();save()},{confirm:1,ok:'Remover'});return}
   if(el=g('[data-act3]')){
     const a=el.dataset.act3;
     if(a==='invite'){inviteMemberDialog();return}
@@ -2344,7 +2351,7 @@ function loginView(mode,msg,pre){
   let b='';
   if(mode==='signin')b=`<h2>Bem-vindo(a) de volta</h2><p class="lsub">Entre com seu e-mail e senha para acessar o painel.</p>${inp('lg_email','E-mail','email','voce@empresa.com.br',pre.email,'username')}${inp('lg_pw','Senha','password','',''  ,'current-password')}<button class="pri lbtn" id="lg_go">Entrar</button><div class="llinks"><a data-lmode="activate">Recebi um convite</a><a data-lmode="forgot">Esqueci minha senha</a></div>`;
   else if(mode==='activate')b=`<h2>Ativar convite</h2><div class="hint">Se o e-mail trouxe um botão ou link, basta clicar nele. Se trouxe um código, preencha abaixo.</div>${inp('lg_email','E-mail do convite','email','voce@empresa.com.br',pre.email,'username')}${inp('lg_code','Código recebido por e-mail','text','código do e-mail','', 'one-time-code')}${inp('lg_pw','Crie uma senha (mín. 8 caracteres)','password','','','new-password')}${inp('lg_pw2','Repita a senha','password','','','new-password')}<button class="pri lbtn" id="lg_act">Ativar e entrar</button>${back}`;
-  else if(mode==='setpw')b=`<h2>${pre.recovery?'Nova senha':'Bem-vindo(a)! Crie sua senha'}</h2><div class="hint" >${pre.email?'Conta: <b>'+esc(pre.email)+'</b>':''}</div>${inp('lg_pw','Nova senha (mín. 8 caracteres)','password','','','new-password')}${inp('lg_pw2','Repita a senha','password','','','new-password')}<button class="pri lbtn" id="lg_setpw">Salvar e entrar</button>`;
+  else if(mode==='setpw')b=`<input type="text" class="uhide" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" value="${esc(pre.email||'')}"><h2>${pre.recovery?'Nova senha':'Bem-vindo(a)! Crie sua senha'}</h2><div class="hint" >${pre.email?'Conta: <b>'+esc(pre.email)+'</b>':''}</div>${inp('lg_pw','Nova senha (mín. 8 caracteres)','password','','','new-password')}${inp('lg_pw2','Repita a senha','password','','','new-password')}<button class="pri lbtn" id="lg_setpw">Salvar e entrar</button>`;
   else if(mode==='forgot')b=`<h2>Esqueci minha senha</h2><div class="hint" >Enviaremos um e-mail com um link (e um código) para criar uma nova senha.</div>${inp('lg_email','E-mail','email','voce@empresa.com.br',pre.email,'username')}<button class="pri lbtn" id="lg_forgot">Enviar e-mail</button><div class="llinks"><a data-lmode="reset">Já tenho o código</a></div>${back}`;
   else if(mode==='reset')b=`<h2>Redefinir senha</h2>${inp('lg_email','E-mail','email','voce@empresa.com.br',pre.email,'username')}${inp('lg_code','Código recebido por e-mail','text','código do e-mail','','one-time-code')}${inp('lg_pw','Nova senha (mín. 8 caracteres)','password','','','new-password')}${inp('lg_pw2','Repita a senha','password','','','new-password')}<button class="pri lbtn" id="lg_reset">Salvar e entrar</button>${back}`;
   else if(mode==='noaccess')b=`<h2>Sem acesso</h2><div class="hint">Sua conta existe, mas não está autorizada neste sistema (ou foi bloqueada). Fale com o administrador.</div><button class="lbtn" data-cloud="out">Sair</button>`;
@@ -2661,7 +2668,7 @@ function cloudUserPop(){
 async function cloudLogout(){try{await sbFetch('/auth/v1/logout',{method:'POST'})}catch(e){}sessSave(null);try{localStorage.removeItem('quire-ui')}catch(e){}location.reload()}
 function changePwDialog(){
   const M=$('#modal');M.dataset.kind='pw';editing=null;closePop();
-  M.innerHTML=`<h3>Alterar senha</h3><label style="margin-top:0">Nova senha (mín. 8 caracteres)</label><input id="np1" type="password" autocomplete="new-password"><label>Repita a senha</label><input id="np2" type="password" autocomplete="new-password"><div id="npm" class="lmsg"></div><div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="np_save">Salvar senha</button></span></div>`;
+  M.innerHTML=`<input type="text" class="uhide" name="username" autocomplete="username" tabindex="-1" aria-hidden="true" value="${esc((sess&&sess.user&&sess.user.email)||'')}"><h3>Alterar senha</h3><label style="margin-top:0">Nova senha (mín. 8 caracteres)</label><input id="np1" type="password" autocomplete="new-password"><label>Repita a senha</label><input id="np2" type="password" autocomplete="new-password"><div id="npm" class="lmsg"></div><div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="np_save">Salvar senha</button></span></div>`;
   $('#ov').classList.add('on');$('#np1').focus();
 }
 /* capturas: assumem o lugar dos tratadores locais quando há nuvem */
@@ -2711,6 +2718,8 @@ window.addEventListener('beforeunload',e=>{if(typeof cloud!=='undefined'&&cloud.
 window.addEventListener('online',()=>{if(typeof cloud!=='undefined'&&cloud.on){cloudSchedule();pollPull()}});
 document.addEventListener('click',e=>{const t=e.target;if(t.closest&&t.closest('#bCollapse')){toggleSide();return}if(t.closest&&t.closest('#mnu')){document.body.classList.toggle('menu');return}if(t.id==='scrim'||(document.body.classList.contains('menu')&&t.closest&&t.closest('#side .si,#side .pi,#side .fi')))document.body.classList.remove('menu')});
 hydrateIcons();
+(()=>{const fix=r=>r.querySelectorAll('input:not([autocomplete]),textarea:not([autocomplete])').forEach(i=>{i.setAttribute('autocomplete',i.type==='password'?'new-password':'off')});
+  ['#view','#modal','#pop'].forEach(s=>{const e=$(s);if(e){fix(e);new MutationObserver(()=>fix(e)).observe(e,{childList:true,subtree:true})}})})();
 if(CLOUD){const bu=$('#bUser');if(bu)bu.removeAttribute('data-pop')}
 toggleSide(document.body.classList.contains('sc'));
 render();
