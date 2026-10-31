@@ -563,7 +563,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(el=g('[data-pop]')){const[ty,id]=el.dataset.pop.split(':');if(pop&&pop.type===ty&&pop.id===id)closePop();else openPop(ty,id,el);return}
-  if(el=g('[data-descid]')){const id=el.dataset.descid;if(canEdit(byId(id))){openTask(id);setTimeout(()=>{const d=$('#m_desc');if(d)d.focus()},80)}else openTask(id);return}
+  if(el=g('[data-descid]')){const id=el.dataset.descid;if(canEdit(byId(id)))startDescEdit(el);else openTask(id);return}
   if(el=g('[data-cid]')){copyLink(el.dataset.cid,'ID '+el.dataset.cid+' copiado');return}
   if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
@@ -725,7 +725,7 @@ function editCell(){
   const k=ccol||'tt';
   if(k==='tt'){act('edit');return}
   if(k==='id'){const t=byId(cur);if(t)copyLink(t.id,'ID '+t.id+' copiado');return}
-  if(k==='ds'){openTask(cur);setTimeout(()=>{const d=$('#m_desc');if(d)d.focus()},80);return}
+  if(k==='ds'){const el=document.querySelector(`#view [data-row="${cur}"] .col-ds`);if(el&&canEdit(byId(cur)))startDescEdit(el);else openTask(cur);return}
   popKey({a:'a',t:'t',s:'s',i:'d',ih:'d',d:'d',dh:'d',u:'d'}[k]);
 }
 function leftKey(){const t=byId(cur);if(!t)return;if(kidsOf(t.id).length&&t.open!==false){t.open=false;render()}else if(t.parent&&navIds().includes(t.parent))setCur(t.parent)}
@@ -3296,3 +3296,24 @@ async function loadMailStatus(test){
 }
 function mailHowTo(){return `<div style="color:var(--amb);font-weight:600">Ainda não ativado</div><div class="hint" style="margin:4px 0 8px;line-height:1.6">Em <b>Supabase → Edge Functions → Secrets</b> crie <code>RESEND_API_KEY</code> (chave gratuita em resend.com) e <code>MAIL_FROM</code> (ex.: <code>CS Infra &lt;avisos@seudominio.com.br&gt;</code>). Depois reimplante a função <code>invite-user</code> com o arquivo novo do GitHub (pasta supabase/functions). Alternativa: <code>SMTP_USER</code> + <code>SMTP_PASS</code>. Passo a passo no <b>GUIA_SUPABASE.md</b>.</div><button id="mail_test">Testar agora</button>`}
 document.addEventListener('click',e=>{if(e.target&&e.target.id==='mail_test'){e.stopImmediatePropagation();loadMailStatus(true)}},true);
+
+
+/* ===== descrição direto na tabela (sem abrir a caixa grande) ===== */
+function startDescEdit(cell){
+  if(cell.querySelector('textarea'))return;
+  const t=byId(cell.dataset.descid||(cell.closest('[data-row]')||{dataset:{}}).dataset.row);if(!t)return;
+  const ta=document.createElement('textarea');ta.value=t.desc||'';ta.className='descin';ta.rows=1;ta.placeholder='Escreva a descrição — Enter salva, ⇧+Enter quebra linha, Esc cancela';
+  cell.classList.add('editing');cell.appendChild(ta);
+  const fit=()=>{ta.style.height='auto';ta.style.height=Math.min(140,ta.scrollHeight+2)+'px'};
+  ta.addEventListener('input',fit);fit();ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+  let done=false;
+  const end=ok=>{if(done)return;done=true;if(ok){const v=ta.value.replace(/\s+$/,'');if(v!==(t.desc||'')){t.desc=v;save()}}render();markSel()};
+  ta.addEventListener('keydown',e=>{
+    e.stopPropagation();
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();end(true)}
+    else if(e.key==='Escape'){e.preventDefault();end(false)}
+    else if(e.key==='Tab'){e.preventDefault();end(true)}
+  });
+  ta.addEventListener('blur',()=>end(true));
+  ta.addEventListener('click',e=>e.stopPropagation());
+}
