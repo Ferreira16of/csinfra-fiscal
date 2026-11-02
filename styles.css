@@ -1283,3 +1283,6 @@ html{-webkit-text-size-adjust:100%}
   .row .hv{right:38px}
   .row.addrow .op{display:none!important}
 }
+.arow .rmp{margin-left:auto;font-size:11.5px;padding:3px 9px;white-space:nowrap;flex-shrink:0;color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,var(--bd))}
+.arow .rmp:hover{background:color-mix(in srgb,var(--red) 10%,transparent)}
+.mact button[data-sdel]{color:var(--red);font-size:12px;padding:3px 9px}

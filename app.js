@@ -2497,7 +2497,7 @@ function memberCard(m,adm){
     <div class="mx">${you?'<span class="st" style="color:var(--ac);border-color:var(--ac)">você</span>':''}<span class="st" style="color:${m.status==='invited'?'var(--amb)':'var(--ok)'};border-color:${m.status==='invited'?'var(--amb)':'var(--ok)'}">${m.status==='invited'?'⏳ convidado':'✔ ativo'}</span>${m.team?`<span class="st" style="color:var(--mu);border-color:var(--bd)">${esc((S.teams.find(t=>t.id===m.team)||{}).name||'equipe')}</span>`:''}<span style="color:var(--mu);font-size:12px">capacidade <input data-mcap="${m.id}" type="number" min="1" max="80" value="${m.cap||40}" style="width:58px;padding:2px 6px" ${adm?'':'disabled'}> h/sem</span>${adm?'<span class="sws">'+COLORS.map(c=>`<span class="sw ${c===m.color?'on':''}" data-mc="${m.id}|${c}" style="background:${c}"></span>`).join('')+'</span>':''}</div>
    </div>
    <div class="mr"><button class="rolebtn" data-pop="r:${m.id}" ${adm?'':'disabled'}><span>${ROLES[r].n}</span><span>▾</span></button>
-    ${adm?`<div class="mact"><button data-asuser="${m.id}" title="Usar o sistema como esta pessoa">Entrar como</button><button data-mst="${m.id}" title="Alternar convidado/ativo">${m.status==='invited'?'Marcar ativo':'Marcar convidado'}</button><button data-mi="${m.id}" title="Enviar convite por e-mail">✉</button><button class="ghost" data-sdel="${m.id}" title="Remover membro">🗑</button></div>`:''}
+    ${adm?`<div class="mact"><button data-asuser="${m.id}" title="Usar o sistema como esta pessoa">Entrar como</button><button data-mst="${m.id}" title="Alternar convidado/ativo">${m.status==='invited'?'Marcar ativo':'Marcar convidado'}</button><button data-mi="${m.id}" title="Enviar convite por e-mail">✉</button><button class="ghost" data-sdel="${m.id}" title="REMOVER DEFINITIVAMENTE: apaga a pessoa e tira o nome dela das atividades. Não dá para desfazer.">🗑 Remover definitivamente</button></div>`:''}
    </div></div>`;
 }
 const THEMES=[['light','Claro','Visual limpo e neutro. Padrão.',['#f5f6f8','#ffffff','#0e7a6e','#e4e7ec']],['dark','Escuro','Menos brilho para ambientes escuros.',['#0b0e0d','#121716','#38d6b3','#222a29']],['cs','CS Infra','Azul, laranja e verde da identidade da marca.',['#f3f4fa','#262c6e','#3b4796','#f07d12']]];
@@ -2619,7 +2619,7 @@ function accessCard(p,adm){
   const people=S.members.filter(m=>roleOfM(m)!=='admin'&&m.access!==false);
   const mark=(m)=>{
     const on=(p.access||[]).includes(m.id),auto=!p.restricted&&roleOfM(m)==='normal';
-    return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-pm2="${m.id}" ${on||auto?'checked':''} ${(!adm||auto)?'disabled':''}><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span class="an"><b>${esc(m.name)}</b><small>${esc(m.email||'sem e-mail')}</small></span>${roleBadge(m)}${auto?'<em>automático</em>':''}</label>`};
+    return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-pm2="${m.id}" ${on||auto?'checked':''} ${(!adm||auto)?'disabled':''}><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><span class="an"><b>${esc(m.name)}</b><small>${esc(m.email||'sem e-mail')}</small></span>${roleBadge(m)}${auto?'<em>automático</em>':''}${adm&&(on||auto)?`<button type="button" class="ghost rmp" data-rmproj="${p.id}|${m.id}" title="Tira ${esc(m.name)} só deste projeto. Os outros projetos e o acesso ao sistema não mudam.">Tirar do projeto</button>`:''}</label>`};
   const seg=`<div class="seg"><button type="button" class="${!p.restricted?'on':''}" data-pacc="open" ${adm?'':'disabled'}>${ic('people',16)} Equipe toda</button><button type="button" class="${p.restricted?'on':''}" data-pacc="restricted" ${adm?'':'disabled'}>${ic('lock',16)} Somente selecionados</button></div>`;
   return `<section class="scard"><header><div><h3>Quem acessa este projeto</h3><p>${projAccessNote(p)}</p></div></header><div class="sb">${adm?'':'<div class="hint" style="margin:0 0 10px">Somente administradores alteram o acesso.</div>'}${seg}<div class="alist">${people.map(mark).join('')||'<div class="hint">Nenhuma pessoa cadastrada além dos administradores.</div>'}</div></section>`;
 }
@@ -2633,7 +2633,7 @@ function memberProjectsDialog(mid){
   const M=$('#modal');M.dataset.kind='mproj';M.style.width='';editing=null;closePop();
   const ps=S.projects.filter(p=>!p.virtual);
   M.innerHTML=`<h3>Projetos de ${esc(m.name)}</h3><div class="hint" style="margin:-6px 0 10px">${roleBadge(m)} ${roleOfM(m)==='limited'||roleOfM(m)==='guest'?'Pessoa de fora: vê somente os projetos marcados.':roleOfM(m)==='normal'?'Vê os projetos abertos automaticamente; os restritos só se marcados.':'Administrador vê tudo.'}</div>
-  <div class="alist">${ps.map(p=>{const on=(p.access||[]).includes(m.id),auto=roleOfM(m)==='admin'||(roleOfM(m)==='normal'&&!p.restricted);return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-mp2="${p.id}|${m.id}" ${on||auto?'checked':''} ${auto?'disabled':''}><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span>${auto?'<em>automático</em>':''}</label>`}).join('')||'<div class="hint">Nenhum projeto criado.</div>'}</div>
+  <div class="alist">${ps.map(p=>{const on=(p.access||[]).includes(m.id),auto=roleOfM(m)==='admin'||(roleOfM(m)==='normal'&&!p.restricted);return `<label class="arow ${auto?'auto':''}"><input type="checkbox" data-mp2="${p.id}|${m.id}" ${on||auto?'checked':''} ${auto?'disabled':''}><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span>${auto?'<em>automático</em>':''}${(on||auto)&&roleOfM(m)!=='admin'?`<button type="button" class="ghost rmp" data-rmproj="${p.id}|${m.id}" title="Tira ${esc(m.name)} só do projeto ${esc(p.name)}. Os outros projetos e o acesso ao sistema não mudam.">Tirar deste projeto</button>`:''}</label>`}).join('')||'<div class="hint">Nenhum projeto criado.</div>'}</div>
   <div class="acts"><span></span><button class="pri" id="g_ok">Concluir</button></div>`;
   $('#ov').classList.add('on');
 }
@@ -3115,7 +3115,7 @@ function memberCardCloud(m,adm){
     <div class="mx">${you?'<span class="st" style="color:var(--ac);border-color:var(--ac)">você</span>':''}<span class="st" style="color:${st[1]};border-color:${st[1]}">${st[0]}</span>${m.team?`<span class="st" style="color:var(--mu);border-color:var(--bd)">${esc((S.teams.find(t=>t.id===m.team)||{}).name||'equipe')}</span>`:''}${last?`<span style="color:var(--mu);font-size:12px">último acesso ${last}</span>`:''}<span style="color:var(--mu);font-size:12px">capacidade <input data-mcap="${m.id}" type="number" min="1" max="80" value="${m.cap||40}" style="width:58px;padding:2px 6px" ${adm?'':'disabled'}> h/sem</span>${adm?'<span class="sws">'+COLORS.map(c=>`<span class="sw ${c===m.color?'on':''}" data-mc="${m.id}|${c}" style="background:${c}"></span>`).join('')+'</span>':''}</div>
    </div>
    <div class="mr"><button class="rolebtn" data-pop="r:${m.id}" ${adm?'':'disabled'}><span>${ROLES[r].n}</span><span>▾</span></button>
-    ${adm?`<div class="mact">${r!=='admin'?`<button data-mproj="${m.id}" title="Escolher quais projetos esta pessoa enxerga">Projetos${r==='limited'||r==='guest'?' ('+S.projects.filter(p=>(p.access||[]).includes(m.id)).length+')':''}</button>`:''}${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${m.access&&!you?'<button data-crevoke="'+m.id+'">Revogar acesso</button>':''}${you?'':'<button class="ghost" data-sdel="'+m.id+'" title="Remover membro">🗑</button>'}</div>`:''}
+    ${adm?`<div class="mact">${r!=='admin'?`<button data-mproj="${m.id}" title="PROJETOS: escolha em quais projetos esta pessoa entra e use “Tirar deste projeto” para retirá-la de UM projeto sem mexer nos outros nem no acesso ao sistema.">Projetos${r==='limited'||r==='guest'?' ('+S.projects.filter(p=>(p.access||[]).includes(m.id)).length+')':''}</button>`:''}${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${m.access&&!you?'<button data-crevoke="'+m.id+'" title="BLOQUEAR ACESSO: a pessoa não consegue mais entrar no sistema (o login dela é desativado). Ela continua na lista de membros e as atividades dela continuam no nome dela. Dá para liberar de novo depois com “Dar acesso”.">Bloquear acesso</button>':''}${you?'':'<button class="ghost" data-sdel="'+m.id+'" title="REMOVER DEFINITIVAMENTE: apaga a pessoa de TODOS os projetos e exclui o login dela. O sistema pergunta o que fazer com as atividades dela (passar para outra pessoa ou excluir). Não dá para desfazer — para voltar, só convidando de novo. Para tirar de um projeto só, use “Projetos”.">🗑 Remover definitivamente</button>'}</div>`:''}
    </div></div>`;
 }
 const cloudAccountHTML=()=>`<label>Conta</label><div class="hint" style="margin:0 0 8px">Conectado como <b>${esc((sess&&sess.user&&sess.user.email)||(cloud.me&&cloud.me.email)||'')}</b> · perfil <b>${ROLES[role()].n}</b>.</div><div style="display:flex;gap:8px"><button data-cloud="pw">Alterar senha</button><button data-cloud="out">Sair</button></div>`;
@@ -3407,3 +3407,34 @@ function nextEditCell(id,col,dir){
   const order=(S.cols?S.cols.order:[]).filter(c=>EDITCOLS.includes(c)&&row.querySelector('.col-'+c)&&row.querySelector('.col-'+c).getClientRects().length);
   const i=order.indexOf(col),j=i+dir;return j>=0&&j<order.length?order[j]:null;
 }
+
+
+/* ===== tirar a pessoa de UM projeto (sem mexer nos outros nem no acesso ao sistema) ===== */
+function removeFromProject(pid,mid){
+  if(!can('members')){deny('members');return}
+  const p=S.projects.find(x=>x.id===pid),m=mem(mid);if(!p||!m)return;
+  if(roleOfM(m)==='admin'){toast('Administradores enxergam todos os projetos.');return}
+  const mine=S.tasks.filter(t=>t.pid===pid&&(t.assignees||[]).includes(mid));
+  const open=!p.restricted&&roleOfM(m)==='normal';
+  const M=$('#modal');M.dataset.kind='rmproj';M.style.width='';editing=null;closePop();window._rpj=[pid,mid];
+  M.innerHTML=`<h3>Tirar ${esc(m.name)} de “${esc(p.name)}”</h3>
+  <div class="hint" style="margin:-6px 0 12px">Só este projeto muda: ${esc(m.name)} continua com acesso ao sistema e aos <b>outros projetos</b>.</div>
+  ${open?`<div class="sro" style="margin:0 0 12px">“${esc(p.name)}” está aberto à equipe toda. Para tirar só ${esc(m.name)}, o projeto passa a <b>“Somente selecionados”</b> e todas as outras pessoas que já enxergam continuam com acesso. Quem for cadastrado depois precisará ser incluído à mão.</div>`:''}
+  ${mine.length?`<label class="opt"><input type="radio" name="rp_mode" value="unassign" checked><span><b>Tirar o nome dele das ${mine.length} atividade${mine.length>1?'s':''} deste projeto</b><small>As atividades continuam, sem esse responsável.</small></span></label>
+  <label class="opt"><input type="radio" name="rp_mode" value="keep"><span><b>Manter o nome dele nas atividades</b><small>Ele deixa de ver o projeto, mas o nome segue nas atividades.</small></span></label>`:`<div class="hint">Ele não é responsável por nenhuma atividade deste projeto.</div>`}
+  <div class="acts"><span></span><span><button id="rp_x" type="button">Cancelar</button> <button class="pri" id="rp_ok" type="button">Tirar do projeto</button></span></div>`;
+  $('#ov').classList.add('on');
+}
+document.addEventListener('click',e=>{
+  const g=q=>e.target.closest&&e.target.closest(q);
+  let el=g('[data-rmproj]');
+  if(el){e.preventDefault();e.stopImmediatePropagation();const[a,b]=el.dataset.rmproj.split('|');removeFromProject(a,b);return}
+  if(g('#rp_x')){e.stopImmediatePropagation();const[,mid]=window._rpj||[];closeModal();if(mid&&S.view!=='settings')render();return}
+  if(g('#rp_ok')){
+    e.stopImmediatePropagation();const[pid,mid]=window._rpj||[];const p=S.projects.find(x=>x.id===pid),m=mem(mid);if(!p||!m)return;
+    const mode=(document.querySelector('input[name=rp_mode]:checked')||{}).value;
+    if(!p.restricted&&roleOfM(m)==='normal'){p.restricted=true;p.access=S.members.filter(x=>roleOfM(x)!=='admin'&&x.access!==false&&x.id!==mid).map(x=>x.id).sort()}
+    else p.access=(p.access||[]).filter(x=>x!==mid);
+    let n=0;if(mode==='unassign')S.tasks.forEach(t=>{if(t.pid===pid&&(t.assignees||[]).includes(mid)){t.assignees=t.assignees.filter(a=>a!==mid);n++}});
+    save();closeModal();render();toast(m.name+' saiu de “'+p.name+'”'+(n?' · tirado de '+n+' atividade'+(n>1?'s':''):''));return}
+},true);
