@@ -2378,10 +2378,13 @@ const ROLES={
   guest:{n:'Convidado',d:'Pode ler e postar comentários.'}};
 const PERM={
   admin:{add:1,editAll:1,del:1,tags:1,rules:1,project:1,delProject:1,members:1,import:1,comment:1},
-  normal:{add:1,editAll:1,del:1,tags:1,rules:1,project:1,import:1,comment:1},
+  normal:{add:1,editAll:1,del:1,tags:1,rules:1,project:1,members:1,import:1,comment:1},
   limited:{add:1,own:1,comment:1},
   guest:{comment:1}};
 const roleOfM=m=>m?(m.role||'normal'):'admin';
+/* administrador gerencia qualquer pessoa; perfil Normal gerencia todos, menos administradores e a si mesmo */
+const canManage=m=>!!m&&can('members')&&(role()==='admin'||(roleOfM(m)!=='admin'&&m.id!==S.me));
+const guardM=m=>{if(canManage(m))return true;toast(role()==='admin'?'Sem permissão.':'Só administradores gerenciam administradores (e você não pode alterar a si mesmo).');return false};
 const role=()=>roleOfM(mem(S.me));
 const noProj=()=>{try{return CLOUD&&proj().virtual&&!PERM[role()].project}catch(e){return false}};
 const can=p=>!!PERM[role()][p]&&!(p==='add'&&noProj());
@@ -2422,7 +2425,7 @@ function renderSpecialPop(anchor){
   if(CLOUD&&pop.type==='u'){P.innerHTML=cloudUserPop();placePop(anchor);return}
   if(pop.type==='r'){
     const m=mem(pop.id);if(!m){closePop();return}
-    P.innerHTML=Object.keys(ROLES).map(k=>`<label class="pl" tabindex="0" data-setrole="${k}" style="align-items:flex-start;min-width:300px"><div style="flex:1"><b style="color:${roleOfM(m)===k?'var(--ac)':'var(--tx)'}">${ROLES[k].n}</b><small style="display:block;margin-top:2px">${ROLES[k].d}</small></div>${roleOfM(m)===k?'<span style="color:var(--ac)">✓</span>':''}</label>`).join('')+`<div class="ft"><div class="hint" style="margin:0">Veja a tabela de permissões abaixo da lista de membros.</div></div>`;
+    P.innerHTML=Object.keys(ROLES).filter(k=>k!=='admin'||role()==='admin').map(k=>`<label class="pl" tabindex="0" data-setrole="${k}" style="align-items:flex-start;min-width:300px"><div style="flex:1"><b style="color:${roleOfM(m)===k?'var(--ac)':'var(--tx)'}">${ROLES[k].n}</b><small style="display:block;margin-top:2px">${ROLES[k].d}</small></div>${roleOfM(m)===k?'<span style="color:var(--ac)">✓</span>':''}</label>`).join('')+`<div class="ft"><div class="hint" style="margin:0">Veja a tabela de permissões abaixo da lista de membros.</div></div>`;
   }else{
     P.innerHTML=`<div style="padding:4px 8px;color:var(--mu);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Entrar como</div>`+S.members.map(m=>`<label class="pl" tabindex="0" data-asuser="${m.id}"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span><div style="flex:1"><b>${esc(m.name)}</b><small style="display:block">${ROLES[roleOfM(m)].n}</small></div>${S.me===m.id?'<span style="color:var(--ac)">✓</span>':''}</label>`).join('')+`<div class="ft"><div class="hint" style="margin:0">Sem servidor, trocar de usuário não exige senha: o perfil limita a interface, mas não é segurança real.</div></div>`;
   }
@@ -2431,6 +2434,8 @@ function renderSpecialPop(anchor){
 function setRole(mid,r){
   const m=mem(mid);if(!m)return;
   if(!can('members')){deny('members');return}
+  if(!guardM(m))return;
+  if(r==='admin'&&role()!=='admin'){toast('Só administradores criam administradores.');return}
   if(roleOfM(m)==='admin'&&r!=='admin'&&S.members.filter(x=>roleOfM(x)==='admin').length<2){toast('Mantenha pelo menos um administrador.');return}
   m.role=r;save();closePop();render();toast(m.name+' agora é '+ROLES[r].n);
 }
@@ -2486,7 +2491,7 @@ function inviteDialog(m){
    `Olá${m.name&&m.name!==m.email?', '+m.name:''}!\n\nVocê foi convidado(a) para colaborar no projeto "${proj().name}" no Controle de Atividades.\n\nSeu perfil: ${ROLES[roleOfM(m)].n} — ${ROLES[roleOfM(m)].d}${link}`,()=>{closeModal();openSettings('membros')});
 }
 const SETTABS=[['geral','Geral'],['membros','Membros'],['equipes','Equipes externas'],['links','Links compartilhados'],['props','Propriedades'],['opcoes','Opções']];
-const PERMROWS=[['Ver atividades, projetos e painéis',()=>1],['Comentar',r=>PERM[r].comment],['Criar atividades',r=>PERM[r].add],['Editar atividades atribuídas a si ou criadas por si',r=>PERM[r].own||PERM[r].editAll],['Editar qualquer atividade',r=>PERM[r].editAll],['Excluir atividades',r=>PERM[r].del],['Etiquetas, automações, modelos e importação Excel',r=>PERM[r].tags&&PERM[r].import],['Gerenciar membros e configurações',r=>PERM[r].members],['Excluir projeto',r=>PERM[r].delProject]];
+const PERMROWS=[['Ver atividades, projetos e painéis',()=>1],['Comentar',r=>PERM[r].comment],['Criar atividades',r=>PERM[r].add],['Editar atividades atribuídas a si ou criadas por si',r=>PERM[r].own||PERM[r].editAll],['Editar qualquer atividade',r=>PERM[r].editAll],['Excluir atividades',r=>PERM[r].del],['Etiquetas, automações, modelos e importação Excel',r=>PERM[r].tags&&PERM[r].import],['Gerenciar membros: convidar, bloquear, remover e escolher projetos (administradores só o administrador gerencia)',r=>PERM[r].members],['Criar administradores',r=>r==='admin'],['Excluir projeto',r=>PERM[r].delProject]];
 function memberCard(m,adm){
   if(CLOUD)return memberCardCloud(m,adm);
   const r=roleOfM(m),you=S.me===m.id;
@@ -2534,7 +2539,7 @@ function settings(){
       row('Término previsto','',`<input type="date" data-pprop="end" value="${p.end||''}" ${d}>`)+
       row('Cor','Aparece no menu e nas etiquetas do projeto',`<div class="swrow">${PCOL.map(c=>`<span class="sw ${pcol(p)===c?'on':''}" data-pcolor="${c}" style="background:${c}"></span>`).join('')}</div>`))+
       accessCard(p,adm)+
-      card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
+      card('Acesso','',row('Perfil padrão para novos membros','Aplicado a quem for convidado sem perfil definido',`<select data-grole="1" ${adm?'':'disabled'}>${Object.keys(ROLES).filter(k=>k!=='admin'||role()==='admin').map(k=>`<option value="${k}" ${(S.defaultRole||'normal')===k?'selected':''}>${ROLES[k].n}</option>`).join('')}</select>`));
   }else if(tab==='opcoes'){
     b=card('Aparência','Escolha o tema do sistema. Fica salvo neste navegador.',themePicker())+
       card('Dados e backup','Exporte suas atividades ou traga atividades de uma planilha.',`<div class="btns"><button class="pri" data-act3="hub">${ic('download',16)} Importar e exportar</button>`)+
@@ -2649,7 +2654,7 @@ document.addEventListener('click',e=>{
     if(p.restricted&&S.me&&!(p.access||[]).includes(S.me)&&roleOfM(mem(S.me))==='normal')p.access=[...(p.access||[]),S.me];
     save();render();return}
   const mp=e.target.closest&&e.target.closest('[data-mproj]');
-  if(mp){memberProjectsDialog(mp.dataset.mproj)}
+  if(mp){const mm=mem(mp.dataset.mproj);if(mm&&guardM(mm))memberProjectsDialog(mp.dataset.mproj)}
 });
 
 /* ----- ações da página de Configurações ----- */
@@ -2657,7 +2662,7 @@ function inviteMemberDialog(teamId){
   if(!can('members')){deny('members');return}
   const M=$('#modal');M.dataset.kind='invite';editing=null;closePop();
   const dr=teamId?(S.teams.find(t=>t.id===teamId)||{}).role:(S.defaultRole||'normal');
-  M.innerHTML=`<h3>＋ Convidar novos membros</h3><label style="margin-top:0">E-mail</label><input id="iv_email" placeholder="email@empresa.com.br"><label>Nome (opcional)</label><input id="iv_name" placeholder="Nome da pessoa"><label>Perfil</label><select id="iv_role">${Object.keys(ROLES).map(k=>`<option value="${k}" ${dr===k?'selected':''}>${ROLES[k].n} — ${ROLES[k].d}</option>`).join('')}</select>
+  M.innerHTML=`<h3>＋ Convidar novos membros</h3><label style="margin-top:0">E-mail</label><input id="iv_email" placeholder="email@empresa.com.br"><label>Nome (opcional)</label><input id="iv_name" placeholder="Nome da pessoa"><label>Perfil</label><select id="iv_role">${Object.keys(ROLES).filter(k=>k!=='admin'||role()==='admin').map(k=>`<option value="${k}" ${dr===k?'selected':''}>${ROLES[k].n} — ${ROLES[k].d}</option>`).join('')}</select>
   <div id="iv_pwrap"><label>Projetos que esta pessoa vai acessar</label><div class="hint" id="iv_phint" style="margin:0 0 6px"></div><div class="alist" style="max-height:190px;overflow:auto">${S.projects.filter(p=>!p.virtual).map(p=>`<label class="arow"><input type="checkbox" class="iv_p" value="${p.id}"><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span></label>`).join('')||'<div class="hint">Nenhum projeto criado ainda — a pessoa entra vazia e cria os dela.</div>'}</div></div>
   <div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="iv_go">Enviar convite</button></span></div>`;
   const ivSync=()=>{const r=$('#iv_role').value;$('#iv_pwrap').style.display=r==='admin'?'none':'';$('#iv_phint').textContent='A pessoa verá SOMENTE os projetos marcados aqui. Se não marcar nenhum, ela entra sem projeto nenhum e cria os dela do zero (e só ela os vê, além dos administradores).'};
@@ -2686,7 +2691,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-asuser]')){S.me=el.dataset.asuser;closePop();render();toast('Agora você é '+(mem(S.me)||{}).name+' ('+ROLES[role()].n+')');return}
   if(el=g('[data-sdel]')){
     if(!can('members')){deny('members');return}
-    const m=mem(el.dataset.sdel);if(!m)return;
+    const m=mem(el.dataset.sdel);if(!m||!guardM(m))return;
     if(roleOfM(m)==='admin'&&S.members.filter(x=>roleOfM(x)==='admin').length<2){toast('Mantenha pelo menos um administrador.');return}
     removeMemberDialog(m);return}
   if(el=g('[data-act3]')){
@@ -3105,8 +3110,8 @@ function inviteResult(res,email){
   $('#ov').classList.add('on');
   const cp=$('#cp_mail');if(cp)cp.onclick=async()=>{try{await navigator.clipboard.writeText(email);toast('E-mail copiado')}catch(e){toast(email)}};
 }
-function memberCardCloud(m,adm){
-  const r=roleOfM(m),you=S.me===m.id;
+function memberCardCloud(m,adm0){
+  const r=roleOfM(m),you=S.me===m.id,adm=adm0&&canManage(m);
   const st=!m.access?['sem acesso ao sistema','var(--mu)']:m.status==='blocked'?['⛔ bloqueado','var(--red)']:m.status==='invited'?['⏳ convite pendente','var(--amb)']:['✔ ativo','var(--ok)'];
   const last=m.last?new Date(m.last).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
   return `<div class="mcard"><span class="avl" style="background:${m.color}">${esc(ini(m.name))}</span>
@@ -3150,11 +3155,11 @@ document.addEventListener('click',async e=>{
     const res=await cloudInvite(em,nm,rl,window._ivTeam,pids);
     if(res.fallback){const m=S.members.find(x=>(x.email||'').toLowerCase()===em.toLowerCase());if(m){if(rl!=='admin')m.only=true;pids.forEach(pid=>{const p=S.projects.find(x=>x.id===pid);if(p&&!(p.access||[]).includes(m.id))p.access=[...(p.access||[]),m.id].sort()});save()}}
     inviteResult(res,em);return}
-  if(el=g('[data-cgrant]')){stop();const m=mem(el.dataset.cgrant);if(!m)return;if(!validEmail(m.email||'')){toast('Preencha um e-mail válido no cartão antes de dar acesso.');return}
+  if(el=g('[data-cgrant]')){stop();const m=mem(el.dataset.cgrant);if(!m||!guardM(m))return;if(!validEmail(m.email||'')){toast('Preencha um e-mail válido no cartão antes de dar acesso.');return}
     toast('Enviando convite…');const res=await cloudInvite(m.email,m.name,roleOfM(m),m.team);inviteResult(res,m.email);return}
-  if(el=g('[data-cresend]')){stop();const m=mem(el.dataset.cresend);if(!m)return;
+  if(el=g('[data-cresend]')){stop();const m=mem(el.dataset.cresend);if(!m||!guardM(m))return;
     try{const r=await fnCall({action:'resend',email:m.email,name:m.name,role:roleOfM(m)});toast((r&&r.message)||'Convite reenviado')}catch(x){if(fnMissing(x))inviteResult({fallback:true},m.email);else toast(trErr(x.message))}return}
-  if(el=g('[data-crevoke]')){stop();const m=mem(el.dataset.crevoke);if(!m)return;
+  if(el=g('[data-crevoke]')){stop();const m=mem(el.dataset.crevoke);if(!m||!guardM(m))return;
     ask('Bloquear o acesso de '+m.name+'? Ela deixa de conseguir entrar (os dados e atividades dela continuam).','',async()=>{
       try{await fnCall({action:'revoke',email:m.email,name:m.name,role:roleOfM(m)});await pullAll(false,true)}
       catch(x){if(fnMissing(x)){m.access=false;m.status='blocked';cloudSchedule()}else{toast(trErr(x.message));return}}

@@ -180,12 +180,18 @@ Deno.serve(async (req: Request) => {
   if (action === 'mail_status') return await mailStatus({ me, body })
 
   // ---- gestão de convites: somente administrador ----
-  if (me.role !== 'admin') return json({ error: 'Somente administradores podem gerenciar convites.' }, 403)
+  if (me.role !== 'admin' && me.role !== 'normal') return json({ error: 'Seu perfil não pode gerenciar convites.' }, 403)
   const email = String(body.email ?? '').trim().toLowerCase()
   const name = String(body.name ?? '').trim()
   const role = String(body.role ?? 'normal')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ error: 'E-mail inválido.' }, 400)
   if (!ROLES.includes(role)) return json({ error: 'Perfil inválido.' }, 400)
+  if (me.role !== 'admin') {
+    // perfil Normal: nunca cria administradores nem mexe em administradores / em si mesmo
+    if (role === 'admin') return json({ error: 'Só administradores criam administradores.' }, 403)
+    const { data: tgt0 } = await admin.from('members').select('id, role').ilike('email', email).maybeSingle()
+    if (tgt0 && (tgt0.role === 'admin' || tgt0.id === me.id)) return json({ error: 'Só administradores gerenciam administradores (e você não pode alterar a si mesmo).' }, 403)
+  }
 
   // 4) ações
   if (action === 'invite' || action === 'resend') {
@@ -210,7 +216,13 @@ Deno.serve(async (req: Request) => {
         await admin.from('members').update({ projects_only: true }).eq('id', tgt.id)
         const ids: string[] = Array.isArray(body.project_ids) ? body.project_ids.map(String).slice(0, 200) : []
         if (ids.length) {
-          const { data: okp } = await admin.from('projects').select('id').in('id', ids)
+          let { data: okp } = await admin.from('projects').select('id').in('id', ids)
+          if (me.role !== 'admin') {
+            // perfil Normal só inclui a pessoa em projetos que ele mesmo enxerga
+            const keep: any[] = []
+            for (const p of okp ?? []) { const { data: v } = await asUser.rpc('can_see_project', { p_proj: p.id }); if (v) keep.push(p) }
+            okp = keep
+          }
           const rows = (okp ?? []).map((p: any) => ({ project_id: p.id, member_id: tgt.id }))
           if (rows.length) await admin.from('project_access').upsert(rows, { onConflict: 'project_id,member_id', ignoreDuplicates: true })
         }

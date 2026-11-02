@@ -144,6 +144,9 @@ Enquanto não estiver configurado, o link "Prefiro abrir no meu programa de e-ma
 ## Parte E4 — Convidar já com os projetos (acesso só ao que for marcado)
 No convite você marca em quais projetos a pessoa entra. Ela passa a ver **somente** esses projetos. Se não marcar nenhum, ela entra **sem projeto** e cria os dela do zero (só ela e os administradores veem o que ela criar). Para as pessoas já cadastradas, em **Membros → Projetos** há a chave "Só vê os projetos marcados". Para ativar: **rode o `supabase_setup.sql` de novo** (seguro repetir; cria a coluna `projects_only` e atualiza a regra de visibilidade) e **publique de novo a função `invite-user`**.
 
+## Parte E5 — Perfil Normal também administra membros
+O perfil **Normal** pode convidar, bloquear, remover e escolher os projetos das pessoas (Configurações → Membros). Limites que o próprio banco impõe: Normal **não cria administradores**, **não mexe em administradores** e **não altera o próprio cadastro**; só inclui pessoas em projetos que ele mesmo enxerga. Para ativar: **rode o `supabase_setup.sql` de novo** e **publique de novo a função `invite-user`**.
+
 ## Parte F — Tirar o acesso de alguém
 - Pelo sistema (depois da integração) ou no SQL: `update public.members set status = 'blocked', access_enabled = false where email = 'fulano@empresa.com.br';`
 - Em **Authentication → Users** você também pode excluir o usuário (derruba as sessões).
