@@ -1210,7 +1210,7 @@ html{-webkit-text-size-adjust:100%}
 @container main (max-width:760px){.col-i{display:none!important}}
 @container main (max-width:660px){.col-a{display:none!important}}
 @media(min-width:701px){
-  .outline{overflow:clip;max-width:none;min-width:100%;width:calc(var(--colsw,600px) + 350px)}
+  .outline{overflow:clip;max-width:none;min-width:100%;width:calc(var(--colsw,600px) + 380px)}
   .outline .row{min-width:calc(var(--colsw,600px) + 330px)}
   .outline .row.hdr{position:sticky}
 }
@@ -1231,7 +1231,7 @@ html{-webkit-text-size-adjust:100%}
   .row .main .pg,.row .main .imgc,.row .main .star{flex:none}
   .row .st{display:inline-block;box-sizing:border-box;width:84px;text-align:center;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row .cell.col-s{width:96px;justify-content:flex-start}
-  .col-u{width:68px}.col-ih,.col-dh{width:52px}
+  .col-u{width:60px}.col-ih,.col-dh{width:46px}
   .rt>.hc{height:20px;line-height:20px}
   .rt>.hc.col-u,.rt>.cell.col-u{text-align:right;justify-content:flex-end;padding-right:10px}
   .row.sub>.main{background-image:repeating-linear-gradient(to right,transparent 0 11px,color-mix(in srgb,var(--mu) 18%,transparent) 11px 12px,transparent 12px 24px)}
@@ -1272,4 +1272,14 @@ html{-webkit-text-size-adjust:100%}
 @media(min-width:701px) and (max-width:900px){
   .row.root>.gut{box-shadow:inset 4px 0 0 var(--ac)}
   .row.cur:not(.root)>.gut{box-shadow:inset 3px 0 0 var(--ac)}
+}
+
+/* ===== botão "abrir painel" sempre visível ===== */
+@media(min-width:701px) and (hover:hover){
+  .row .main{padding-right:36px}
+  .row .op{display:inline-flex!important;opacity:1;position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;padding:0;font-size:0;align-items:center;justify-content:center;border-radius:8px;border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));background:color-mix(in srgb,var(--ac) 8%,var(--bg2));color:var(--ac);z-index:3}
+  .row .op::before{content:"⤢";font-size:15px;line-height:1}
+  .row .op:hover{background:var(--ac);color:#fff;border-color:var(--ac)}
+  .row .hv{right:38px}
+  .row.addrow .op{display:none!important}
 }
