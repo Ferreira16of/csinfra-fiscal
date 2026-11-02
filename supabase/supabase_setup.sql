@@ -387,6 +387,11 @@ begin
     if tg_op = 'UPDATE' and new.user_id is distinct from old.user_id then
       raise exception 'Somente administrador altera o login vinculado.' using errcode = 'P0001';
     end if;
+    -- bloquear / tirar o acesso: somente administrador
+    if tg_op = 'UPDATE' and ((new.status = 'blocked' and old.status is distinct from 'blocked')
+                             or (old.access_enabled and not new.access_enabled)) then
+      raise exception 'Somente administrador bloqueia o acesso.' using errcode = 'P0001';
+    end if;
   end if;
   return new;
 end $$;
@@ -395,13 +400,16 @@ create trigger protect_member_cols_ins before insert on public.members for each 
 drop trigger if exists protect_member_cols_upd on public.members;
 create trigger protect_member_cols_upd before update on public.members for each row execute function public.protect_member_cols();
 
--- Projeto restrito: criar restrito é só do administrador; já a restrição (quem vê) pode ser mudada por quem gerencia membros (admin/normal)
+-- Só administrador cria projeto restrito ou muda a restrição
 create or replace function public.protect_project_cols() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   if public.my_role() is not null and public.my_role() <> 'admin' then
     if tg_op = 'INSERT' and new.restricted then
       raise exception 'Somente administrador cria projeto restrito.' using errcode = 'P0001';
+    end if;
+    if tg_op = 'UPDATE' and new.restricted is distinct from old.restricted then
+      raise exception 'Somente administrador altera o acesso do projeto.' using errcode = 'P0001';
     end if;
   end if;
   return new;
@@ -470,15 +478,14 @@ drop policy if exists members_write on public.members;
 drop policy if exists members_write_admin on public.members;
 drop policy if exists members_ins_normal on public.members;
 drop policy if exists members_upd_normal on public.members;
-drop policy if exists members_del_normal on public.members;
+drop policy if exists members_del_normal on public.members;  -- removida: Normal não exclui membros
 create policy members_write_admin on public.members for all to authenticated using (public.my_role() = 'admin') with check (public.my_role() = 'admin');
 -- perfil Normal também gerencia membros, mas nunca administradores nem a si mesmo, e não cria administradores
 create policy members_ins_normal on public.members for insert to authenticated with check (public.my_role() = 'normal' and role <> 'admin');
 create policy members_upd_normal on public.members for update to authenticated
   using (public.my_role() = 'normal' and role <> 'admin' and id <> public.my_member_id())
   with check (public.my_role() = 'normal' and role <> 'admin');
-create policy members_del_normal on public.members for delete to authenticated
-  using (public.my_role() = 'normal' and role <> 'admin' and id <> public.my_member_id());
+-- (excluir membro: somente administrador — não há política de DELETE para o perfil Normal)
 
 -- projects: admin/normal criam e editam; só admin exclui
 create policy projects_read   on public.projects for select to authenticated using (public.can_see_project(id));
@@ -487,13 +494,16 @@ create policy projects_update on public.projects for update to authenticated usi
 -- quem pode ver quais projetos: só administrador altera; cada pessoa lê as próprias linhas
 drop policy if exists pa_read on public.project_access;
 drop policy if exists pa_write on public.project_access;
+drop policy if exists pa_write_admin on public.project_access;
+drop policy if exists pa_ins_normal on public.project_access;
 create policy pa_read  on public.project_access for select to authenticated using (public.my_role() in ('admin','normal') or member_id = public.my_member_id());
--- admin: tudo · normal: só em projetos que enxerga e só para pessoas que não são administradoras
-create policy pa_write on public.project_access for all    to authenticated
-  using (public.my_role() = 'admin' or (public.my_role() = 'normal' and public.can_see_project(project_id)
-         and not exists (select 1 from public.members m where m.id = member_id and m.role = 'admin')))
-  with check (public.my_role() = 'admin' or (public.my_role() = 'normal' and public.can_see_project(project_id)
-         and not exists (select 1 from public.members m where m.id = member_id and m.role = 'admin')));
+-- admin: tudo
+create policy pa_write_admin on public.project_access for all to authenticated
+  using (public.my_role() = 'admin') with check (public.my_role() = 'admin');
+-- Normal: pode INCLUIR pessoas (não administradoras) em projetos que enxerga; tirar do projeto é só do administrador
+create policy pa_ins_normal on public.project_access for insert to authenticated
+  with check (public.my_role() = 'normal' and public.can_see_project(project_id)
+              and not exists (select 1 from public.members m where m.id = member_id and m.role = 'admin'));
 create policy projects_delete on public.projects for delete to authenticated using (public.my_role() = 'admin');
 
 -- tasks: todos leem · admin/normal/limited criam · edição conforme o perfil · admin/normal excluem

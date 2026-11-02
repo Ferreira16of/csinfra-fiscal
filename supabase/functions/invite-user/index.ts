@@ -186,6 +186,7 @@ Deno.serve(async (req: Request) => {
   const role = String(body.role ?? 'normal')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ error: 'E-mail inválido.' }, 400)
   if (!ROLES.includes(role)) return json({ error: 'Perfil inválido.' }, 400)
+  if (me.role !== 'admin' && (action === 'revoke' || action === 'delete')) return json({ error: 'Só administradores bloqueiam ou removem pessoas.' }, 403)
   if (me.role !== 'admin') {
     // perfil Normal: nunca cria administradores nem mexe em administradores / em si mesmo
     if (role === 'admin') return json({ error: 'Só administradores criam administradores.' }, 403)
