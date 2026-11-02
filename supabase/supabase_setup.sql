@@ -65,6 +65,9 @@ create table if not exists public.projects (
   updated_by   uuid
 );
 
+-- Pessoa que só vê os projetos em que foi incluída (e os que ela mesma criar), mesmo sendo perfil Normal.
+alter table public.members add column if not exists projects_only boolean not null default false;
+
 -- Acesso por projeto: projeto "restrito" só aparece para administradores e para as pessoas listadas.
 alter table public.projects add column if not exists restricted boolean not null default false;
 -- Imagens anexadas à tarefa (lista de {p: caminho, n: nome, w, h}); os arquivos ficam no Storage (bucket task-images)
@@ -190,15 +193,23 @@ $$;
 
 -- Pode ver este projeto?
 --   admin   : todos
---   normal  : os não restritos + os restritos em que foi incluído
+--   normal  : os não restritos + os restritos em que foi incluído (se "projects_only": só os em que foi incluído + os que ele criou)
 --   limited / guest (pessoas de fora): somente os projetos em que foi incluído
+create or replace function public.my_projects_only() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select m.projects_only from public.members m
+                   where m.user_id = auth.uid() and m.access_enabled and m.status <> 'blocked' limit 1), false)
+$$;
+
 create or replace function public.can_see_project(p_proj text) returns boolean
 language sql stable security definer set search_path = public as $$
   select case public.my_role()
     when 'admin'  then exists (select 1 from public.projects pr where pr.id = p_proj)
+    -- normal: os abertos (a menos que seja "só os dele") + os que criou + os restritos/selecionados em que foi incluído
     when 'normal' then exists (select 1 from public.projects pr
                                where pr.id = p_proj
-                                 and ( not pr.restricted
+                                 and ( (not pr.restricted and not public.my_projects_only())
+                                       or pr.created_by = auth.uid()
                                        or exists (select 1 from public.project_access a
                                                   where a.project_id = pr.id and a.member_id = public.my_member_id()) ))
     when 'limited' then exists (select 1 from public.project_access a where a.project_id = p_proj and a.member_id = public.my_member_id())

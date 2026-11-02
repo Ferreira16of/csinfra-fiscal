@@ -203,6 +203,19 @@ Deno.serve(async (req: Request) => {
       })
       if (insErr) return json({ error: insErr.message }, 400)
     }
+    // 4a-2) projetos escolhidos no convite: a pessoa passa a ver SÓ esses (nenhum marcado = nenhum projeto; ela cria os dela)
+    if (action === 'invite' && role !== 'admin' && body.projects_only === true) {
+      const { data: tgt } = await admin.from('members').select('id').ilike('email', email).maybeSingle()
+      if (tgt) {
+        await admin.from('members').update({ projects_only: true }).eq('id', tgt.id)
+        const ids: string[] = Array.isArray(body.project_ids) ? body.project_ids.map(String).slice(0, 200) : []
+        if (ids.length) {
+          const { data: okp } = await admin.from('projects').select('id').in('id', ids)
+          const rows = (okp ?? []).map((p: any) => ({ project_id: p.id, member_id: tgt.id }))
+          if (rows.length) await admin.from('project_access').upsert(rows, { onConflict: 'project_id,member_id', ignoreDuplicates: true })
+        }
+      }
+    }
     // 4b) envia o convite pelo Supabase Auth
     const { error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
       data: { name: name || undefined, role },
