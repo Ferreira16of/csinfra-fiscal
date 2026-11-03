@@ -147,6 +147,15 @@ No convite você marca em quais projetos a pessoa entra. Ela passa a ver **somen
 ## Parte E5 — Perfil Normal também administra membros
 O perfil **Normal** pode convidar, reenviar convite, dar acesso, mudar o perfil (até Normal) e **incluir** pessoas em projetos (Configurações → Membros). **Bloquear acesso, remover definitivamente e tirar alguém de um projeto são só do administrador.** Limites que o próprio banco impõe: Normal **não cria administradores**, **não mexe em administradores** e **não altera o próprio cadastro**; só inclui pessoas em projetos que ele mesmo enxerga. Para ativar: **rode o `supabase_setup.sql` de novo** e **publique de novo a função `invite-user`**.
 
+## Parte E6 — Convite caindo no spam
+O e-mail de convite só deixa de ir para o spam se sair de um **remetente do seu próprio domínio, com SPF, DKIM e DMARC configurados**. Por isso, quando o **E-mail do sistema** está ativo (Parte E3: `RESEND_API_KEY` + `MAIL_FROM`), a função `invite-user` passa a enviar o convite por ele — com texto simples, um único botão e o código de reserva — em vez do e-mail genérico do Supabase. Passo a passo:
+1. No Resend (resend.com → **Domains → Add Domain**) adicione o domínio da empresa (ex.: `csinfra.com.br`) e crie no seu DNS os registros que ele mostrar (**SPF** e **DKIM**). Espere ficar **Verified**.
+2. Crie também o registro **DMARC** (TXT em `_dmarc.seudominio.com.br`), por exemplo: `v=DMARC1; p=none; rua=mailto:ti@seudominio.com.br`.
+3. Em **Edge Functions → Secrets**, `MAIL_FROM` precisa ser desse domínio, ex.: `CS Infra <avisos@seudominio.com.br>` (nunca um `@gmail.com`/`@outlook.com`: esses não autorizam o seu servidor e vão para o spam).
+4. Publique de novo a função `invite-user` e reenvie o convite. Peça à pessoa para marcar como **"Não é spam"** na primeira vez e adicionar o remetente aos contatos.
+5. Para conferir a nota do e-mail, envie um convite para o endereço que o site mail-tester.com mostrar.
+Sem o e-mail do sistema ativo, o convite continua saindo pelo Supabase Auth (Authentication → Emails → SMTP Settings: use o mesmo provedor/domínio verificado e edite o modelo "Invite user" com um assunto claro).
+
 ## Parte F — Tirar o acesso de alguém
 - Pelo sistema (depois da integração) ou no SQL: `update public.members set status = 'blocked', access_enabled = false where email = 'fulano@empresa.com.br';`
 - Em **Authentication → Users** você também pode excluir o usuário (derruba as sessões).

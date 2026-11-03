@@ -229,7 +229,47 @@ Deno.serve(async (req: Request) => {
         }
       }
     }
-    // 4b) envia o convite pelo Supabase Auth
+    // 4b) envia o convite.
+    //     Se o envio por e-mail do sistema (Resend/SMTP com domínio próprio) estiver ativo, o convite sai por ele:
+    //     remetente com SPF/DKIM do seu domínio => bem menos chance de cair no spam.
+    //     Senão, usa o e-mail padrão do Supabase Auth.
+    if (mailProvider().kind) {
+      const { data: gl, error: glErr } = await admin.auth.admin.generateLink({
+        type: 'invite', email, options: { data: { name: name || undefined, role }, redirectTo: SITE_URL },
+      })
+      if (glErr) {
+        const already = /already|registered|exists/i.test(glErr.message)
+        return json({
+          error: already
+            ? 'Esta pessoa já ativou o convite. Se esqueceu a senha, use “Esqueci minha senha” na tela de login.'
+            : glErr.message,
+        }, already ? 409 : 400)
+      }
+      const site = (Deno.env.get('SITE_URL') ?? SITE_URL).replace(/\/$/, '')
+      const props: any = gl?.properties ?? {}
+      const link = props.hashed_token ? `${site}/?token_hash=${encodeURIComponent(props.hashed_token)}&type=invite&email=${encodeURIComponent(email)}` : site
+      const code: string = props.email_otp ?? ''
+      const who = name || email.split('@')[0]
+      const subject = 'Convite para o Controle de Atividades — CS Infra'
+      const text = `Olá, ${who}.\n\n${me.name} convidou você para o Controle de Atividades da CS Infra.\n\nPara criar sua senha e entrar, abra este endereço:\n${link}\n` +
+        (code ? `\nSe preferir, na tela de entrada escolha "Recebi um convite" e informe seu e-mail e o código ${code}.\n` : '') +
+        `\nO convite vale por tempo limitado. Se você não esperava esta mensagem, pode ignorá-la.\n\nCS Infra`
+      const html = `<div style="background:#f5f6f8;padding:24px 12px;font-family:Segoe UI,Arial,sans-serif"><div style="max-width:560px;margin:auto;background:#fff;border:1px solid #e4e7ec;border-radius:14px;overflow:hidden">
+  <div style="padding:18px 24px;border-bottom:1px solid #e4e7ec;font-weight:700;color:#0e7a6e">CS Infra · Controle de Atividades</div>
+  <div style="padding:22px 24px;color:#101828;font-size:15px;line-height:1.6">
+   <p style="margin:0 0 12px">Olá, ${esc(who)}.</p>
+   <p style="margin:0 0 18px">${esc(me.name)} convidou você para o Controle de Atividades da CS Infra. Para criar sua senha e entrar, use o botão abaixo.</p>
+   <p style="text-align:center;margin:0 0 18px"><a href="${esc(link)}" style="background:#0e7a6e;color:#fff;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:10px;display:inline-block">Criar minha senha e entrar</a></p>
+   ${code ? `<p style="margin:0 0 12px;font-size:13.5px;color:#475467">Se o botão não funcionar, na tela de entrada escolha <b>“Recebi um convite”</b> e informe seu e-mail e o código <b style="letter-spacing:2px">${esc(code)}</b>.</p>` : ''}
+   <p style="margin:0;font-size:12.5px;color:#667085">O convite vale por tempo limitado. Se você não esperava esta mensagem, pode ignorá-la.</p>
+  </div></div></div>`
+      try {
+        await sendMails([{ to: email, subject, text, html, replyTo: me.email ?? undefined }])
+      } catch (e) {
+        return json({ error: 'Não foi possível enviar o convite por e-mail: ' + (e as Error).message }, 502)
+      }
+      return json({ ok: true, message: 'Convite enviado para ' + email })
+    }
     const { error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
       data: { name: name || undefined, role },
       redirectTo: SITE_URL,
