@@ -10,7 +10,7 @@
 //  Chamada (o app fará isso):
 //    POST {SUPABASE_URL}/functions/v1/invite-user
 //    Authorization: Bearer <token do usuário logado>
-//    { "action": "invite" | "resend" | "revoke" | "delete" | "notify" | "mail_status",
+//    { "action": "invite" | "create" | "resend" | "revoke" | "delete" | "notify" | "mail_status",
 //      "email": "pessoa@empresa.com", "name": "Nome", "role": "normal", "team_id": null }
 // =====================================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -195,14 +195,21 @@ Deno.serve(async (req: Request) => {
   }
 
   // 4) ações
-  if (action === 'invite' || action === 'resend') {
+  if (action === 'invite' || action === 'resend' || action === 'create') {
+    // cadastro manual: valida a senha provisória antes de mexer em qualquer coisa
+    const password = String(body.password ?? '')
+    if (action === 'create' && password.length < 8) return json({ error: 'A senha provisória precisa ter pelo menos 8 caracteres.' }, 400)
+    if (action === 'create') {
+      const { data: ex0 } = await admin.from('members').select('id, user_id, status').ilike('email', email).maybeSingle()
+      if (ex0?.user_id && ex0.status !== 'invited') return json({ error: 'Esta pessoa já tem login. Se esqueceu a senha, use “Esqueci minha senha” na tela de entrada.' }, 409)
+    }
     // 4a) autoriza o e-mail na tabela members (o portão do banco exige isso)
     const { data: existing } = await admin.from('members').select('id, role').ilike('email', email).maybeSingle()
     if (existing) {
       await admin.from('members').update({
         access_enabled: true,
         status: 'invited',
-        ...(action === 'invite' ? { role, name: name || undefined, team_id: body.team_id ?? null } : {}),
+        ...(action !== 'resend' ? { role, name: name || undefined, team_id: body.team_id ?? null } : {}),
       }).eq('id', existing.id)
     } else {
       const { error: insErr } = await admin.from('members').insert({
@@ -211,7 +218,7 @@ Deno.serve(async (req: Request) => {
       if (insErr) return json({ error: insErr.message }, 400)
     }
     // 4a-2) projetos escolhidos no convite: a pessoa passa a ver SÓ esses (nenhum marcado = nenhum projeto; ela cria os dela)
-    if (action === 'invite' && role !== 'admin' && body.projects_only === true) {
+    if ((action === 'invite' || action === 'create') && role !== 'admin' && body.projects_only === true) {
       const { data: tgt } = await admin.from('members').select('id').ilike('email', email).maybeSingle()
       if (tgt) {
         await admin.from('members').update({ projects_only: true }).eq('id', tgt.id)
@@ -228,6 +235,26 @@ Deno.serve(async (req: Request) => {
           if (rows.length) await admin.from('project_access').upsert(rows, { onConflict: 'project_id,member_id', ignoreDuplicates: true })
         }
       }
+    }
+    // 4a-3) CADASTRO MANUAL: cria o login já confirmado, com a senha provisória. Nenhum e-mail é enviado.
+    if (action === 'create') {
+      // convite pendente: o login já existe (nunca foi usado) → só define a senha e confirma
+      const { data: pend } = await admin.from('members').select('user_id, status').ilike('email', email).maybeSingle()
+      if (pend?.user_id && pend.status === 'invited') {
+        const { error: upErr } = await admin.auth.admin.updateUserById(pend.user_id, { password, email_confirm: true })
+        if (upErr) return json({ error: upErr.message }, 400)
+        await admin.from('members').update({ status: 'active' }).ilike('email', email)
+        return json({ ok: true, message: 'Cadastro criado para ' + email })
+      }
+      const { data: cu, error: cuErr } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: { name: name || undefined, role },
+      })
+      if (cuErr) {
+        const already = /already|registered|exists/i.test(cuErr.message)
+        return json({ error: already ? 'Já existe um login com este e-mail. Use “Esqueci minha senha” na tela de entrada.' : cuErr.message }, already ? 409 : 400)
+      }
+      await admin.from('members').update({ status: 'active', user_id: cu.user?.id ?? undefined }).ilike('email', email)
+      return json({ ok: true, message: 'Cadastro criado para ' + email })
     }
     // 4b) envia o convite.
     //     Se o envio por e-mail do sistema (Resend/SMTP com domínio próprio) estiver ativo, o convite sai por ele:

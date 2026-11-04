@@ -171,3 +171,14 @@ O `quire.html` entregue já contém a Project URL e a chave **anon** do seu proj
 - **Pausa:** projetos Free sem uso por cerca de 7 dias podem ser pausados (basta reativar no painel).
 - **Hospedagem:** cada pessoa precisa abrir o sistema. Pode ser o arquivo HTML compartilhado ou hospedado (GitHub Pages, Netlify, Cloudflare Pages — gratuitos).
 - Guarde a senha do banco e o acesso à sua conta Supabase: quem controla o painel controla os dados.
+
+## Parte E7 — Cadastrar pessoa manualmente (sem e-mail)
+
+Use quando o e-mail de convite não chega (rede da empresa bloqueando, spam, etc.).
+
+1. **Republique a função** `invite-user` (Edge Functions → invite-user → cole o `index.ts` novo → Deploy). Não precisa rodar SQL de novo.
+2. No site: Configurações → Membros → **＋ Convidar**. Em **Como cadastrar**, escolha **Cadastrar manualmente**, informe e-mail, nome, perfil e os projetos, e clique em **Gerar** (ou digite) uma senha provisória.
+3. A conta é criada **já ativa**. O site mostra o endereço, o e-mail e a senha, com o botão **Copiar dados**. Passe para a pessoa por WhatsApp ou pessoalmente. Ela entra direto, sem convite nem código, e pode trocar a senha em “Alterar senha”.
+4. Quem **já foi convidado e nunca recebeu**: no cartão do membro use **Cadastrar com senha** (define a senha do login pendente e ativa a conta).
+
+Regras mantidas: Normal só cadastra Normal/Limitado/Convidado e não mexe em administradores; a senha nunca fica guardada no site (aparece uma única vez).

@@ -2692,10 +2692,14 @@ function inviteMemberDialog(teamId){
   const M=$('#modal');M.dataset.kind='invite';editing=null;closePop();
   const dr=teamId?(S.teams.find(t=>t.id===teamId)||{}).role:(S.defaultRole||'normal');
   M.innerHTML=`<h3>＋ Convidar novos membros</h3><label style="margin-top:0">E-mail</label><input id="iv_email" placeholder="email@empresa.com.br"><label>Nome (opcional)</label><input id="iv_name" placeholder="Nome da pessoa"><label>Perfil</label><select id="iv_role">${Object.keys(ROLES).filter(k=>k!=='admin'||role()==='admin').map(k=>`<option value="${k}" ${dr===k?'selected':''}>${ROLES[k].n} — ${ROLES[k].d}</option>`).join('')}</select>
+  ${cloud.on?`<label>Como cadastrar</label><select id="iv_mode"><option value="mail">Enviar convite por e-mail</option><option value="manual">Cadastrar manualmente (eu defino a senha, sem e-mail)</option></select>
+  <div id="iv_manual" style="display:none"><label>Senha provisória (mín. 8 caracteres)</label><div style="display:flex;gap:6px"><input id="iv_pw" type="text" autocomplete="off" style="flex:1" placeholder="Senha provisória"><button type="button" id="iv_gen">Gerar</button></div><div class="hint" style="margin:6px 0 0">A conta é criada já ativa. Passe o e-mail e a senha para a pessoa por onde preferir (WhatsApp, pessoalmente…). Ela pode trocar a senha depois em “Alterar senha”.</div></div>`:''}
   <div id="iv_pwrap"><label>Projetos que esta pessoa vai acessar</label><div class="hint" id="iv_phint" style="margin:0 0 6px"></div><div class="alist" style="max-height:190px;overflow:auto">${S.projects.filter(p=>!p.virtual).map(p=>`<label class="arow"><input type="checkbox" class="iv_p" value="${p.id}"><i class="pd" style="background:${pcol(p)}"></i><span class="an"><b>${esc(p.name)}</b><small>${p.restricted?'Projeto restrito':'Projeto aberto'}</small></span></label>`).join('')||'<div class="hint">Nenhum projeto criado ainda — a pessoa entra vazia e cria os dela.</div>'}</div></div>
   <div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="iv_go">Enviar convite</button></span></div>`;
   const ivSync=()=>{const r=$('#iv_role').value;$('#iv_pwrap').style.display=r==='admin'?'none':'';$('#iv_phint').textContent='A pessoa verá SOMENTE os projetos marcados aqui. Se não marcar nenhum, ela entra sem projeto nenhum e cria os dela do zero (e só ela os vê, além dos administradores).'};
   $('#iv_role').onchange=ivSync;ivSync();
+  const md=$('#iv_mode');if(md){const sw=()=>{const man=md.value==='manual';$('#iv_manual').style.display=man?'':'none';$('#iv_go').textContent=man?'Cadastrar pessoa':'Enviar convite'};md.onchange=sw;sw();
+    $('#iv_gen').onclick=()=>{const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint32Array(12);crypto.getRandomValues(r);$('#iv_pw').value=[...r].map(x=>a[x%a.length]).join('')}}
   window._ivTeam=teamId||null;$('#ov').classList.add('on');$('#iv_email').focus();
 }
 function addMember(email,name,r,teamId){
@@ -3138,6 +3142,13 @@ async function cloudInvite(email,name,role,teamId,pids){
     return{ok:false,msg:trErr(e.message)};
   }
 }
+function manualResult(res,email,pw){
+  const M=$('#modal');M.dataset.kind='invres';editing=null;closePop();
+  if(res.ok)M.innerHTML=`<h3>✔ Pessoa cadastrada</h3><div class="hint" style="line-height:1.6">Nenhum e-mail foi enviado. Passe estes dados para a pessoa:<br><br>Endereço: <b>${esc(location.origin)}</b><br>E-mail: <b>${esc(email)}</b><br>Senha provisória: <b style="letter-spacing:1px">${esc(pw)}</b><br><br>Esta senha só aparece agora. Se perder, é só remover o cadastro e cadastrar de novo, ou a pessoa usar “Esqueci minha senha”.</div><div class="acts"><button id="cp_cred">Copiar dados</button><button class="pri" id="g_ok">Ok</button></div>`;
+  else M.innerHTML=`<h3>Não foi possível cadastrar</h3><div class="hint" style="color:var(--red)">${esc(res.msg||'Erro desconhecido')}</div><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
+  $('#ov').classList.add('on');
+  const cp=$('#cp_cred');if(cp)cp.onclick=async()=>{const t=`Acesso ao Controle de Atividades — CS Infra\nEndereço: ${location.origin}\nE-mail: ${email}\nSenha provisória: ${pw}`;try{await navigator.clipboard.writeText(t);toast('Dados copiados')}catch(e){toast(t)}};
+}
 function inviteResult(res,email){
   const M=$('#modal');M.dataset.kind='invres';editing=null;closePop();
   if(res.ok)M.innerHTML=`<h3>✔ Convite enviado</h3><div class="hint">${esc(res.msg)}. A pessoa receberá o e-mail com o link (e o código) para criar a senha.</div><div class="acts"><span></span><button class="pri" id="g_ok">Ok</button></div>`;
@@ -3158,7 +3169,7 @@ function memberCardCloud(m,adm0){
     ${memberProjChips(m)}
    </div>
    <div class="mr"><button class="rolebtn" data-pop="r:${m.id}" ${adm?'':'disabled'}><span>${ROLES[r].n}</span><span>▾</span></button>
-    ${adm?`<div class="mact">${r!=='admin'?`<button data-mproj="${m.id}" title="PROJETOS: escolha em quais projetos esta pessoa entra e use “Tirar deste projeto” para retirá-la de UM projeto sem mexer nos outros nem no acesso ao sistema.">Projetos${r==='limited'||r==='guest'||m.only?' ('+S.projects.filter(p=>(p.access||[]).includes(m.id)).length+')':''}</button>`:''}${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${m.access&&!you&&isAdm()?'<button data-crevoke="'+m.id+'" title="BLOQUEAR ACESSO: a pessoa não consegue mais entrar no sistema (o login dela é desativado). Ela continua na lista de membros e as atividades dela continuam no nome dela. Dá para liberar de novo depois com “Dar acesso”.">Bloquear acesso</button>':''}${you||!isAdm()?'':'<button class="ghost" data-sdel="'+m.id+'" title="REMOVER DEFINITIVAMENTE: apaga a pessoa de TODOS os projetos e exclui o login dela. O sistema pergunta o que fazer com as atividades dela (passar para outra pessoa ou excluir). Não dá para desfazer — para voltar, só convidando de novo. Para tirar de um projeto só, use “Projetos”.">🗑 Remover definitivamente</button>'}</div>`:''}
+    ${adm?`<div class="mact">${r!=='admin'?`<button data-mproj="${m.id}" title="PROJETOS: escolha em quais projetos esta pessoa entra e use “Tirar deste projeto” para retirá-la de UM projeto sem mexer nos outros nem no acesso ao sistema.">Projetos${r==='limited'||r==='guest'||m.only?' ('+S.projects.filter(p=>(p.access||[]).includes(m.id)).length+')':''}</button>`:''}${!m.access?'<button data-cgrant="'+m.id+'" title="Autorizar e enviar convite por e-mail">Dar acesso (convidar)</button>':m.status==='invited'?'<button data-cresend="'+m.id+'">Reenviar convite</button>':''}${(!m.access||m.status==='invited')&&m.email?'<button data-cmanual="'+m.id+'" title="Não chegou e-mail? Defina você mesmo uma senha provisória: a conta fica ativa na hora, sem enviar nada.">Cadastrar com senha</button>':''}${m.access&&!you&&isAdm()?'<button data-crevoke="'+m.id+'" title="BLOQUEAR ACESSO: a pessoa não consegue mais entrar no sistema (o login dela é desativado). Ela continua na lista de membros e as atividades dela continuam no nome dela. Dá para liberar de novo depois com “Dar acesso”.">Bloquear acesso</button>':''}${you||!isAdm()?'':'<button class="ghost" data-sdel="'+m.id+'" title="REMOVER DEFINITIVAMENTE: apaga a pessoa de TODOS os projetos e exclui o login dela. O sistema pergunta o que fazer com as atividades dela (passar para outra pessoa ou excluir). Não dá para desfazer — para voltar, só convidando de novo. Para tirar de um projeto só, use “Projetos”.">🗑 Remover definitivamente</button>'}</div>`:''}
    </div></div>`;
 }
 const cloudAccountHTML=()=>`<label>Conta</label><div class="hint" style="margin:0 0 8px">Conectado como <b>${esc((sess&&sess.user&&sess.user.email)||(cloud.me&&cloud.me.email)||'')}</b> · perfil <b>${ROLES[role()].n}</b>.</div><div style="display:flex;gap:8px"><button data-cloud="pw">Alterar senha</button><button data-cloud="out">Sair</button></div>`;
@@ -3187,13 +3198,30 @@ document.addEventListener('click',async e=>{
   if(g('#iv_go')){stop();
     const em=$('#iv_email').value.trim(),nm=$('#iv_name').value.trim(),rl=$('#iv_role').value;
     if(!validEmail(em)){toast('Digite um e-mail válido');return}
-    const bt=$('#iv_go');bt.disabled=true;bt.textContent='Enviando…';
     const pids=[...document.querySelectorAll('.iv_p:checked')].map(x=>x.value);
+    const mdv=$('#iv_mode');
+    if(mdv&&mdv.value==='manual'){
+      const pw=($('#iv_pw').value||'');if(pw.length<8){toast('A senha provisória precisa ter pelo menos 8 caracteres');return}
+      const b2=$('#iv_go');b2.disabled=true;b2.textContent='Cadastrando…';
+      try{await fnCall({action:'create',email:em,name:nm,role:rl,password:pw,team_id:window._ivTeam||null,...(rl!=='admin'?{projects_only:true,project_ids:pids}:{})});await pullAll(false,true);render();manualResult({ok:true},em,pw)}
+      catch(x){manualResult({ok:false,msg:fnMissing(x)?'A função invite-user ainda não foi republicada no Supabase com a opção de cadastro manual. Publique o index.ts novo (GUIA, parte E7).':trErr(x.message)},em,pw)}
+      return}
+    const bt=$('#iv_go');bt.disabled=true;bt.textContent='Enviando…';
     const res=await cloudInvite(em,nm,rl,window._ivTeam,pids);
     if(res.fallback){const m=S.members.find(x=>(x.email||'').toLowerCase()===em.toLowerCase());if(m){if(rl!=='admin')m.only=true;pids.forEach(pid=>{const p=S.projects.find(x=>x.id===pid);if(p&&!(p.access||[]).includes(m.id))p.access=[...(p.access||[]),m.id].sort()});save()}}
     inviteResult(res,em);return}
   if(el=g('[data-cgrant]')){stop();const m=mem(el.dataset.cgrant);if(!m||!guardM(m))return;if(!validEmail(m.email||'')){toast('Preencha um e-mail válido no cartão antes de dar acesso.');return}
     toast('Enviando convite…');const res=await cloudInvite(m.email,m.name,roleOfM(m),m.team);inviteResult(res,m.email);return}
+  if(el=g('[data-cmanual]')){stop();const m=mem(el.dataset.cmanual);if(!m||!guardM(m))return;if(!validEmail(m.email||'')){toast('Preencha um e-mail válido no cartão antes.');return}
+    const M=$('#modal');M.dataset.kind='cman';editing=null;closePop();
+    M.innerHTML=`<h3>Cadastrar ${esc(m.name)} com senha</h3><div class="hint">${esc(m.email)} — a conta fica ativa agora, sem enviar e-mail.</div><label>Senha provisória (mín. 8 caracteres)</label><div style="display:flex;gap:6px"><input id="cm_pw" type="text" autocomplete="off" style="flex:1"><button type="button" id="cm_gen">Gerar</button></div><div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="cm_go" data-mid="${m.id}">Cadastrar</button></span></div>`;
+    $('#ov').classList.add('on');$('#cm_pw').focus();return}
+  if(g('#cm_gen')){stop();const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=new Uint32Array(12);crypto.getRandomValues(r);$('#cm_pw').value=[...r].map(x=>a[x%a.length]).join('');return}
+  if(el=g('#cm_go')){stop();const m=mem(el.dataset.mid),pw=$('#cm_pw').value;if(!m)return;if(pw.length<8){toast('A senha precisa ter pelo menos 8 caracteres');return}
+    el.disabled=true;el.textContent='Cadastrando…';
+    try{await fnCall({action:'create',email:m.email,name:m.name,role:roleOfM(m),password:pw});await pullAll(false,true);render();manualResult({ok:true},m.email,pw)}
+    catch(x){manualResult({ok:false,msg:fnMissing(x)?'A função invite-user ainda não foi republicada com o cadastro manual (GUIA, parte E7).':trErr(x.message)},m.email,pw)}
+    return}
   if(el=g('[data-cresend]')){stop();const m=mem(el.dataset.cresend);if(!m||!guardM(m))return;
     try{const r=await fnCall({action:'resend',email:m.email,name:m.name,role:roleOfM(m)});toast((r&&r.message)||'Convite reenviado')}catch(x){if(fnMissing(x))inviteResult({fallback:true},m.email);else toast(trErr(x.message))}return}
   if(el=g('[data-crevoke]')){stop();const m=mem(el.dataset.crevoke);if(!m||!guardM(m)||!onlyAdm())return;
