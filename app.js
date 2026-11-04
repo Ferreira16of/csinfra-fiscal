@@ -304,7 +304,7 @@ function startEdit(span){
   const inp=document.createElement('input');inp.value=t.title;inp.className='ie';
   span.replaceWith(inp);inp.focus();inp.select();
   let fin=false;
-  const end=ok=>{if(fin)return;fin=true;if(ok&&inp.value.trim())t.title=inp.value.trim();render()};
+  const end=ok=>{if(fin)return;fin=true;if(ok&&inp.value.trim()&&inp.value.trim()!==t.title){t.title=inp.value.trim();save()}render()};
   inp.onblur=()=>end(true);
   inp.onkeydown=e=>{
     if(e.key==='Enter'){e.preventDefault();end(true)}
@@ -3527,3 +3527,21 @@ document.addEventListener('click',e=>{
   const gp=g('[data-gopj]');
   if(gp){e.stopImmediatePropagation();S.cur=gp.dataset.gopj;S.setTab='props';render();return}
 },true);
+
+
+/* ===== rede de segurança do salvamento =====
+   Qualquer alteração feita na tela que esqueça de chamar save() é detectada aqui:
+   depois de cada clique, tecla, mudança de campo ou redesenho, se os dados diferem do que está no banco, agenda o envio. */
+(function(){
+  if(typeof CLOUD==='undefined'||!CLOUD)return;
+  let tm=null;
+  const check=()=>{
+    tm=null;
+    if(!cloud.ready||!cloud.on||document.body.dataset.sync==='err')return;
+    if(cloud.pushing||cloud.timer){tm=setTimeout(check,1000);return}
+    try{if(sigOf(dbRows())!==cloud.sig){cloudSchedule()}}catch(e){}
+  };
+  const kick=()=>{clearTimeout(tm);tm=setTimeout(check,350)};
+  ['click','keyup','change','focusout','drop','pointerup'].forEach(ev=>document.addEventListener(ev,kick,true));
+  const _r=render;render=function(){_r.apply(this,arguments);kick()};
+})();
