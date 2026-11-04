@@ -2933,7 +2933,11 @@ async function getAll(t,order){
   return out;
 }
 const T0=s=>s?Date.parse(s):null;
+/* mantém o MESMO objeto para o mesmo id: quem está editando (célula, título, descrição…) segura uma referência à atividade;
+   se a busca em segundo plano trocasse os objetos, a edição cairia num objeto "velho" e nunca seria salva. */
+const keepObjs=(oldArr,newArr)=>{const m=new Map((oldArr||[]).map(o=>[o.id,o]));return newArr.map(n=>{const o=m.get(n.id);if(!o)return n;for(const k of Object.keys(o))if(!(k in n))delete o[k];return Object.assign(o,n)})};
 function applyRows(R){
+  const old0={members:S.members,teams:S.teams,tags:S.tags,projects:S.projects,tasks:S.tasks};
   const open={};S.tasks.forEach(t=>open[t.id]=t.open);
   const uidMem={};
   S.members=R.members.map(r=>{if(r.user_id)uidMem[r.user_id]=r.id;return{id:r.id,name:r.name,email:r.email||'',color:r.color||'#5b8cff',cap:+r.capacity||40,role:r.role,status:r.status,access:!!r.access_enabled,only:!!r.projects_only,team:r.team_id||null,uid:r.user_id||null,last:r.last_login_at||null}});
@@ -2948,6 +2952,7 @@ function applyRows(R){
     repeat:r.repeat_freq?{freq:r.repeat_freq,every:r.repeat_every||1}:null,assignees:A.get(r.id)||[],tags:TG.get(r.id)||[],open:open[r.id]!==false,created:T0(r.created_at)||Date.now(),
     doneAt:T0(r.done_at),doneLog:(r.done_log||[]).map(T0),comments:(C.get(r.id)||[]).sort((a,b)=>a.created_at<b.created_at?-1:1).map(c=>({id:c.id,text:c.body,ts:T0(c.created_at),by:c.author_name||''})),
     by:uidMem[r.created_by]||'',sec:!!r.is_section,ms:!!r.is_milestone,star:stars.has(r.id),est:+r.estimate_h||0,spent:+r.spent_h||0,timerStart:T0(r.timer_started_at),deps:D.get(r.id)||[],_pos:+r.position}));
+  S.members=keepObjs(old0.members,S.members);S.teams=keepObjs(old0.teams,S.teams);S.tags=keepObjs(old0.tags,S.tags);S.projects=keepObjs(old0.projects,S.projects);S.tasks=keepObjs(old0.tasks,S.tasks);
   const w=R.ws[0];if(w){S.org=w.org_name;S.link=w.system_link||'';S.defaultRole=w.default_role;S.rules=w.rules||{}}
   const my=S.members.find(m=>m.uid===(sess&&sess.user&&sess.user.id))||S.members.find(m=>m.id===(cloud.me&&cloud.me.id));
   S.me=my?my.id:'';
