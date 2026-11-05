@@ -20,9 +20,10 @@
   <button id="bPal" class="pal" title="Buscar projetos, atividades e comandos (Ctrl+K)"><i data-i="search"></i><span>Buscar…</span><kbd>Ctrl K</kbd></button>
   <button id="newTask"><i data-i="plus"></i><span>Nova atividade</span><kbd>Q</kbd></button>
   <nav class="snav">
-    <div class="lbl">Visões</div>
+    <div class="lbl sgh" data-sgrp="v" role="button" tabindex="0" aria-expanded="true" title="Clique para recolher ou expandir"><span class="lt"><i class="cv"></i>Visões</span></div>
     <div id="smarts"></div>
-    <div class="lbl">Projetos <button id="addProj" title="Novo projeto (use um modelo pronto)"><i data-i="plus" data-s="15"></i></button></div>
+    <div class="lbl sgh" data-sgrp="p" role="button" tabindex="0" aria-expanded="true" title="Clique para recolher ou expandir"><span class="lt"><i class="cv"></i>Projetos <b id="pcount"></b></span><button id="addProj" title="Novo projeto (use um modelo pronto)"><i data-i="plus" data-s="15"></i></button></div>
+    <input id="pfilt" class="pfilt" placeholder="Filtrar projetos…" aria-label="Filtrar projetos" hidden autocomplete="off">
     <div id="projs"></div>
   </nav>
   <div class="foot">

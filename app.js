@@ -647,7 +647,7 @@ $('#vb').onclick=()=>{S.view='board';render()};
 $('#vd').onclick=()=>{S.view='dash';render()};
 $('#bTeam').onclick=openTeam;
 $('#bTags').onclick=openTags;
-$('#addProj').onclick=()=>ask('Nome do novo projeto','',v=>{if(!v.trim())return false;const id=uid();S.projects.push({id,name:v.trim()});S.cur=id;adding=null;render()});
+$('#addProj').onclick=()=>ask('Nome do novo projeto','',v=>{if(!v.trim())return false;const id=uid();S.projects.push(newProjectObj({id,name:v.trim()}));S.cur=id;adding=null;render()});
 $('#pswitch').onclick=()=>openPalette('proj');
 $('#pname').ondblclick=e=>{e.stopPropagation();if(!['smart','settings'].includes(S.view))renameProj()};
 $('#bPal').onclick=()=>openPalette();
@@ -1835,8 +1835,10 @@ function openNewProject(){
   M.innerHTML=`<h3>+ Novo projeto</h3><label style="margin-top:0">Nome do projeto</label><input id="np_name" placeholder="Ex.: Fechamento fiscal — Cliente X"><label>Comece com um modelo pronto</label>${TPL.map(t=>`<div class="tpl ${t.id==='blank'?'on':''}" data-tpl="${t.id}"><div style="font-size:24px">${t.i}</div><div><b>${t.n}</b><small>${t.d}</small></div></div>`).join('')}<div class="acts"><span></span><span><button id="g_ok">Cancelar</button> <button class="pri" id="np_go">Criar projeto</button></span></div>`;
   $('#ov').classList.add('on');$('#np_name').focus();
 }
+/* projeto novo nasce RESTRITO: só administradores (veem tudo) e quem criou; as demais pessoas entram quando você incluir */
+const newProjectObj=o=>({...o,restricted:true,access:(typeof role==='function'&&role()!=='admin'&&S.me)?[S.me]:[]});
 function createFromTemplate(name,id){
-  const tpl=TPL.find(x=>x.id===id)||TPL[0],p={id:uid(),name:name||tpl.n};S.projects.push(p);
+  const tpl=TPL.find(x=>x.id===id)||TPL[0],p=newProjectObj({id:uid(),name:name||tpl.n});S.projects.push(p);
   tpl.s.forEach(([sec,items])=>{
     const root=mkTask({pid:p.id,parent:null,title:sec});S.tasks.push(root);
     items.forEach(([title,days,o])=>{o=o||{};S.tasks.push(mkTask({pid:p.id,parent:root.id,title,due:addDays(days),prio:o.prio||2,est:o.est||0,ms:!!o.ms,tags:(o.tags||[]).map(g=>createTag(g).id)}))});
@@ -2118,7 +2120,7 @@ function applyImport(plan){
   const touched=[];
   plan.items.forEach(it=>{
     let P=it.project?S.projects.find(p=>norm(p.name)===norm(it.project)):proj();
-    if(!P){P={id:uid(),name:it.project};S.projects.push(P)}
+    if(!P){P=newProjectObj({id:uid(),name:it.project});S.projects.push(P)}
     let t=it.id?byId(it.id):null;
     if(t){up++}
     else{
@@ -2783,7 +2785,7 @@ const SESSK='quire-sb-session',UIK='quire-ui';
 let sess=null,refreshing=null;
 const sessLoad=()=>{try{sess=JSON.parse(localStorage.getItem(SESSK))}catch(e){sess=null}};
 const sessSave=s=>{sess=s;try{s?localStorage.setItem(SESSK,JSON.stringify(s)):localStorage.removeItem(SESSK)}catch(e){}};
-const UIKEYS=['theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
+const UIKEYS=['sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
 function saveUI(){try{const o={};UIKEYS.forEach(k=>o[k]=S[k]);localStorage.setItem(UIK,JSON.stringify(o))}catch(e){}}
 function loadUI(){try{const o=JSON.parse(localStorage.getItem(UIK))||{};UIKEYS.forEach(k=>{if(o[k]!==undefined)S[k]=o[k]})}catch(e){}}
 function trErr(m){
@@ -3549,4 +3551,29 @@ document.addEventListener('click',e=>{
   const kick=()=>{clearTimeout(tm);tm=setTimeout(check,350)};
   ['click','keyup','change','focusout','drop','pointerup'].forEach(ev=>document.addEventListener(ev,kick,true));
   const _r=render;render=function(){_r.apply(this,arguments);kick()};
+})();
+
+
+/* ===== menu lateral: seções recolhíveis + filtro de projetos ===== */
+(function(){
+  let pfq='';
+  const sg=()=>{if(!S.sg||typeof S.sg!=='object')S.sg={v:false,p:false};return S.sg};
+  function applySide(){
+    const nav=document.querySelector('.snav');if(!nav)return;
+    const g=sg();
+    nav.classList.toggle('vcol',!!g.v);nav.classList.toggle('pcol',!!g.p);
+    document.querySelectorAll('[data-sgrp]').forEach(h=>h.setAttribute('aria-expanded',String(!g[h.dataset.sgrp])));
+    const n=S.projects.filter(x=>!x.virtual).length,f=document.getElementById('pfilt');
+    if(f){f.hidden=n<7||!!g.p;if(f.hidden&&pfq){pfq='';f.value=''}}
+    const q=norm(pfq).trim();
+    document.querySelectorAll('#projs .pi').forEach(e=>{e.style.display=(q&&!norm(e.textContent).includes(q)&&!e.classList.contains('on'))?'none':''});
+    const cnt=document.getElementById('pcount');if(cnt)cnt.textContent=n>1?String(n):'';
+  }
+  function toggle(k){const g=sg();g[k]=!g[k];saveUI();applySide()}
+  document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('[data-sgrp]');if(!h||e.target.closest('button'))return;toggle(h.dataset.sgrp)});
+  document.addEventListener('keydown',e=>{const h=e.target.closest&&e.target.closest('[data-sgrp]');if(h&&e.target===h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggle(h.dataset.sgrp)}});
+  document.addEventListener('input',e=>{if(e.target.id==='pfilt'){pfq=e.target.value;applySide()}});
+  document.addEventListener('keydown',e=>{if(e.target.id==='pfilt'&&e.key==='Escape'){e.stopPropagation();pfq='';e.target.value='';applySide()}},true);
+  const _r=render;render=function(){_r.apply(this,arguments);try{applySide()}catch(x){}};
+  try{applySide()}catch(x){}
 })();

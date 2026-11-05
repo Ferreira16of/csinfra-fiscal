@@ -400,15 +400,15 @@ create trigger protect_member_cols_ins before insert on public.members for each 
 drop trigger if exists protect_member_cols_upd on public.members;
 create trigger protect_member_cols_upd before update on public.members for each row execute function public.protect_member_cols();
 
--- Só administrador cria projeto restrito ou muda a restrição
+-- Projeto novo SEMPRE nasce restrito (só administradores e quem criou; as demais pessoas entram por inclusão).
+-- Só administrador muda a restrição depois.
 create or replace function public.protect_project_cols() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if public.my_role() is not null and public.my_role() <> 'admin' then
-    if tg_op = 'INSERT' and new.restricted then
-      raise exception 'Somente administrador cria projeto restrito.' using errcode = 'P0001';
-    end if;
-    if tg_op = 'UPDATE' and new.restricted is distinct from old.restricted then
+  if public.my_role() is not null then
+    if tg_op = 'INSERT' then
+      new.restricted := true;
+    elsif public.my_role() <> 'admin' and new.restricted is distinct from old.restricted then
       raise exception 'Somente administrador altera o acesso do projeto.' using errcode = 'P0001';
     end if;
   end if;

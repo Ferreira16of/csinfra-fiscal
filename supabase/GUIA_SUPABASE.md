@@ -182,3 +182,10 @@ Use quando o e-mail de convite não chega (rede da empresa bloqueando, spam, etc
 4. Quem **já foi convidado e nunca recebeu**: no cartão do membro use **Cadastrar com senha** (define a senha do login pendente e ativa a conta).
 
 Regras mantidas: Normal só cadastra Normal/Limitado/Convidado e não mexe em administradores; a senha nunca fica guardada no site (aparece uma única vez).
+
+
+## Parte E8 — Projeto novo só para administradores e quem criou
+
+Todo projeto **novo** nasce **restrito**: só os administradores (que veem tudo) e quem o criou enxergam. As demais pessoas só passam a ver quando você as inclui (Configurações → Projeto atual → Membros deste projeto, ou Membros → Projetos). Para abrir para a equipe toda, o administrador usa o botão **Equipe toda** nas configurações do projeto.
+
+Projetos que já existiam **não mudam**. Para aplicar a regra no banco, rode de novo o `supabase_setup.sql` inteiro (é seguro repetir).
