@@ -1352,3 +1352,15 @@ body:is(.sc,.sca) .pfilt{display:none}
 .row.done .main input[type=checkbox]{accent-color:var(--ok)}
 .outline.nodrag .grip{pointer-events:none}
 .row.prow .tt:hover{text-decoration:underline;background:transparent}
+
+
+/* ===== v15: cabeçalho de projeto bem diferente das atividades ===== */
+.row.prow{--stk:color-mix(in srgb,var(--pc) 20%,var(--bg2))!important;background:var(--stk)!important;box-shadow:inset 6px 0 0 var(--pc)!important;border-top:1px solid color-mix(in srgb,var(--pc) 45%,transparent);border-bottom:1px solid color-mix(in srgb,var(--pc) 45%,transparent);cursor:pointer}
+.row.prow:hover{--stk:color-mix(in srgb,var(--pc) 28%,var(--bg2))!important}
+.row.prow>.main{gap:8px}
+.row.prow .tt{font-size:14.5px!important;font-weight:800!important;text-transform:none!important;letter-spacing:.1px;color:var(--tx)}
+.row.prow .ptg{color:var(--pc);font-size:14px;width:16px}
+.row.prow .ptag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:#fff;background:var(--pc);border-radius:5px;padding:2px 7px;flex:none;text-shadow:0 1px 1px #0003}
+.row.prow .pg{font-weight:700}
+.row.prow .bar{background:color-mix(in srgb,var(--pc) 22%,transparent)}.row.prow .bar i{background:var(--pc)}
+@media(min-width:701px){.row.prow:not(.hdr){height:40px;min-height:40px;max-height:40px}}

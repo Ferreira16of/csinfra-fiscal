@@ -569,6 +569,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
   if(el=g('[data-ds]')){S.dash=el.dataset.ds;render();return}
+  if((el=g('.prow'))&&!e.target.closest('.tt')&&!e.target.closest('input')){const pr=S.projects.find(x=>x.id===el.dataset.gop);if(pr){S.sgc=S.sgc||{};S.sgc[pr.id]=!S.sgc[pr.id];saveUI();render();return}}
   if((el=g('[data-gop] .tt'))&&!e.target.closest('input')){const pid=el.closest('[data-gop]').dataset.gop;S.cur=pid;S.view='list';adding=null;zoom=null;cur=null;sel=new Set();render();return}
   if(el=g('.pi')){S.cur=el.dataset.id;adding=null;zoom=null;cur=null;sel=new Set();if(S.view==='smart')S.view='list';else if(S.view==='settings')S.view=(S.prevView&&!['smart','settings'].includes(S.prevView))?S.prevView:'list';render();if(CLOUD&&Date.now()-(cloud.last||0)>4000)pollPull(true);return}
   if(el=g('[data-tg]')){const t=byId(el.dataset.tg);t.open=t.open===false;render();return}
@@ -1492,13 +1493,19 @@ function list(){
   h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / atividade</button></div></div>`);
   $('#view').innerHTML=h+'</div>';
 }
+const pcol_=p=>pcol(p);
+const pgCollapsed=p=>!!(S.sgc&&S.sgc[p.id]);
+function projHead(p,info){
+  const c=pgCollapsed(p);
+  return `<div class="row root prow ${c?'pcol':''}" data-gop="${p.id}" style="--pc:${pcol_(p)}"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main"><span class="tg ptg" title="${c?'Expandir':'Recolher'} este projeto">${c?'▸':'▾'}</span><span class="ptag">Projeto</span><span class="tt" style="cursor:pointer" title="Abrir o projeto">${esc(p.name)}</span>${info}</div></div>`;
+}
 function smartTreeAll(){
   const f=filtering()||S.hideDone;let n=0;
   const blocks=S.projects.filter(p=>!p.virtual).map(p=>{
     const all=S.tasks.filter(t=>t.pid===p.id),roots=all.filter(t=>!t.parent),vis=f?roots.filter(matchTree):roots;
     if(!vis.length)return '';n+=all.length;
     const lf=all.filter(isLeaf),dn=lf.filter(t=>t.status==='done').length;
-    return `<div class="row root prow" data-gop="${p.id}"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main"><i class="pd" style="background:${pcol(p)}"></i><span class="tt" style="cursor:pointer" title="Abrir o projeto">${esc(p.name)}</span><span class="pg">${dn}/${lf.length}</span><span class="bar"><i style="width:${lf.length?dn/lf.length*100:0}%"></i></span></div></div>`+vis.map(t=>rowHTML(t,0)).join('');
+    return projHead(p,`<span class="pg">${dn}/${lf.length}</span><span class="bar"><i style="width:${lf.length?dn/lf.length*100:0}%"></i></span>`)+(pgCollapsed(p)?'':vis.map(t=>rowHTML(t,0)).join(''));
   }).join('');
   $('#view').innerHTML=`<div class="outline nodrag">`+listHeader(n)+(blocks||`<div class="empty"><b>Nada por aqui</b>${EMPTY.allp}</div>`)+'</div>';
 }
@@ -1509,7 +1516,7 @@ function smartView(){
   const ts=S.tasks.filter(t=>isLeaf(t)&&pred(t)&&match(t)).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')||b.prio-a.prio);
   const groups=S.projects.map(p=>[p,ts.filter(t=>t.pid===p.id)]).filter(g=>g[1].length);
   let h='<div class="outline">'+listHeader(ts.length);
-  h+=groups.map(([p,l])=>`<div class="row root"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main"><i class="pd" style="background:${pcol(p)}"></i><span class="tt" style="cursor:default">${esc(p.name)}</span><span class="pg">${l.length}</span></div></div>`+l.map(t=>rowHTML(t,0,true)).join('')).join('')||`<div class="empty"><b>Nada por aqui 🎉</b>${EMPTY[key]||''}</div>`;
+  h+=groups.map(([p,l])=>projHead(p,`<span class="pg">${l.length}</span>`)+(pgCollapsed(p)?'':l.map(t=>rowHTML(t,0,true)).join(''))).join('')||`<div class="empty"><b>Nada por aqui 🎉</b>${EMPTY[key]||''}</div>`;
   $('#view').innerHTML=h+'</div>';
 }
 
@@ -2798,7 +2805,7 @@ const SESSK='quire-sb-session',UIK='quire-ui';
 let sess=null,refreshing=null;
 const sessLoad=()=>{try{sess=JSON.parse(localStorage.getItem(SESSK))}catch(e){sess=null}};
 const sessSave=s=>{sess=s;try{s?localStorage.setItem(SESSK,JSON.stringify(s)):localStorage.removeItem(SESSK)}catch(e){}};
-const UIKEYS=['sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
+const UIKEYS=['sgc','sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
 function saveUI(){try{const o={};UIKEYS.forEach(k=>o[k]=S[k]);localStorage.setItem(UIK,JSON.stringify(o))}catch(e){}}
 function loadUI(){try{const o=JSON.parse(localStorage.getItem(UIK))||{};UIKEYS.forEach(k=>{if(o[k]!==undefined)S[k]=o[k]})}catch(e){}}
 function trErr(m){
