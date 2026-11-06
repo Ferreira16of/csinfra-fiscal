@@ -1364,3 +1364,32 @@ body:is(.sc,.sca) .pfilt{display:none}
 .row.prow .pg{font-weight:700}
 .row.prow .bar{background:color-mix(in srgb,var(--pc) 22%,transparent)}.row.prow .bar i{background:var(--pc)}
 @media(min-width:701px){.row.prow:not(.hdr){height:40px;min-height:40px;max-height:40px}}
+
+/* ===== v16: projetos na lateral — favoritos, ordem manual ===== */
+.lbl .pbtns{display:inline-flex;align-items:center;gap:2px}
+#orgProj.on{background:var(--ac2);color:var(--ac)}
+.pgl{display:flex;align-items:center;gap:6px;padding:8px 10px 3px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);cursor:pointer;user-select:none;border-radius:8px}
+.pgl:hover{color:var(--tx)}
+.pgl .cv{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;display:inline-block;transition:transform .15s;opacity:.8}
+.pgl.c .cv{transform:rotate(-90deg)}
+.pgl b{font-weight:600;font-size:10px;background:var(--hov2);border-radius:9px;padding:0 6px;letter-spacing:0}
+.pgl.dgrp{background:var(--ac2);color:var(--ac)}
+.pgl.c+.pgb .pi:not(.on){display:none}
+.pi .pctl{display:none;margin-left:auto;align-items:center;gap:1px;flex-shrink:0}
+.pi .pb{width:22px;height:22px;min-height:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--mu);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pi .pb:hover:not(:disabled){background:var(--hov2);color:var(--tx)}
+.pi .pb:disabled{opacity:.25;cursor:default}
+.pi .pb.on{color:#f5b301}
+.pi.fv .pfv{display:inline-flex}
+@media (hover:hover){.pi:hover .pctl{display:inline-flex}.pi:hover .plock{display:none}}
+.snav.porg .pi .pctl{display:inline-flex}
+.snav.porg .pi .plock{display:none}
+.snav.porg .pi{cursor:grab}
+.pi.dragging{opacity:.4}
+.pi.dtop{box-shadow:0 -2px 0 var(--ac)}
+.pi.dbot{box-shadow:0 2px 0 var(--ac)}
+.snav.pcol .pgl,.snav.pcol .pgb .pi:not(.on){display:none}
+.snav.pfiltering .pgl{display:none}
+.snav.pfiltering .pgb .pi{display:flex}
+body:is(.sc,.sca) .pgl,body:is(.sc,.sca) .pctl,body:is(.sc,.sca) #orgProj{display:none!important}
+body:is(.sc,.sca) .pi.on .pctl{display:none!important}

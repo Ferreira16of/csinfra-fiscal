@@ -1350,6 +1350,53 @@ document.addEventListener('click',e=>{
     openMenu(p,d[2]().map(it=>({l:it.l,sw:it.sw,on:it.v===cur,f:()=>{$('#'+d[0]).value=it.v;render()}})),{align:'left'});return}
   if(e.target.closest&&e.target.closest('#fclear')){['fm','ft','fs','fp'].forEach(i=>$('#'+i).value='');S.qf='all';S.hideDone=false;$('#q').value='';render();save()}
 },true);
+
+/* ===== projetos na lateral: favoritos + ordem manual (por usuário/navegador) ===== */
+function projLists(){
+  const ps=S.projects.filter(p=>!p.virtual),ids=new Set(ps.map(p=>p.id));
+  const ord=(Array.isArray(S.pord)?S.pord:[]).filter(id=>ids.has(id));
+  const seen=new Set(ord);ps.forEach(p=>{if(!seen.has(p.id))ord.push(p.id)});
+  const fav=new Set((Array.isArray(S.pfav)?S.pfav:[]).filter(id=>ids.has(id)));
+  const by=new Map(ps.map(p=>[p.id,p]));
+  return {ord,fav,by,favL:ord.filter(id=>fav.has(id)),restL:ord.filter(id=>!fav.has(id))};
+}
+const _PUP='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>';
+const _PDN='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const _PST=f=>`<svg viewBox="0 0 24 24" width="14" height="14" fill="${f?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>`;
+function sideProjHTML(smart,P){
+  const L=projLists(),gc=(S.pgc&&typeof S.pgc==='object')?S.pgc:{};
+  const item=(id,grp,i,n)=>{const p=L.by.get(id),f=L.fav.has(id);
+    return `<div class="pi ${!smart&&p.id===P.id?'on':''} ${f?'fv':''}" data-id="${p.id}" data-pg="${grp}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}<span class="pctl"><button type="button" class="pb pfv ${f?'on':''}" data-pact="fav" data-pid="${p.id}" title="${f?'Tirar dos favoritos':'Marcar como favorito (fica no topo)'}" aria-label="Favorito">${_PST(f)}</button><button type="button" class="pb" data-pact="up" data-pid="${p.id}" title="Mover para cima" aria-label="Mover para cima"${i===0?' disabled':''}>${_PUP}</button><button type="button" class="pb" data-pact="down" data-pid="${p.id}" title="Mover para baixo" aria-label="Mover para baixo"${i===n-1?' disabled':''}>${_PDN}</button></span></div>`};
+  const grp=(k,label,list)=>`<div class="pgl ${gc[k]?'c':''}" data-pgl="${k}" role="button" tabindex="0" aria-expanded="${!gc[k]}"><i class="cv"></i><span>${label}</span><b>${list.length}</b></div><div class="pgb" data-pgb="${k}">${list.map((id,i)=>item(id,k,i,list.length)).join('')}</div>`;
+  if(!L.favL.length)return `<div class="pgb" data-pgb="rest">${L.restL.map((id,i)=>item(id,'rest',i,L.restL.length)).join('')}</div>`;
+  return grp('fav','Favoritos',L.favL)+(L.restL.length?grp('rest','Outros projetos',L.restL):'');
+}
+function projMove(id,dir){
+  const L=projLists(),grp=L.fav.has(id)?L.favL:L.restL,i=grp.indexOf(id),j=i+dir;
+  if(i<0||j<0||j>=grp.length)return;
+  const ord=L.ord.slice(),a=ord.indexOf(id),b=ord.indexOf(grp[j]);ord[a]=grp[j];ord[b]=id;
+  S.pord=ord;saveUI();render();
+}
+function projFav(id){
+  const L=projLists(),f=L.fav.has(id);
+  const fav=L.favL.slice();
+  if(f)fav.splice(fav.indexOf(id),1);else fav.push(id);
+  S.pfav=fav;
+  // ao favoritar, vai para o fim dos favoritos; ao tirar, vai para o começo dos outros
+  const rest=L.ord.filter(x=>x!==id&&!L.fav.has(x));
+  S.pord=f?[...L.favL.filter(x=>x!==id),id,...rest]:[...L.favL,id,...rest];
+  saveUI();render();
+}
+function projDrop(id,targetId,after,grpKey){
+  const L=projLists();if(!L.by.has(id)||id===targetId)return;
+  let ord=L.ord.filter(x=>x!==id),fav=new Set(L.fav);
+  if(targetId){const k=ord.indexOf(targetId);if(k<0)return;ord.splice(after?k+1:k,0,id);if(L.fav.has(targetId))fav.add(id);else fav.delete(id)}
+  else if(grpKey){const first=ord.find(x=>(grpKey==='fav')===fav.has(x));
+    if(grpKey==='fav')fav.add(id);else fav.delete(id);
+    if(first)ord.splice(ord.indexOf(first),0,id);else ord.push(id)}
+  S.pord=ord;S.pfav=ord.filter(x=>fav.has(x));saveUI();render();
+}
+
 const setHTML=(sel,h)=>{const e=$(sel);if(e&&e.__h!==h){e.__h=h;e.innerHTML=h}};
 function render(){
   if(S.projects.length>1&&S.projects.some(p=>p.virtual))S.projects=S.projects.filter(p=>!p.virtual);
@@ -1373,7 +1420,7 @@ function render(){
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
   setHTML('#smarts',SMARTS.filter(s=>['today','week','late','mine','every','allp'].includes(s[0])).map(([k,l,i])=>{const n=k==='late'?all.filter(qfPred(k)).length:0;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="bad">${n}</small>`:''}</div>`}).join(''));
-  setHTML('#projs',S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}</div>`).join(''));
+  setHTML('#projs',S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:sideProjHTML(smart,P));
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as atividades concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
   const nf=['fm','ft','fs','fp'].filter(i=>$('#'+i).value).length+(S.qf&&S.qf!=='all'?1:0)+(S.hideDone?1:0);
@@ -2816,7 +2863,7 @@ const SESSK='quire-sb-session',UIK='quire-ui';
 let sess=null,refreshing=null;
 const sessLoad=()=>{try{sess=JSON.parse(localStorage.getItem(SESSK))}catch(e){sess=null}};
 const sessSave=s=>{sess=s;try{s?localStorage.setItem(SESSK,JSON.stringify(s)):localStorage.removeItem(SESSK)}catch(e){}};
-const UIKEYS=['sgc','sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
+const UIKEYS=['pfav','pord','pgc','sgc','sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
 function saveUI(){try{const o={};UIKEYS.forEach(k=>o[k]=S[k]);localStorage.setItem(UIK,JSON.stringify(o))}catch(e){}}
 function loadUI(){try{const o=JSON.parse(localStorage.getItem(UIK))||{};UIKEYS.forEach(k=>{if(o[k]!==undefined)S[k]=o[k]})}catch(e){}}
 function trErr(m){
@@ -3592,11 +3639,12 @@ document.addEventListener('click',e=>{
   function applySide(){
     const nav=document.querySelector('.snav');if(!nav)return;
     const g=sg();
-    nav.classList.toggle('vcol',!!g.v);nav.classList.toggle('pcol',!!g.p);
+    nav.classList.toggle('vcol',!!g.v);nav.classList.toggle('pcol',!!g.p);nav.classList.toggle('porg',!!S.porg&&!g.p);const ob=document.getElementById('orgProj');if(ob){ob.classList.toggle('on',!!S.porg);ob.setAttribute('aria-pressed',String(!!S.porg))}
+    document.querySelectorAll('#projs .pi').forEach(e=>{e.draggable=!!S.porg});
     document.querySelectorAll('[data-sgrp]').forEach(h=>h.setAttribute('aria-expanded',String(!g[h.dataset.sgrp])));
     const n=S.projects.filter(x=>!x.virtual).length,f=document.getElementById('pfilt');
     if(f){f.hidden=n<7||!!g.p;if(f.hidden&&pfq){pfq='';f.value=''}}
-    const q=norm(pfq).trim();
+    const q=norm(pfq).trim();nav.classList.toggle('pfiltering',!!q);
     document.querySelectorAll('#projs .pi').forEach(e=>{e.style.display=(q&&!norm(e.textContent).includes(q)&&!e.classList.contains('on'))?'none':''});
     const cnt=document.getElementById('pcount');if(cnt)cnt.textContent=n>1?String(n):'';
   }
@@ -3605,6 +3653,20 @@ document.addEventListener('click',e=>{
   document.addEventListener('keydown',e=>{const h=e.target.closest&&e.target.closest('[data-sgrp]');if(h&&e.target===h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggle(h.dataset.sgrp)}});
   document.addEventListener('input',e=>{if(e.target.id==='pfilt'){pfq=e.target.value;applySide()}});
   document.addEventListener('keydown',e=>{if(e.target.id==='pfilt'&&e.key==='Escape'){e.stopPropagation();pfq='';e.target.value='';applySide()}},true);
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pact]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();
+    const id=b.dataset.pid,a=b.dataset.pact;if(a==='fav')projFav(id);else if(a==='up')projMove(id,-1);else if(a==='down')projMove(id,1)},true);
+  document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('[data-pgl]');if(h){e.stopImmediatePropagation();const k=h.dataset.pgl;S.pgc=Object.assign({},S.pgc||{});S.pgc[k]=!S.pgc[k];saveUI();render()}},true);
+  document.addEventListener('keydown',e=>{const h=e.target.closest&&e.target.closest('[data-pgl]');if(h&&e.target===h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();h.click()}},true);
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#orgProj');if(!b)return;e.stopImmediatePropagation();S.porg=!S.porg;applySide()},true);
+  let dragId=null;
+  const clr=()=>document.querySelectorAll('#projs .dtop,#projs .dbot,#projs .dgrp').forEach(x=>x.classList.remove('dtop','dbot','dgrp'));
+  document.addEventListener('dragstart',e=>{const el=e.target.closest&&e.target.closest('#projs .pi');if(!el||!S.porg){return}dragId=el.dataset.id;el.classList.add('dragging');try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId)}catch(x){}});
+  document.addEventListener('dragend',()=>{dragId=null;clr();document.querySelectorAll('#projs .dragging').forEach(x=>x.classList.remove('dragging'))});
+  document.addEventListener('dragover',e=>{if(!dragId)return;const el=e.target.closest&&e.target.closest('#projs .pi'),gl=e.target.closest&&e.target.closest('#projs .pgl');if(!el&&!gl)return;e.preventDefault();clr();
+    if(el){const r=el.getBoundingClientRect();el.classList.add(e.clientY>r.top+r.height/2?'dbot':'dtop')}else gl.classList.add('dgrp')});
+  document.addEventListener('drop',e=>{if(!dragId)return;const el=e.target.closest&&e.target.closest('#projs .pi'),gl=e.target.closest&&e.target.closest('#projs .pgl');if(!el&&!gl)return;e.preventDefault();
+    const id=dragId;dragId=null;
+    if(el){const r=el.getBoundingClientRect();projDrop(id,el.dataset.id,e.clientY>r.top+r.height/2)}else projDrop(id,null,false,gl.dataset.pgl);clr()});
   const _r=render;render=function(){_r.apply(this,arguments);try{applySide()}catch(x){}};
   try{applySide()}catch(x){}
 })();
