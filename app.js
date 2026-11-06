@@ -569,6 +569,7 @@ document.addEventListener('click',e=>{
   if(el=g('[data-ie]')){if(matchMedia('(hover:none),(max-width:900px)').matches&&el.closest('.row')&&!el.closest('.row.root')){openTask(el.dataset.ie);return}startEdit(el);return}
   if(el=g('[data-pr]')){const t=byId(el.dataset.pr);t.prio=t.prio%3+1;render();return}
   if(el=g('[data-ds]')){S.dash=el.dataset.ds;render();return}
+  if((el=g('[data-gop] .tt'))&&!e.target.closest('input')){const pid=el.closest('[data-gop]').dataset.gop;S.cur=pid;S.view='list';adding=null;zoom=null;cur=null;sel=new Set();render();return}
   if(el=g('.pi')){S.cur=el.dataset.id;adding=null;zoom=null;cur=null;sel=new Set();if(S.view==='smart')S.view='list';else if(S.view==='settings')S.view=(S.prevView&&!['smart','settings'].includes(S.prevView))?S.prevView:'list';render();if(CLOUD&&Date.now()-(cloud.last||0)>4000)pollPull(true);return}
   if(el=g('[data-tg]')){const t=byId(el.dataset.tg);t.open=t.open===false;render();return}
   if(el=g('[data-add]')){adding=el.dataset.add;if(adding!=='root'){const t=byId(adding);if(t)t.open=true}render();return}
@@ -1193,13 +1194,14 @@ const QF={all:()=>true,
   week:t=>t.status!=='done'&&!!t.due&&dayDiff(t.due)>=0&&dayDiff(t.due)<=7,
   late:t=>isLate(t),
   mine:t=>!!S.me&&t.assignees.includes(S.me),
+  every:()=>true,
   blocked:t=>t.status==='blocked'||(t.status!=='done'&&depsBlocked(t)),
   star:t=>!!t.star,
   done:t=>t.status==='done'};
 const qfPred=k=>QF[k]||QF.all;
 const CHIPS=[['all','Todas'],['today','Hoje'],['week','7 dias'],['late','Atrasadas'],['mine','Minhas'],['blocked','Impedidas'],['star','★ Favoritas'],['done','Concluídas']];
-const SMARTS=[['today','🗓 Hoje','calendar'],['week','📅 Próximos 7 dias','gantt'],['late','⚠ Atrasadas','alert'],['mine','👤 Minhas atividades','user'],['star','★ Favoritas','star'],['blocked','🚧 Impedidas','ban']];
-const EMPTY={today:'Nenhuma atividade vence hoje nem está atrasada.',week:'Nada vence nos próximos 7 dias.',late:'Nenhuma atividade atrasada. Bom trabalho!',mine:'Você não tem atividades abertas atribuídas.',star:'Marque atividades com ★ (tecla *) para vê-las aqui.',blocked:'Nenhuma atividade impedida.'};
+const SMARTS=[['today','🗓 Hoje','calendar'],['week','📅 Próximos 7 dias','gantt'],['late','⚠ Atrasadas','alert'],['mine','👤 Minhas atividades','user'],['every','📋 Todas as atividades','list'],['allp','🗂 Todos os projetos','board'],['star','★ Favoritas','star'],['blocked','🚧 Impedidas','ban']];
+const EMPTY={today:'Nenhuma atividade vence hoje nem está atrasada.',week:'Nada vence nos próximos 7 dias.',late:'Nenhuma atividade atrasada. Bom trabalho!',mine:'Você não tem atividades abertas atribuídas.',every:'Nenhuma atividade encontrada.',allp:'Nenhum projeto com atividades ainda.',star:'Marque atividades com ★ (tecla *) para vê-las aqui.',blocked:'Nenhuma atividade impedida.'};
 const alertCount=()=>S.tasks.filter(t=>isLeaf(t)&&QF.today(t)).length;
 
 /* ----- renderização principal ----- */
@@ -1359,7 +1361,7 @@ function render(){
   if(V==='settings'){$('#pname').textContent='Configurações';$('#subline').innerHTML='<span>Perfis, membros e preferências</span>'}
   [['l','list'],['b','board'],['c','cal'],['g','gantt'],['p','people'],['d','dash']].forEach(([k,v])=>$('#v'+k).classList.toggle('on',V===v));
   const all=S.tasks.filter(isLeaf);
-  setHTML('#smarts',SMARTS.filter(s=>['today','week','late','mine'].includes(s[0])).map(([k,l,i])=>{const n=k==='late'?all.filter(qfPred(k)).length:0;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="bad">${n}</small>`:''}</div>`}).join(''));
+  setHTML('#smarts',SMARTS.filter(s=>['today','week','late','mine','every','allp'].includes(s[0])).map(([k,l,i])=>{const n=k==='late'?all.filter(qfPred(k)).length:0;return `<div class="si ${smart&&S.smart===k?'on':''}" data-smart="${k}" title="${l.replace(/^\S+\s/,'')}">${ic(i)}<span>${l.replace(/^\S+\s/,'')}</span>${n?`<small class="bad">${n}</small>`:''}</div>`}).join(''));
   setHTML('#projs',S.projects.every(p=>p.virtual)?`<div class="pempty">Nenhum projeto ainda.${can('project')?'<button type="button" id="addProj2">Criar o primeiro projeto</button>':'<span>Peça a um administrador para liberar o acesso.</span>'}</div>`:S.projects.map(p=>`<div class="pi ${!smart&&p.id===P.id?'on':''}" data-id="${p.id}" title="${esc(p.name)}"><i class="pd" style="background:${pcol(p)}"></i><span>${esc(p.name)}</span>${p.restricted?`<span class="plock" title="Projeto restrito">${ic('lock',13)}</span>`:''}</div>`).join(''));
   $('#chips').style.display=['list','board','cal','gantt'].includes(V)?'flex':'none';
   $('#chips').innerHTML=CHIPS.map(([k,l])=>{const n=lf.filter(qfPred(k)).length;return `<span class="chip ${S.qf===k?'on':''} ${k==='late'&&n?'bad':''}" data-qf="${k}">${l}${k!=='all'?` <small>${n}</small>`:''}</span>`}).join('')+`<span class="chip ${S.hideDone?'on':''}" data-hd="1" title="Esconde as atividades concluídas da lista, quadro, calendário, cronograma e pessoas" style="margin-left:10px">${S.hideDone?'👁 Mostrar':'🙈 Ocultar'} concluídas</span>`;
@@ -1452,7 +1454,7 @@ function rowHTML(t,depth,flat){
   const wait=(t.deps||[]).map(byId).filter(x=>x&&x.status!=='done').map(x=>x.title).join(', ');
   let h=`<div class="row ${rootish?'root':''} ${!rootish&&ks.length?'par':''} ${depth>0&&!flat?'sub':''} ${done?'done':''}" data-row="${t.id}" data-d="${flat?0:depth}">
    <span class="grip" ${flat?'style="visibility:hidden"':'title="Arraste para mover (acima/abaixo = mesmo nível · no meio = subatividade)"'}>⋮⋮</span><span class="gut p${t.prio}" data-pr="${t.id}" title="Prioridade ${PR[t.prio]} — clique para alterar">${{3:'↑',2:'–',1:'↓'}[t.prio]}</span>
-   <div class="main" style="padding-left:${flat?4:depth*24}px;--d:${flat?0:depth}">
+   <div class="main" style="padding-left:${flat?4:depth*16}px;--d:${flat?0:depth}">
     <span class="tg" ${flat?'':`data-tg="${t.id}"`}>${ks.length?(open?'▾':'▸'):''}</span>
     <input type="checkbox" data-ck="${t.id}" ${done?'checked':''} ${ks.length&&!done&&desc(t.id).some(x=>x.status==='done')?'data-part="1"':''} title="${ks.length?'Concluir esta atividade e todas as subatividades':'Concluir'}">
     ${t.ms?'<span style="color:var(--amb)" title="Marco">◆</span>':''}<span class="tt" data-ie="${t.id}" title="Clique para editar o nome">${esc(t.title)}</span>
@@ -1490,8 +1492,19 @@ function list(){
   h+=(adding==='root'?addRow('root',0):`<div class="row addrow" style="min-height:42px"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:16px"><button class="ghost" data-add="root" style="color:var(--ac)">+ Nova seção / atividade</button></div></div>`);
   $('#view').innerHTML=h+'</div>';
 }
+function smartTreeAll(){
+  const f=filtering()||S.hideDone;let n=0;
+  const blocks=S.projects.filter(p=>!p.virtual).map(p=>{
+    const all=S.tasks.filter(t=>t.pid===p.id),roots=all.filter(t=>!t.parent),vis=f?roots.filter(matchTree):roots;
+    if(!vis.length)return '';n+=all.length;
+    const lf=all.filter(isLeaf),dn=lf.filter(t=>t.status==='done').length;
+    return `<div class="row root prow" data-gop="${p.id}"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main"><i class="pd" style="background:${pcol(p)}"></i><span class="tt" style="cursor:pointer" title="Abrir o projeto">${esc(p.name)}</span><span class="pg">${dn}/${lf.length}</span><span class="bar"><i style="width:${lf.length?dn/lf.length*100:0}%"></i></span></div></div>`+vis.map(t=>rowHTML(t,0)).join('');
+  }).join('');
+  $('#view').innerHTML=`<div class="outline nodrag">`+listHeader(n)+(blocks||`<div class="empty"><b>Nada por aqui</b>${EMPTY.allp}</div>`)+'</div>';
+}
 function smartView(){
   const key=S.smart||'today',pred=qfPred(key);
+  if(key==='allp'){smartTreeAll();return}
   if(key==='mine'&&!S.me){$('#view').innerHTML=`<div class="empty"><b>Quem é você?</b>Para ver “Minhas atividades”, marque seu nome em <button id="goTeam">👥 Equipe</button> usando o botão 👤.</div>`;return}
   const ts=S.tasks.filter(t=>isLeaf(t)&&pred(t)&&match(t)).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')||b.prio-a.prio);
   const groups=S.projects.map(p=>[p,ts.filter(t=>t.pid===p.id)]).filter(g=>g[1].length);
@@ -3266,7 +3279,7 @@ if(CLOUD){loginShow(true);cloudBoot()}else{loginShow(false);if(!S.seen)setTimeou
 const ROUTER_ON=/^https?:$/.test(location.protocol);
 const VIEWPATH={list:'lista',board:'quadro',cal:'calendario',gantt:'cronograma',people:'pessoas',dash:'painel'};
 const PATHVIEW=Object.fromEntries(Object.entries(VIEWPATH).map(([k,v])=>[v,k]));
-const SMARTPATH={today:'hoje',week:'proximos',late:'atrasadas',mine:'minhas',star:'favoritas',blocked:'impedidas'};
+const SMARTPATH={today:'hoje',week:'proximos',late:'atrasadas',mine:'minhas',every:'todas',allp:'projetos',star:'favoritas',blocked:'impedidas'};
 const PATHSMART=Object.fromEntries(Object.entries(SMARTPATH).map(([k,v])=>[v,k]));
 const slugify=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'projeto';
 function pslug(p){

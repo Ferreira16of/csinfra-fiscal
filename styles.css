@@ -1329,3 +1329,26 @@ html{-webkit-text-size-adjust:100%}
 .pfilt{display:block;width:calc(100% - 12px);margin:2px 6px 6px;padding:5px 9px;font-size:12.5px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--tx)}
 .pfilt[hidden]{display:none}
 body:is(.sc,.sca) .pfilt{display:none}
+
+
+/* ===== v14: linhas mais enxutas e concluídas mais legíveis ===== */
+@media(min-width:701px){
+  .row:not(.hdr):not(.addrow){height:32px;min-height:32px;max-height:32px}
+  .row.root:not(.hdr){height:34px;min-height:34px;max-height:34px}
+  .row.addrow{min-height:34px!important;height:auto;max-height:none}
+  .row .main{gap:6px}
+  .tg{width:14px}
+  .row.sub>.main{background-image:repeating-linear-gradient(to right,transparent 0 7px,color-mix(in srgb,var(--mu) 16%,transparent) 7px 8px,transparent 8px 16px);background-size:calc(var(--d)*16px) 100%}
+  .row .tt,.row.root>.main .tt,.row.par>.main .tt{font-size:13px}
+  .row.root>.main .tt{font-size:12.5px}
+}
+.row.done:not(.cur):not(.sel){--stk:color-mix(in srgb,var(--ok) 6%,var(--row2))}
+.row.done.root:not(.cur):not(.sel){--stk:color-mix(in srgb,var(--ok) 8%,var(--row))}
+.row.done:hover{--stk:color-mix(in srgb,var(--ok) 10%,var(--row))}
+.row.done{background:color-mix(in srgb,var(--ok) 6%,var(--row2))}
+.row.done .tt{color:color-mix(in srgb,var(--tx) 62%,var(--bg2));text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ok) 75%,transparent);text-decoration-thickness:1px}
+.row.done .rt>.cell:not(.col-s){opacity:.72}
+.row.done .pg,.row.done .bar{opacity:.8}
+.row.done .main input[type=checkbox]{accent-color:var(--ok)}
+.outline.nodrag .grip{pointer-events:none}
+.row.prow .tt:hover{text-decoration:underline;background:transparent}
