@@ -173,8 +173,16 @@ function fillFilters(){
   $('#fs').value=c;
 }
 /* ---------- LIST (outline) ---------- */
-function addRow(pid,depth){
-  return `<div class="row addrow"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:${depth*24+16}px"><input data-addin="${pid}" placeholder="Nova atividade — Enter adiciona, Esc fecha"></div></div>`;
+function addRow(pid,depth,after){
+  return `<div class="row addrow"><span class="grip" style="visibility:hidden"></span><span class="gut"></span><div class="main" style="padding-left:${depth*16+16}px"><input data-addin="${pid}" ${after?`data-after="${after}"`:''} placeholder="Nova atividade — Enter adiciona outra, Esc fecha"></div></div>`;
+}
+/* nova atividade logo ABAIXO de uma existente, no mesmo nível (Enter na lista) */
+function addTaskAfter(title,afterId){
+  if(!can('add')){deny('add');return null}
+  const ref=byId(afterId);if(!ref)return null;
+  const n=mkTask({pid:ref.pid,parent:ref.parent||null,title});
+  S.tasks.splice(S.tasks.indexOf(ref)+1,0,n);
+  return n;
 }
 /* ---------- BOARD ---------- */
 function board(){
@@ -633,9 +641,11 @@ document.addEventListener('keydown',e=>{
     if(adding){adding=null;render();return}
     if($('#ov').classList.contains('on')){if(editing)collect();closeModal();render();return}if(sel.size){sel=new Set();cur=null;markSel()}return}
   if(e.key!=='Enter')return;
+  if(e.target.dataset&&e.target.dataset.addin&&!e.target.value.trim()&&e.target.dataset.after){e.preventDefault();adding=null;render();return}
   if(e.target.id==='m_comment'){if(!e.shiftKey){e.preventDefault();addComment()}return}
   const t=e.target,v=t.value&&t.value.trim();if(!v)return;
-  if(t.dataset.addin){addTask(v,t.dataset.addin);adding=t.dataset.addin;render()}
+  if(t.dataset.addin&&t.dataset.after){const n=addTaskAfter(v,t.dataset.after);if(n){cur=n.id;anchor=n.id;sel=new Set([n.id]);adding='after:'+n.id}render()}
+  else if(t.dataset.addin){addTask(v,t.dataset.addin);adding=t.dataset.addin;render()}
   else if(t.id==='m_sub'){collect();addTask(v,editing);openTask(editing);render()}
   else if(t.id==='m_newtag'){collect();const g=createTag(v);const k=byId(editing);if(g&&!k.tags.includes(g.id))k.tags.push(g.id);openTask(editing);render()}
   else if(t.id==='pop_new'&&pop){const k=byId(pop.id),g=createTag(v);if(g&&!k.tags.includes(g.id))k.tags.push(g.id);render();renderPop();const i=$('#pop_new');if(i)i.focus()}
@@ -673,7 +683,7 @@ document.addEventListener('drop',e=>{const c=e.target.closest&&e.target.closest(
 let cur=null,anchor=null,sel=new Set(),zoom=null,clip=null,lvl=null,hist=[];
 
 const HELP=[
-['Navegar',[['↑ , ↓ , PgUp , PgDn , Home , End','Mover o cursor entre as atividades'],['← , →','Na lista: mover entre as colunas da linha (← no nome recolhe / vai ao pai; → num grupo fechado expande)'],['Enter , F2','Editar a coluna marcada (no nome: renomear; nas outras: abre o seletor de responsável, etiqueta, status ou datas)'],['Espaço','Abrir / fechar o painel da atividade'],['Esc','Sai da coluna marcada / limpa a seleção'],['Tab , ⇧+Tab','Próxima / anterior'],['Ctrl+⇧+↑ , Ctrl+⇧+↓ , Ctrl+⇧+← , Ctrl+⇧+→','Mover-se no Quadro entre cartões e colunas']]],
+['Navegar',[['↑ , ↓ , PgUp , PgDn , Home , End','Mover o cursor entre as atividades'],['← , →','Na lista: mover entre as colunas da linha (← no nome recolhe / vai ao pai; → num grupo fechado expande)'],['Enter','Nova atividade logo abaixo da selecionada (mesmo nível); em coluna marcada (→) edita a coluna: responsável, etiqueta, status ou datas'],['F2','Renomear a atividade (ou editar a coluna marcada)'],['Espaço','Abrir / fechar o painel da atividade'],['Esc','Sai da coluna marcada / limpa a seleção'],['Tab , ⇧+Tab','Próxima / anterior'],['Ctrl+⇧+↑ , Ctrl+⇧+↓ , Ctrl+⇧+← , Ctrl+⇧+→','Mover-se no Quadro entre cartões e colunas']]],
 ['Reduzir ou expandir atividades',[['← , →','Recolher / expandir (← vai ao pai; → entra na 1ª subatividade)'],['⇧+← , ⇧+→','Recolher / expandir todas as subatividades'],['o','Alternar recolher / expandir'],['⇧+Alt+← , ⇧+Alt+→','Reduzir / expandir o projeto por nível']]],
 ['Selecionar várias atividades',[['⇧+↑ , ⇧+↓ , ⇧+PgUp , ⇧+PgDn','Estender a seleção'],['Ctrl+Clique , ⇧+Clique','Alternar / selecionar intervalo'],['Ctrl+A','Selecionar tudo'],['Esc','Limpar a seleção']]],
 ['Recuar atividade no modo de edição',[['Tab , ⇧+Tab','Ao editar o nome na lista: recuar / avançar nível']]],
@@ -823,7 +833,7 @@ function act(name){
     case 'desc':if(!need())return;openTask(first);setTimeout(()=>{const x=$('#m_desc');if(x)x.focus()},0);return;
     case 'comment':if(!need())return;openTask(first);setTimeout(()=>{const x=$('#m_comment');if(x)x.focus()},0);return;
     case 'addroot':S.view='list';adding=zoom||'root';render();return;
-    case 'add':{S.view='list';const t=first&&byId(first);adding=t?(t.id===zoom?t.id:(t.parent||(zoom||'root'))):(zoom||'root');render();return}
+    case 'add':{S.view='list';const t=first&&byId(first);adding=t?(t.id===zoom?t.id:'after:'+t.id):(zoom||'root');render();return}
     case 'addsub':{if(!need())return;S.view='list';adding=first;byId(first).open=true;render();return}
     case 'sublist':{if(!need())return;S.view='list';const p=byId(first);const n=mkTask({pid:p.pid,parent:p.id,title:'Nova sublista',sec:true});S.tasks.push(n);p.open=true;cur=n.id;anchor=n.id;sel=new Set([n.id]);render();const sp=document.querySelector(`[data-ie="${n.id}"]`);if(sp)startEdit(sp);return}
     case 'del':{if(!needSel())return;const tops=topT();ask(`Excluir ${tops.length} atividade(s) selecionada(s) e todas as suas subatividades?`,'',()=>{tops.forEach(delTask);sel=new Set();cur=null;render()},{confirm:1,ok:'Excluir'});return}
@@ -857,7 +867,7 @@ function infoDialog(id){
   const t=byId(id),p=[];let x=t;while(x.parent){x=byId(x.parent);p.unshift(x.title)}
   const row=(a,b)=>`<tr><td style="color:var(--mu);width:150px">${a}</td><td>${b}</td></tr>`;
   const lastDone=t.doneLog.length?new Date(t.doneLog[t.doneLog.length-1]).toLocaleString('pt-BR'):'—';
-  $('#modal').innerHTML=`<h3>ℹ Detalhes da atividade</h3><table>${row('ID',`<code>${t.id}</code>`)}${row('Título',esc(t.title))}${row('Caminho',esc(p.join(' › ')||'(raiz)'))}${row('Projeto',esc((S.projects.find(q=>q.id===t.pid)||{}).name||''))}${row('Status',stOf(t.status).n)}${row('Prioridade',PR[t.prio])}${row('Datas',esc(dateTxt(t)||'—'))}${row('Repetição',esc(repLabel(t)||'—'))}${row('Responsáveis',esc(t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Etiquetas',esc(t.tags.map(a=>(tagOf(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Subatividades',desc(id).length)}${row('Comentários',t.comments.length)}${row('Criada em',new Date(t.created).toLocaleString('pt-BR'))}${row('Concluída (vezes)',t.doneLog.length+' · última: '+lastDone)}</table><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
+  editing=null;closePop();$('#modal').dataset.kind='info';$('#modal').innerHTML=`<h3>ℹ Detalhes da atividade</h3><table>${row('ID',`<code>${t.id}</code>`)}${row('Título',esc(t.title))}${row('Caminho',esc(p.join(' › ')||'(raiz)'))}${row('Projeto',esc((S.projects.find(q=>q.id===t.pid)||{}).name||''))}${row('Status',stOf(t.status).n)}${row('Prioridade',PR[t.prio])}${row('Datas',esc(dateTxt(t)||'—'))}${row('Repetição',esc(repLabel(t)||'—'))}${row('Responsáveis',esc(t.assignees.map(a=>(mem(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Etiquetas',esc(t.tags.map(a=>(tagOf(a)||{}).name).filter(Boolean).join(', ')||'—'))}${row('Subatividades',desc(id).length)}${row('Comentários',t.comments.length)}${row('Criada em',new Date(t.created).toLocaleString('pt-BR'))}${row('Concluída (vezes)',t.doneLog.length+' · última: '+lastDone)}</table><div class="acts"><span></span><button class="pri" id="g_ok">Fechar</button></div>`;
   $('#ov').classList.add('on');
 }
 function addComment(){
@@ -1082,7 +1092,7 @@ function kbd(e){
   if(k==='C'&&sh){eat();act('done');return}
   const pk={'@':'a','?':'s','#':'t','<':'d','!':'p','>':'j'}[k];
   if(pk){eat();popKey(pk);return}
-  if(k==='Enter'){if(t.tagName==='BUTTON'||t.tagName==='A')return;eat();if(sh){act('addsub');return}if(cur&&byId(cur)&&['list','smart'].includes(S.view)){editCell();return}act('add');return}
+  if(k==='Enter'){if(t.tagName==='BUTTON'||t.tagName==='A')return;eat();if(sh){act('addsub');return}if(cur&&byId(cur)&&['list','smart'].includes(S.view)&&ccol&&ccol!=='tt'){editCell();return}if(cur&&byId(cur)&&S.view==='smart'){editCell();return}act('add');return}
   if(k===' '){if(t.tagName==='BUTTON')return;eat();if(cur)openTask(cur);else toast('Selecione uma atividade (clique ou use ↑ ↓)');return}
   if(k===']'||k==='['){eat();toggleSide();return}
   if(k==='('||k===')'){eat();cycleView(k===')'?1:-1);return}
@@ -1480,6 +1490,7 @@ function rowHTML(t,depth,flat){
     shown.forEach(k=>h+=rowHTML(k,depth+1));
     if(adding===t.id)h+=addRow(t.id,depth+1);
   }
+  if(adding==='after:'+t.id)h+=addRow(t.parent||'root',depth,t.id);
   return h;
 }
 function list(){
