@@ -21,6 +21,7 @@ const dayDiff=d=>Math.round((new Date(d+'T00:00')-new Date(today()+'T00:00'))/86
 const fmtD=d=>{if(!d)return'';const x=new Date(d+'T00:00');const o={day:'numeric',month:'short'};if(x.getFullYear()!==new Date().getFullYear())o.year='numeric';return x.toLocaleDateString('pt-BR',o)};
 const fmtS=d=>fmtD(d).replace(' de ',' ');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nameFromEmail=e=>{const l=String(e||'').split('@')[0].split(/[._\-+\s]+/).filter(Boolean)[0]||'';return l?l.charAt(0).toUpperCase()+l.slice(1).toLowerCase():String(e||'')};
 const ini=n=>n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
 const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 function addInt(ds,f,n){
@@ -594,7 +595,7 @@ document.addEventListener('click',e=>{
   if(g('#inv_go')){
     const em=$('#inv_email').value.trim();if(!validEmail(em)){toast('Digite um e-mail válido');$('#inv_email').focus();return}
     let m=S.members.find(x=>(x.email||'').toLowerCase()===em.toLowerCase());
-    if(!m){const nm=$('#inv_name').value.trim()||em.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    if(!m){const nm=$('#inv_name').value.trim()||nameFromEmail(em);
       m={id:uid(),name:nm,email:em,color:COLORS[S.members.length%COLORS.length],status:'invited'};S.members.push(m);save();render()}
     inviteDialog(m);return}
   if(el=g('[data-me-set]')){S.me=S.me===el.dataset.meSet?'':el.dataset.meSet;save();openTeam();return}
@@ -630,7 +631,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   const c=e.target.dataset;
-  if(c.mn){mem(c.mn).name=e.target.value;save()}
+  if(c.mn){const v=e.target.value;mem(c.mn).name=/@/.test(v)?nameFromEmail(v):v;if(/@/.test(v))e.target.value=mem(c.mn).name;save()}
   if(c.me){mem(c.me).email=e.target.value.trim();save()}
   if(c.gn){tagOf(c.gn).name=e.target.value;save()}
   if(e.target.id==='inv_link'){S.link=e.target.value.trim();save()}
@@ -1771,7 +1772,7 @@ function people(){
   const w0=wkOf(today()),weeks=[...Array(8)].map((_,i)=>plus(w0,i*7));
   const cols=['late',...weeks,'later','nodate'];
   const tasks=ptasks().filter(t=>isLeaf(t)&&t.status!=='done'&&match(t));
-  const P=[...S.members.map(m=>({id:m.id,n:m.name,c:m.color,cap:m.cap||40})),{id:'none',n:'Sem responsável',c:'#667085',cap:40}];
+  const pj=proj(),P=[...S.members.filter(m=>pj&&!pj.virtual?(inProject(m,pj)&&(m.access!==false||(pj.access||[]).includes(m.id))):true).map(m=>({id:m.id,n:m.name,c:m.color,cap:m.cap||40})),{id:'none',n:'Sem responsável',c:'#667085',cap:40}];
   const grid={},add=(pid,col,h,t)=>{const k=pid+'|'+col,c=grid[k]=grid[k]||{h:0,list:[]};c.h+=h;if(!c.list.includes(t))c.list.push(t)};
   tasks.forEach(t=>{
     const eff=t.est||1,owners=t.assignees.length?t.assignees:['none'];
@@ -1786,7 +1787,7 @@ function people(){
     });
   });
   const lab={late:'Atrasadas',later:'Depois',nodate:'Sem data'};
-  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Atividade sem estimativa conta 1 h. A capacidade (h/semana) de cada pessoa é editada em Configurações → Membros. Clique numa célula para ver as atividades.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
+  let h=`<div class="card2"><h4>Carga de trabalho — próximas 8 semanas</h4><div class="hint" style="margin:-6px 0 12px">Horas por pessoa e semana (soma das estimativas). Atividade sem estimativa conta 1 h. Aparecem só as pessoas que estão neste projeto e as atividades sem dono. A capacidade (h/semana) de cada pessoa é editada em Configurações → Membros. Clique numa célula para ver as atividades.</div><div style="overflow:auto"><table class="wl"><tr><th style="text-align:left">Pessoa</th>${cols.map(c=>`<th>${lab[c]||new Date(c+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}</tr>`;
   P.forEach(p=>{
     const tot=Object.keys(grid).filter(k=>k.startsWith(p.id+'|')).reduce((a,k)=>a+grid[k].list.length,0);
     if(p.id==='none'&&!tot)return;
@@ -2210,7 +2211,7 @@ function applyImport(plan){
     const f=it.f;t.title=it.title;
     ['prio','start','due','startTime','dueTime','est','spent','ms','star','desc'].forEach(k=>{if(k in f)t[k]=f[k]});
     if('repeat' in f)t.repeat=f.repeat;
-    if(f.resp)t.assignees=[...new Set(f.resp.map(n=>{let m=findMember(n);if(!m){const em=/@/.test(n);m={id:uid(),name:em?n.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):n,email:em?n:'',color:COLORS[S.members.length%COLORS.length],status:'active',cap:40};S.members.push(m)}return m.id}))];
+    if(f.resp)t.assignees=[...new Set(f.resp.map(n=>{let m=findMember(n);if(!m){const em=/@/.test(n);m={id:uid(),name:em?nameFromEmail(n):n,email:em?n:'',color:COLORS[S.members.length%COLORS.length],status:'active',cap:40};S.members.push(m)}return m.id}))];
     if(f.tags)t.tags=[...new Set(f.tags.map(n=>createTag(n).id))];
     normDates(t);
     if(f.status)setStatus(t,f.status);
@@ -2785,7 +2786,7 @@ function inviteMemberDialog(teamId){
 function addMember(email,name,r,teamId){
   const em=email.trim();let m=S.members.find(x=>(x.email||'').toLowerCase()===em.toLowerCase());
   if(m)return m;
-  const nm=(name||'').trim()||em.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const nm=(name||'').trim()||nameFromEmail(em);
   m={id:uid(),name:nm,email:em,color:COLORS[S.members.length%COLORS.length],status:'invited',cap:40,role:r,team:teamId||null};
   S.members.push(m);return m;
 }
@@ -3032,7 +3033,7 @@ function applyRows(R){
     repeat:r.repeat_freq?{freq:r.repeat_freq,every:r.repeat_every||1}:null,assignees:A.get(r.id)||[],tags:TG.get(r.id)||[],open:open[r.id]!==false,created:T0(r.created_at)||Date.now(),
     doneAt:T0(r.done_at),doneLog:(r.done_log||[]).map(T0),comments:(C.get(r.id)||[]).sort((a,b)=>a.created_at<b.created_at?-1:1).map(c=>({id:c.id,text:c.body,ts:T0(c.created_at),by:c.author_name||''})),
     by:uidMem[r.created_by]||'',sec:!!r.is_section,ms:!!r.is_milestone,star:stars.has(r.id),est:+r.estimate_h||0,spent:+r.spent_h||0,timerStart:T0(r.timer_started_at),deps:D.get(r.id)||[],_pos:+r.position}));
-  S.members=keepObjs(old0.members,S.members);S.teams=keepObjs(old0.teams,S.teams);S.tags=keepObjs(old0.tags,S.tags);S.projects=keepObjs(old0.projects,S.projects);S.tasks=keepObjs(old0.tasks,S.tasks);
+  S.members=keepObjs(old0.members,S.members);S.members.forEach(m=>{if(/@/.test(m.name||'')){if(!m.email)m.email=m.name.trim();m.name=nameFromEmail(m.name)}});S.teams=keepObjs(old0.teams,S.teams);S.tags=keepObjs(old0.tags,S.tags);S.projects=keepObjs(old0.projects,S.projects);S.tasks=keepObjs(old0.tasks,S.tasks);
   const w=R.ws[0];if(w){S.org=w.org_name;S.link=w.system_link||'';S.defaultRole=w.default_role;S.rules=w.rules||{}}
   const my=S.members.find(m=>m.uid===(sess&&sess.user&&sess.user.id))||S.members.find(m=>m.id===(cloud.me&&cloud.me.id));
   S.me=my?my.id:'';
@@ -3220,7 +3221,7 @@ async function cloudInvite(email,name,role,teamId,pids){
     await pullAll(false,true);render();return{ok:true,msg:(r&&r.message)||('Convite enviado para '+email)};
   }catch(e){
     if(fnMissing(e)){
-      if(!S.members.some(m=>(m.email||'').toLowerCase()===email.toLowerCase()))S.members.push({id:uid(),name:name||email.split('@')[0],email,color:COLORS[S.members.length%COLORS.length],cap:40,role,status:'invited',access:true,team:teamId||null});
+      if(!S.members.some(m=>(m.email||'').toLowerCase()===email.toLowerCase()))S.members.push({id:uid(),name:(name&&!/@/.test(name)?name:nameFromEmail(name||email)),email,color:COLORS[S.members.length%COLORS.length],cap:40,role,status:'invited',access:true,team:teamId||null});
       else{const m=S.members.find(x=>(x.email||'').toLowerCase()===email.toLowerCase());m.access=true;m.status='invited';m.role=role}
       cloudSchedule();render();return{ok:false,fallback:true};
     }
