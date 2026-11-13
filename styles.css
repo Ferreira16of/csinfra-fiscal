@@ -13,7 +13,7 @@ select option{background:var(--bg2);color:var(--tx)}
 textarea{resize:vertical}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);padding:0;margin:0;flex-shrink:0;cursor:pointer}
 input[type=date],input[type=time]{color-scheme:light dark}
-[data-theme=dark] input[type=date],[data-theme=dark] input[type=time]{color-scheme:dark}
+:is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) input[type=date],:is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) input[type=time]{color-scheme:dark}
 /* =========================================================
    CS Infra — Controle de Tarefas · identidade visual "Atlas"
    claro (papel) + escuro (grafite), acento verde-petróleo
@@ -620,7 +620,7 @@ h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#logi
 .st.st0{background:var(--hov2);color:var(--mu)!important;opacity:1}
 .tg2{background:color-mix(in srgb,var(--c) 13%,transparent)!important;color:var(--c)!important;font-weight:600;padding:2px 10px 2px 8px;display:inline-flex;align-items:center;gap:6px}
 .tg2::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c);flex-shrink:0}
-[data-theme=dark] .tg2{background:color-mix(in srgb,var(--c) 22%,transparent)!important}
+:is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) .tg2{background:color-mix(in srgb,var(--c) 22%,transparent)!important}
 .outline{border-radius:14px}
 .row.hdr{background:var(--row)}
 .hc{color:var(--mu)}
@@ -634,7 +634,7 @@ h1,h2,h3,.psw h2,.setpg h1,.setmain h2,.kpi b,.dh h3,.calhead h3,.modal h3,#logi
 /* cartões */
 .card2,.kpi,.cal,.gwrap,.cside,.outline{box-shadow:0 1px 2px rgba(16,24,40,.04)}
 .col{background:var(--hdr)}
-[data-theme=dark] .col{background:#ffffff08}
+:is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) .col{background:#ffffff08}
 /* menu lateral */
 .brand{padding:18px 16px 14px;gap:10px}
 .si,.pi{font-size:13.5px;height:36px;padding:0 10px;margin:1px 0}
@@ -899,7 +899,7 @@ body:is(.sc,.sca) #syncst{display:none}
 
 /* ===== filtros e selects ===== */
 :root{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
-[data-theme=dark]{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9693' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+:is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]){--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9693' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
 select{appearance:none;-webkit-appearance:none;background-image:var(--chev);background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:38px!important;cursor:pointer;text-overflow:ellipsis}
 select:disabled{opacity:.6;cursor:not-allowed}
 select option{padding:8px}
@@ -1393,3 +1393,36 @@ body:is(.sc,.sca) .pfilt{display:none}
 .snav.pfiltering .pgb .pi{display:flex}
 body:is(.sc,.sca) .pgl,body:is(.sc,.sca) .pctl,body:is(.sc,.sca) #orgProj{display:none!important}
 body:is(.sc,.sca) .pi.on .pctl{display:none!important}
+
+
+/* ===== v17: temas extras (violeta, coral, cinza claro, cinza escuro) ===== */
+:root[data-theme=violeta]{--bg:#14161c;--bg2:#1d2029;--row:#191c24;--row2:#1d2029;--bd:#2b2f3b;--tx:#eceef6;--mu:#8b91a6;--ac:#8b7cff;--ac2:#2a2650;--acx:#12131a;--red:#ff7b87;--amb:#ffc26b;--ok:#2fd4c0;--hov:#ffffff08;--hov2:#ffffff12;--hdr:#181b22;--inp:#12141a;--sel:#8b7cff1f;--sh:0 1px 2px rgba(0,0,0,.4);--sh2:0 24px 60px -12px rgba(0,0,0,.7);--side:#101218;--ring:0 0 0 3px #8b7cff33}
+:root[data-theme=violeta] .pbar i,:root[data-theme=violeta] .bar i{background:linear-gradient(90deg,#8b7cff,#2fd4c0)}
+:root[data-theme=coral]{--bg:#fbf7f1;--bg2:#fffdf9;--row:#f8f2e8;--row2:#fffdf9;--bd:#eadfce;--tx:#2a2118;--mu:#85766a;--ac:#e8590c;--ac2:#ffe9d6;--acx:#ffffff;--red:#d6403a;--amb:#b4640a;--ok:#2f9e44;--hov:#2a211808;--hov2:#2a211812;--hdr:#f4ece0;--inp:#fffdf9;--sel:#e8590c17;--sh:0 1px 2px rgba(80,50,20,.06);--sh2:0 24px 60px -12px rgba(80,50,20,.28);--side:#fff6ea;--ring:0 0 0 3px #e8590c30}
+:root[data-theme=coral] .pbar i,:root[data-theme=coral] .bar i{background:linear-gradient(90deg,#ffb347,#e8590c)}
+:root[data-theme=coral] .si.on,:root[data-theme=coral] .pi.on{background:#ffe3c7;box-shadow:inset 3px 0 0 #e8590c}
+:root[data-theme=cinzaesc]{--bg:#202328;--bg2:#2b2f36;--row:#262a30;--row2:#2b2f36;--bd:#3a3f48;--tx:#eceef1;--mu:#9aa1ad;--ac:#2dd4bf;--ac2:#173c38;--acx:#06322d;--red:#ff8080;--amb:#f5c77a;--ok:#2dd4bf;--hov:#ffffff08;--hov2:#ffffff12;--hdr:#262a30;--inp:#1b1e22;--sel:#2dd4bf1f;--sh:0 1px 2px rgba(0,0,0,.4);--sh2:0 24px 60px -12px rgba(0,0,0,.7);--side:#16181c;--ring:0 0 0 3px #2dd4bf33}
+:root[data-theme=cinzaesc] .pbar i,:root[data-theme=cinzaesc] .bar i{background:linear-gradient(90deg,#6b7482,#2dd4bf)}
+:root[data-theme=cinza]{--bg:#eceef1;--bg2:#ffffff;--row:#f3f4f6;--row2:#ffffff;--bd:#d9dce2;--tx:#23272f;--mu:#6b727f;--ac:#0e8f80;--ac2:#d9f3ef;--acx:#ffffff;--red:#d23f3f;--amb:#a5600d;--ok:#14a38f;--hov:#23272f08;--hov2:#23272f12;--hdr:#e4e6ea;--inp:#ffffff;--sel:#0e8f8017;--sh:0 1px 2px rgba(30,35,45,.06);--sh2:0 24px 60px -12px rgba(25,30,40,.3);--side:#2a2e35;--ring:0 0 0 3px #0e8f8030}
+:root[data-theme=cinza] .pbar i,:root[data-theme=cinza] .bar i{background:linear-gradient(90deg,#5d6573,#14b8a6)}
+:root[data-theme=cinza] #side{background:linear-gradient(185deg,#3a3f48 0%,#2a2e35 100%);border-right:0;--tx:#f1f2f4;--mu:#aab0ba;--bd:#ffffff1f;--hov2:#ffffff17;--hov:#ffffff0d;--ac:#ffffff;--ac2:#ffffff1c;color:#f1f2f4}
+[data-theme=cinza] #side .brand b{color:#fff}
+[data-theme=cinza] .brand .lgo{background:#fff;border-radius:12px;padding:4px;filter:none;box-shadow:0 6px 16px -6px #0008}
+[data-theme=cinza] .pal,[data-theme=cinza] #bUser{background:#ffffff14}
+[data-theme=cinza] .pal:hover,[data-theme=cinza] #bUser:hover{background:#ffffff22}
+[data-theme=cinza] #side kbd{background:#ffffff14;border-color:#ffffff22;color:#cfd3da}
+[data-theme=cinza] #newTask{background:#14b8a6;border-color:#14b8a6;color:#06322d;box-shadow:0 8px 18px -8px #14b8a6}
+[data-theme=cinza] #newTask:hover{background:#0fa797}
+[data-theme=cinza] #newTask kbd{background:#0000001f;border-color:#00000026;color:#06322d}
+[data-theme=cinza] .si.on,[data-theme=cinza] .pi.on{background:#ffffff1c;color:#fff;box-shadow:inset 3px 0 0 #14b8a6}
+[data-theme=cinza] .si.on .ico{color:#fff}
+[data-theme=cinza] .si small,[data-theme=cinza] .pi small{background:#ffffff1a;color:#d6dae0}
+[data-theme=cinza] .si.on small,[data-theme=cinza] .pi.on small{background:#ffffff30;color:#fff}
+[data-theme=cinza] #side .foot{border-top-color:#ffffff1f}
+[data-theme=cinza] #side .foot .fi{color:#e3e6ea}[data-theme=cinza] #side .foot .fi .ico{color:#aab0ba}
+[data-theme=cinza] #side .foot .fi:hover{background:#ffffff17;color:#fff}
+[data-theme=cinza] .ibn:hover,[data-theme=cinza] .lbl button:hover{background:#ffffff1c;color:#fff}
+[data-theme=cinza] #syncst,[data-theme=cinza] .plock{color:#aab0ba}
+[data-theme=cinza] #bUser .av::after{border-color:#2f333b}
+[data-theme=cinza] .chip.on{background:#3a3f48;border-color:#3a3f48;color:#fff}
+[data-theme=cinza] .tcard.on{border-color:#0e8f80}
