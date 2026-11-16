@@ -316,8 +316,19 @@ begin
   if to_jsonb(new) ? 'updated_by' then new := jsonb_populate_record(new, jsonb_build_object('updated_by', auth.uid())); end if;
   return new;
 end $$;
+-- Tarefas: registra quem mexeu por último (também na criação). Mudar só a ordem (position) não conta.
+create or replace function public.touch_task() returns trigger
+language plpgsql as $$
+begin
+  if tg_op = 'UPDATE' and (to_jsonb(new) - 'position' - 'updated_at' - 'updated_by') = (to_jsonb(old) - 'position' - 'updated_at' - 'updated_by') then
+    new.updated_at := old.updated_at; new.updated_by := old.updated_by; return new;
+  end if;
+  new.updated_at := now();
+  new.updated_by := auth.uid();
+  return new;
+end $$;
 drop trigger if exists touch_tasks on public.tasks;
-create trigger touch_tasks before update on public.tasks for each row execute function public.touch_row();
+create trigger touch_tasks before insert or update on public.tasks for each row execute function public.touch_task();
 drop trigger if exists touch_projects on public.projects;
 create trigger touch_projects before update on public.projects for each row execute function public.touch_row();
 drop trigger if exists touch_members on public.members;

@@ -22,6 +22,29 @@ const fmtD=d=>{if(!d)return'';const x=new Date(d+'T00:00');const o={day:'numeric
 const fmtS=d=>fmtD(d).replace(' de ',' ');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const nameFromEmail=e=>{const l=String(e||'').split('@')[0].split(/[._\-+\s]+/).filter(Boolean)[0]||'';return l?l.charAt(0).toUpperCase()+l.slice(1).toLowerCase():String(e||'')};
+
+/* ===== ponto laranja: alguém (outra pessoa) mexeu na atividade ===== */
+const myUid=()=>(typeof sess!=='undefined'&&sess&&sess.user&&sess.user.id)||'';
+function updInfo(t){
+  if(!CLOUD||!t||!t._upd||!t._upd.by||!t._upd.at||t._upd.by===myUid())return null;
+  if(!S.seenBase){S.seenBase=new Date().toISOString();try{saveUI()}catch(e){}}
+  const at=Date.parse(t._upd.at)||0;
+  if(at<=Date.parse(S.seenBase))return null;
+  if((Date.parse((S.seenU||{})[t.id])||0)>=at)return null;
+  return t._upd;
+}
+function updDot(t){
+  const u=updInfo(t);if(!u)return '';
+  const m=S.members.find(x=>x.uid===u.by),d=new Date(u.at);
+  const when=isNaN(d)?'':d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return `<i class="upd" data-upd="${t.id}" title="${esc('Alterada por '+(m?m.name:'outra pessoa')+(when?' em '+when:'')+' — abra o painel para marcar como vista')}"></i>`;
+}
+function markSeen(id){
+  const t=byId(id);if(!t||!t._upd||!t._upd.at)return;
+  S.seenU=S.seenU||{};if((Date.parse(S.seenU[id])||0)>=(Date.parse(t._upd.at)||0))return;
+  S.seenU[id]=t._upd.at;try{saveUI()}catch(e){}
+  document.querySelectorAll(`[data-upd="${id}"]`).forEach(x=>x.remove());
+}
 const ini=n=>n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
 const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 function addInt(ds,f,n){
@@ -639,8 +662,8 @@ document.addEventListener('input',e=>{
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(pop){closePop();return}
-    if(adding){adding=null;render();return}
-    if($('#ov').classList.contains('on')){if(editing)collect();closeModal();render();return}if(sel.size){sel=new Set();cur=null;markSel()}return}
+    if(adding){adding=null;render();try{markSel(true)}catch(x){}return}
+    if($('#ov').classList.contains('on')){if(editing)collect();closeModal();render();try{markSel(true)}catch(x){}return}if(sel.size>1){sel=new Set(cur&&byId(cur)?[cur]:[]);markSel()}return}
   if(e.key!=='Enter')return;
   if(e.target.dataset&&e.target.dataset.addin&&!e.target.value.trim()&&e.target.dataset.after){e.preventDefault();adding=null;render();return}
   if(e.target.id==='m_comment'){if(!e.shiftKey){e.preventDefault();addComment()}return}
@@ -1519,7 +1542,7 @@ function rowHTML(t,depth,flat){
     ${t.ms?'<span style="color:var(--amb)" title="Marco">◆</span>':''}<span class="tt" data-ie="${t.id}" title="Clique para editar o nome">${esc(t.title)}</span>
     ${(t.imgs||[]).length?`<span class="imgc" title="${t.imgs.length} imagem(ns)">${ic('image',13)}${t.imgs.length}</span>`:''}${t.star?`<span class="star" data-star="${t.id}" title="Favorita">★</span>`:''}${blocked?`<span class="lk" title="Aguardando: ${esc(wait)}">🔒</span>`:''}${t.timerStart?'<span class="tim" title="Cronômetro em andamento">⏱</span>':''}${t.comments.length?`<span class="pg" title="Comentários">💬${t.comments.length}</span>`:''}
     ${pr?`<span class="pg">${pr[0]}/${pr[1]}</span><span class="bar"><i style="width:${pr[1]?pr[0]/pr[1]*100:0}%"></i></span>`:''}${path}
-    <button class="op" data-t="${t.id}" title="Abrir painel de edição (Espaço)">⤢ abrir</button>
+    ${updDot(t)}<button class="op" data-t="${t.id}" title="Abrir painel de edição (Espaço)">⤢ abrir</button>
     <span class="hv"><button data-star="${t.id}" title="Favoritar (*)">${t.star?'★':'☆'}</button>${CLOUD?`<button data-attach="${t.id}" title="Anexar imagem — ou cole com Ctrl+V / solte a imagem sobre a linha">${ic('image',14)}</button>`:''}<button class="hdel" data-qdel="${t.id}" title="Excluir atividade">${ic('trash',14)}</button>${flat?'':`<button data-add="${t.id}" title="Nova subatividade">+</button><button data-mv="${t.id}:-1" title="Subir">▲</button><button data-mv="${t.id}:1" title="Descer">▼</button>`}</span>
    </div>
    <div class="rt">
@@ -2526,7 +2549,7 @@ function setRole(mid,r){
 
 /* ----- painel da atividade em modo leitura ----- */
 function openTask(id){
-  openTaskBase(id);
+  openTaskBase(id);markSeen(id);
   const t=byId(id);if(!t)return;
   modalRO=!canEdit(t);
   if(!modalRO)return;
@@ -2864,7 +2887,7 @@ const SESSK='quire-sb-session',UIK='quire-ui';
 let sess=null,refreshing=null;
 const sessLoad=()=>{try{sess=JSON.parse(localStorage.getItem(SESSK))}catch(e){sess=null}};
 const sessSave=s=>{sess=s;try{s?localStorage.setItem(SESSK,JSON.stringify(s)):localStorage.removeItem(SESSK)}catch(e){}};
-const UIKEYS=['pfav','pord','pgc','sgc','sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
+const UIKEYS=['seenU','seenBase','pfav','pord','pgc','sgc','sg','theme','hideDone','qf','view','calMonth','gz','seen','helpTab','setTab','dash','smart','cur'];
 function saveUI(){try{const o={};UIKEYS.forEach(k=>o[k]=S[k]);localStorage.setItem(UIK,JSON.stringify(o))}catch(e){}}
 function loadUI(){try{const o=JSON.parse(localStorage.getItem(UIK))||{};UIKEYS.forEach(k=>{if(o[k]!==undefined)S[k]=o[k]})}catch(e){}}
 function trErr(m){
@@ -3029,11 +3052,11 @@ function applyRows(R){
   const by=(rows,k,v)=>{const m=new Map();rows.forEach(r=>{if(!m.has(r[k]))m.set(r[k],[]);m.get(r[k]).push(v?r[v]:r)});return m};
   const A=by(R.asg,'task_id','member_id'),TG=by(R.ttag,'task_id','tag_id'),D=by(R.dep,'task_id','depends_on_id'),C=by(R.cmt,'task_id');
   const stars=new Set(R.stars.map(r=>r.task_id));
-  S.tasks=R.tasks.map(r=>({id:r.id,pid:r.project_id,parent:r.parent_id||null,title:r.title,desc:r.description||'',imgs:Array.isArray(r.attachments)?r.attachments:[],status:r.status,prio:r.priority,start:r.start_date||'',startTime:r.start_time||'',due:r.due_date||'',dueTime:r.due_time||'',
+  S.tasks=R.tasks.map(r=>({_upd:{at:r.updated_at||'',by:r.updated_by||''},id:r.id,pid:r.project_id,parent:r.parent_id||null,title:r.title,desc:r.description||'',imgs:Array.isArray(r.attachments)?r.attachments:[],status:r.status,prio:r.priority,start:r.start_date||'',startTime:r.start_time||'',due:r.due_date||'',dueTime:r.due_time||'',
     repeat:r.repeat_freq?{freq:r.repeat_freq,every:r.repeat_every||1}:null,assignees:A.get(r.id)||[],tags:TG.get(r.id)||[],open:open[r.id]!==false,created:T0(r.created_at)||Date.now(),
     doneAt:T0(r.done_at),doneLog:(r.done_log||[]).map(T0),comments:(C.get(r.id)||[]).sort((a,b)=>a.created_at<b.created_at?-1:1).map(c=>({id:c.id,text:c.body,ts:T0(c.created_at),by:c.author_name||''})),
     by:uidMem[r.created_by]||'',sec:!!r.is_section,ms:!!r.is_milestone,star:stars.has(r.id),est:+r.estimate_h||0,spent:+r.spent_h||0,timerStart:T0(r.timer_started_at),deps:D.get(r.id)||[],_pos:+r.position}));
-  S.members=keepObjs(old0.members,S.members);S.members.forEach(m=>{if(/@/.test(m.name||'')){if(!m.email)m.email=m.name.trim();m.name=nameFromEmail(m.name)}});S.teams=keepObjs(old0.teams,S.teams);S.tags=keepObjs(old0.tags,S.tags);S.projects=keepObjs(old0.projects,S.projects);S.tasks=keepObjs(old0.tasks,S.tasks);
+  if(!S.seenBase){S.seenBase=new Date().toISOString();try{saveUI()}catch(e){}}S.members=keepObjs(old0.members,S.members);S.members.forEach(m=>{if(/@/.test(m.name||'')){if(!m.email)m.email=m.name.trim();m.name=nameFromEmail(m.name)}});S.teams=keepObjs(old0.teams,S.teams);S.tags=keepObjs(old0.tags,S.tags);S.projects=keepObjs(old0.projects,S.projects);S.tasks=keepObjs(old0.tasks,S.tasks);
   const w=R.ws[0];if(w){S.org=w.org_name;S.link=w.system_link||'';S.defaultRole=w.default_role;S.rules=w.rules||{}}
   const my=S.members.find(m=>m.uid===(sess&&sess.user&&sess.user.id))||S.members.find(m=>m.id===(cloud.me&&cloud.me.id));
   S.me=my?my.id:'';

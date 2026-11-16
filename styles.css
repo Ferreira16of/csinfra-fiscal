@@ -1433,3 +1433,16 @@ body:is(.sc,.sca) .pi.on .pctl{display:none!important}
 :is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) .tg2{--tx2:color-mix(in srgb,var(--c) 38%,#fff);background:color-mix(in srgb,var(--c) 30%,transparent)!important;border-color:color-mix(in srgb,var(--c) 60%,transparent)!important}
 :is([data-theme=dark],[data-theme=violeta],[data-theme=cinzaesc]) .tg2::before{background:color-mix(in srgb,var(--c) 55%,#fff)}
 @media print{.tg2{border-color:#888!important;color:#000!important}}
+
+/* ===== v19: ponto laranja de "alguém mexeu" (à esquerda do botão abrir) ===== */
+.upd{width:9px;height:9px;border-radius:50%;background:#f97316;box-shadow:0 0 0 3px #f9731626;flex-shrink:0;display:inline-block;margin:0 6px;animation:updp 2.4s ease-in-out infinite}
+@keyframes updp{0%,100%{box-shadow:0 0 0 3px #f9731626}50%{box-shadow:0 0 0 5px #f9731640}}
+@media (prefers-reduced-motion:reduce){.upd{animation:none}}
+@media(min-width:701px){
+  .row .upd{position:absolute;top:50%;transform:translateY(-50%);margin:0;right:274px;z-index:2}
+}
+@container main (max-width:900px){.row .upd{right:118px}}
+@media(min-width:701px) and (hover:hover){
+  .row .upd{right:40px}
+}
+@media print{.upd{display:none!important}}

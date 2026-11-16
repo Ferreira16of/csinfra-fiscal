@@ -189,3 +189,9 @@ Regras mantidas: Normal só cadastra Normal/Limitado/Convidado e não mexe em ad
 Todo projeto **novo** nasce **restrito**: só os administradores (que veem tudo) e quem o criou enxergam. As demais pessoas só passam a ver quando você as inclui (Configurações → Projeto atual → Membros deste projeto, ou Membros → Projetos). Para abrir para a equipe toda, o administrador usa o botão **Equipe toda** nas configurações do projeto.
 
 Projetos que já existiam **não mudam**. Para aplicar a regra no banco, rode de novo o `supabase_setup.sql` inteiro (é seguro repetir).
+
+
+## E9. Ponto laranja: "alguém mexeu nesta atividade"
+
+Para o ponto laranja funcionar para todos, rode de novo o `supabase_setup.sql` (SQL Editor → colar → Run). Ele troca o gatilho das tarefas para registrar **quem** mexeu por último, inclusive ao criar. Mudar apenas a ordem (arrastar) não conta como alteração.
+O ponto some quando você abre o painel da atividade. Não precisa republicar a função `invite-user`.
