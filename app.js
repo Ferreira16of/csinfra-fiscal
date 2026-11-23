@@ -376,10 +376,12 @@ function openTaskBase(id){
     <div style="align-self:end;color:var(--mu);font-size:12px;padding-bottom:8px">Ao concluir, as datas avançam.</div>
   </div>
   ${taskExtraHTML(t)}
-  <label>Responsáveis (clique para atribuir)</label>
-  <div class="pick" id="m_as">${S.members.map(m=>`<span class="pa ${t.assignees.includes(m.id)?'on':''}" data-pm="${m.id}"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span>${esc(m.name)}</span>`).join('')||'<span style="color:var(--mu)">Cadastre pessoas em “Equipe”.</span>'}</div>
-  <label>Etiquetas (clique para marcar) — ou crie uma nova</label>
-  <div class="pick" id="m_tg">${S.tags.map(g=>`<span class="ac ${t.tags.includes(g.id)?'on':''}" data-pg="${g.id}" style="background:${g.color}">${esc(g.name)}</span>`).join('')}<input id="m_newtag" placeholder="+ nova etiqueta (Enter)" style="width:190px"></div>
+  <label>Responsáveis</label>
+  <div class="pk2"><div class="pk2s" id="m_as_sum"></div><button type="button" class="pk2b" data-pk2="as">+ Pessoa</button></div>
+  <div class="pick" id="m_as" hidden>${S.members.map(m=>`<span class="pa ${t.assignees.includes(m.id)?'on':''}" data-pm="${m.id}">${esc(m.name)}</span>`).join('')}</div>
+  <label>Etiquetas</label>
+  <div class="pk2"><div class="pk2s" id="m_tg_sum"></div><button type="button" class="pk2b" data-pk2="tg">+ Etiqueta</button></div>
+  <div class="pick" id="m_tg" hidden>${S.tags.map(g=>`<span class="ac ${t.tags.includes(g.id)?'on':''}" data-pg="${g.id}">${esc(g.name)}</span>`).join('')}</div>
   <label>Descrição / observações</label><textarea id="m_desc" rows="4">${esc(t.desc)}</textarea>
   ${CLOUD?`<div class="galwrap" id="m_gw"><div class="gal" id="m_gal">${galHTML(t)}</div>${canImg(t)?`<button type="button" class="gadd" id="m_addimg">${ic('image',16)} Adicionar imagem <small style="opacity:.7;margin-left:6px">ou cole (Ctrl+V) / arraste</small></button><input type="file" id="m_file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden>`:''}</div>${canImg(t)?'<div class="hint">Cole com Ctrl+V, arraste para cá ou clique em “Adicionar imagem”.</div>':''}`:''}
   <label>Subatividades</label>
@@ -2549,7 +2551,7 @@ function setRole(mid,r){
 
 /* ----- painel da atividade em modo leitura ----- */
 function openTask(id){
-  openTaskBase(id);markSeen(id);
+  openTaskBase(id);markSeen(id);try{pk2Close();pk2Sum()}catch(x){}
   const t=byId(id);if(!t)return;
   modalRO=!canEdit(t);
   if(!modalRO)return;
@@ -3710,3 +3712,81 @@ document.addEventListener('click',e=>{
   if(ov){new MutationObserver(sync).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true,childList:true})}
   window.addEventListener('resize',sync);
 })();
+
+
+/* ===== painel da atividade: responsáveis e etiquetas em lista suspensa ===== */
+const _CK='<svg class="ck" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+const _SRCH='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
+function pk2El(kind,id){return document.querySelector(kind==='as'?`#m_as .pa[data-pm="${id}"]`:`#m_tg .ac[data-pg="${id}"]`)}
+function pk2On(kind,id){const e=pk2El(kind,id);return !!(e&&e.classList.contains('on'))}
+function pk2Sum(){
+  const as=$('#m_as_sum'),tg=$('#m_tg_sum');
+  if(as){const on=S.members.filter(m=>pk2On('as',m.id));
+    as.innerHTML=on.length?on.map(m=>`<span class="pk2c" title="${esc(m.name)}"><span class="av" style="background:${m.color};border-color:transparent">${esc(ini(m.name))}</span>${esc(m.name)}<button type="button" class="pk2x" data-pk2x="as:${m.id}" title="Remover" aria-label="Remover ${esc(m.name)}">×</button></span>`).join(''):'<span class="pk2e">Ninguém atribuído</span>'}
+  if(tg){const on=S.tags.filter(g=>pk2On('tg',g.id));
+    tg.innerHTML=on.length?on.map(g=>`<span class="ac pk2t" style="background:${g.color}">${esc(g.name)}<button type="button" class="pk2x" data-pk2x="tg:${g.id}" title="Remover" aria-label="Remover ${esc(g.name)}">×</button></span>`).join(''):'<span class="pk2e">Sem etiquetas</span>'}
+}
+let pk2={kind:null,q:'',act:0,btn:null};
+function pk2Close(){const p=$('#pk2pop');if(p)p.remove();const b=pk2.btn;pk2={kind:null,q:'',act:0,btn:null};if(b&&b.isConnected)b.setAttribute('aria-expanded','false')}
+function pk2Items(){
+  const q=norm(pk2.q).trim();
+  if(pk2.kind==='as')return S.members.filter(m=>!q||norm(m.name).includes(q)).map(m=>({id:m.id,name:m.name,color:m.color,on:pk2On('as',m.id)}));
+  const L=S.tags.filter(g=>!q||norm(g.name).includes(q)).map(g=>({id:g.id,name:g.name,color:g.color,on:pk2On('tg',g.id)}));
+  const raw=pk2.q.trim();
+  if(raw&&!S.tags.some(g=>norm(g.name)===norm(raw)))L.push({create:raw});
+  return L;
+}
+function pk2List(keep){
+  const box=$('#pk2l');if(!box)return;const top=box.scrollTop,items=pk2Items();
+  if(pk2.act>=items.length)pk2.act=Math.max(0,items.length-1);
+  box.innerHTML=items.length?items.map((it,i)=>it.create
+    ?`<div class="pk2i pk2new ${i===pk2.act?'act':''}" data-pk2new="1"><span class="pk2plus">＋</span><span class="pk2n">Criar etiqueta “${esc(it.create)}”</span></div>`
+    :`<div class="pk2i ${it.on?'on':''} ${i===pk2.act?'act':''}" data-pk2i="${it.id}">${pk2.kind==='as'?`<span class="av" style="background:${it.color};border-color:transparent">${esc(ini(it.name))}</span>`:`<span class="pk2dot" style="background:${it.color}"></span>`}<span class="pk2n">${esc(it.name)}</span>${_CK}</div>`).join('')
+    :`<div class="pk2none">${pk2.kind==='as'?'Nenhuma pessoa encontrada':'Nenhuma etiqueta'}</div>`;
+  if(keep)box.scrollTop=top;
+  const act=box.querySelector('.act');if(act&&!keep){const at=act.offsetTop,ab=at+act.offsetHeight;if(at<box.scrollTop)box.scrollTop=at-4;else if(ab>box.scrollTop+box.clientHeight)box.scrollTop=ab-box.clientHeight+4}
+}
+function pk2Open(kind,btn){
+  if(pk2.kind===kind&&$('#pk2pop')){pk2Close();return}
+  pk2Close();pk2={kind,q:'',act:0,btn,t:Date.now()};btn.setAttribute('aria-expanded','true');
+  const p=document.createElement('div');p.id='pk2pop';
+  p.innerHTML=`<div class="pk2in">${_SRCH}<input id="pk2q" autocomplete="off" placeholder="${kind==='as'?'Buscar pessoa…':'Buscar ou criar etiqueta…'}"></div><div class="pk2l" id="pk2l"></div>`;
+  document.body.appendChild(p);pk2List();
+  const r=btn.getBoundingClientRect(),w=290,left=Math.max(8,Math.min(r.left,innerWidth-w-8));
+  p.style.left=left+'px';p.style.width=w+'px';
+  const h=p.offsetHeight;
+  if(r.bottom+6+h>innerHeight-8&&r.top-6-h>8){p.style.top=(r.top-6-h)+'px'}else p.style.top=Math.min(r.bottom+6,Math.max(8,innerHeight-h-8))+'px';
+  $('#pk2q').focus();
+}
+function pk2Toggle(id){
+  const e=pk2El(pk2.kind,id);if(!e)return;e.classList.toggle('on');pk2Sum();pk2List(true);
+}
+function pk2Create(name){
+  collect();const g=createTag(name);const k=byId(editing);if(g&&k&&!k.tags.includes(g.id))k.tags.push(g.id);
+  const kind=pk2.kind;pk2Close();openTask(editing);render();
+  setTimeout(()=>{const b=document.querySelector('[data-pk2="'+kind+'"]');if(b)pk2Open(kind,b)},30);
+}
+window.addEventListener('click',e=>{
+  const t=e.target;if(!t||!t.closest)return;
+  const b=t.closest('[data-pk2]');
+  if(b){e.stopImmediatePropagation();e.preventDefault();if(!b.disabled)pk2Open(b.dataset.pk2,b);return}
+  const x=t.closest('[data-pk2x]');
+  if(x){e.stopImmediatePropagation();e.preventDefault();if(x.disabled)return;const[k,id]=x.dataset.pk2x.split(':');const el=pk2El(k,id);if(el){el.classList.remove('on');pk2Sum();if(pk2.kind===k)pk2List(true)}return}
+  const it=t.closest('#pk2pop [data-pk2i]');
+  if(it){e.stopImmediatePropagation();e.preventDefault();pk2.act=[...$('#pk2l').children].indexOf(it);pk2Toggle(it.dataset.pk2i);const q=$('#pk2q');if(q)q.focus();return}
+  if(t.closest('#pk2pop [data-pk2new]')){e.stopImmediatePropagation();e.preventDefault();pk2Create(pk2.q.trim());return}
+  if(t.closest('#pk2pop'))return;
+  if($('#pk2pop'))pk2Close();
+},true);
+window.addEventListener('input',e=>{if(e.target&&e.target.id==='pk2q'){pk2.q=e.target.value;pk2.act=0;pk2List()}},true);
+window.addEventListener('keydown',e=>{
+  if(!$('#pk2pop'))return;
+  const k=e.key,items=pk2Items();
+  if(k==='Escape'){e.stopImmediatePropagation();e.preventDefault();const b=pk2.btn;pk2Close();if(b&&b.isConnected)b.focus();return}
+  if(e.target&&e.target.id!=='pk2q')return;
+  if(k==='ArrowDown'||k==='ArrowUp'){e.stopImmediatePropagation();e.preventDefault();if(items.length)pk2.act=(pk2.act+(k==='ArrowDown'?1:-1)+items.length)%items.length;pk2List();return}
+  if(k==='Enter'){e.stopImmediatePropagation();e.preventDefault();const it=items[pk2.act];if(!it)return;if(it.create)pk2Create(it.create);else pk2Toggle(it.id);return}
+  e.stopPropagation();
+},true);
+document.addEventListener('scroll',e=>{if($('#pk2pop')&&Date.now()-(pk2.t||0)>350&&!(e.target&&e.target.closest&&e.target.closest('#pk2pop')))pk2Close()},true);
+window.addEventListener('resize',()=>{if($('#pk2pop'))pk2Close()});
