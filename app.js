@@ -357,7 +357,7 @@ function openTaskBase(id){
   const ordered=[];(function walk(par){S.tasks.filter(x=>x.pid===t.pid&&(x.parent||null)===par&&!banned.includes(x.id)).forEach(x=>{ordered.push(x);walk(x.id)})})(null);
   const r=t.repeat||{freq:'',every:1};
   const M0=$('#modal');M0.dataset.kind='task';M0.style.width='';
-  if(innerWidth>900&&innerWidth<1500)document.body.classList.add('sca');
+  
   $('#modal').innerHTML=`<button class="dxb" id="m_x" type="button" title="Fechar (Esc)">${ic('x',18)}</button>${bc}<h3><input id="m_title" value="${esc(t.title)}" style="font-size:16px;font-weight:600"></h3>
   <div class="g3">
     <div><label>Status</label><select id="m_st">${ST.map(s=>`<option value="${s.id}" ${s.id===t.status?'selected':''}>${s.n}</option>`).join('')}</select></div>
@@ -1006,7 +1006,7 @@ function openUndo(){
 /* ----- vistas e extras ----- */
 function setView(n){S.view=['list','board','cal','gantt','people','dash'][n-1]||'list';render()}
 function cycleView(d){const a=['list','board','cal','gantt','people','dash'];S.view=a[(Math.max(0,a.indexOf(S.view))+d+a.length)%a.length];render()}
-function toggleSide(force){const on=force===undefined?!document.body.classList.contains('sc'):!!force;document.body.classList.toggle('sc',on);try{localStorage.setItem('quire-sc',on?'1':'')}catch(e){}const b=$('#bCollapse');if(b){b.innerHTML=ic(on?'chevR':'chevL');b.title=on?'Expandir menu ([)':'Recolher menu ([)'}}
+function toggleSide(force){try{delete document.body.dataset.autoSc;const o=document.getElementById('ov');if(o&&o.classList.contains('on'))document.body.dataset.sideTouched='1'}catch(e){}const on=force===undefined?!document.body.classList.contains('sc'):!!force;document.body.classList.toggle('sc',on);try{localStorage.setItem('quire-sc',on?'1':'')}catch(e){}const b=$('#bCollapse');if(b){b.innerHTML=ic(on?'chevR':'chevL');b.title=on?'Expandir menu ([)':'Recolher menu ([)'}}
 try{if(localStorage.getItem('quire-sc'))document.body.classList.add('sc')}catch(e){}
 function fullscreen(){
   try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
@@ -3693,4 +3693,20 @@ document.addEventListener('click',e=>{
     if(el){const r=el.getBoundingClientRect();projDrop(id,el.dataset.id,e.clientY>r.top+r.height/2)}else projDrop(id,null,false,gl.dataset.pgl);clr()});
   const _r=render;render=function(){_r.apply(this,arguments);try{applySide()}catch(x){}};
   try{applySide()}catch(x){}
+})();
+
+
+/* ===== painel lateral da atividade: recolhe o menu da esquerda enquanto estiver aberto ===== */
+(function(){
+  const wide=()=>window.innerWidth>900;
+  const panelOpen=()=>{const ov=document.getElementById('ov'),m=document.getElementById('modal');return !!(ov&&ov.classList.contains('on')&&m&&m.dataset.kind==='task')};
+  function sync(){
+    const b=document.body,open=panelOpen()&&wide();
+    if(!open)delete b.dataset.sideTouched;
+    if(open&&!b.classList.contains('sc')&&!b.dataset.sideTouched){b.dataset.autoSc='1';b.classList.add('sc');const x=document.getElementById('bCollapse');if(x){x.innerHTML=ic('chevR');x.title='Expandir menu ([)'}}
+    else if(!open&&b.dataset.autoSc){delete b.dataset.autoSc;b.classList.remove('sc');const x=document.getElementById('bCollapse');if(x){x.innerHTML=ic('chevL');x.title='Recolher menu ([)'}}
+  }
+  const ov=document.getElementById('ov');
+  if(ov){new MutationObserver(sync).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true,childList:true})}
+  window.addEventListener('resize',sync);
 })();

@@ -1446,3 +1446,12 @@ body:is(.sc,.sca) .pi.on .pctl{display:none!important}
   .row .upd{right:40px}
 }
 @media print{.upd{display:none!important}}
+
+/* ===== v20: com o painel da atividade aberto, esconde os atalhos flutuantes da linha (favorito, lixeira...) ===== */
+body:has(#ov.on #modal[data-kind=task]) .row .hv,body:has(#ov.on #modal[data-kind=task]) .row:hover .hv{display:none!important}
+/* painel aberto (desktop com mouse): tira colunas secundárias para a Atividade ficar o mais larga possível */
+@media(min-width:901px) and (hover:hover){
+  body:has(#ov.on #modal[data-kind=task]) :is(.col-id,.col-ih,.col-dh,.col-u,.col-ds){display:none!important}
+  body:has(#ov.on #modal[data-kind=task]) .outline .row{min-width:0!important}
+  body:has(#ov.on #modal[data-kind=task]) .outline{width:auto}
+}
