@@ -1030,6 +1030,15 @@ function kbd(e){
   if(modalOpen){
     if(kind==='undo'&&ctrl&&L==='z'){eat();if(hist.length>1)restore(hist.length-1);else{closeModal();render()}return}
     if(ctrl&&L==='b'&&(kind==='undo'||kind==='help')){eat();openPalette();return}
+    // painel da atividade aberto + foco na lista: ↑/↓ trocam a atividade mostrada no painel
+    if(kind==='task'&&editing&&!typing&&!ctrl&&!alt&&!sh&&(k==='ArrowDown'||k==='ArrowUp')&&!(t.closest&&t.closest('#modal'))&&t.tagName!=='BUTTON'&&!$('#pk2pop')){
+      const ids=navIds();if(ids.length){
+        const base=(cur&&ids.includes(cur))?cur:editing,i=ids.indexOf(base);
+        const n=i<0?0:Math.max(0,Math.min(ids.length-1,i+(k==='ArrowDown'?1:-1)));
+        eat();
+        if(ids[n]!==editing||ids[n]!==cur){setCur(ids[n],false);if(ids[n]!==editing){openTask(ids[n]);try{if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur()}catch(x){}}}
+      }
+      return}
     if(editing&&alt&&L==='q'){eat();quoteSel();return}
     if(editing&&!typing&&k===' '&&!ctrl&&!alt&&t.tagName!=='BUTTON'){eat();collect();closeModal();render();return}
     return;
