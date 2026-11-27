@@ -1495,3 +1495,20 @@ body:has(#ov.on #modal[data-kind=task]) .row .hv,body:has(#ov.on #modal[data-kin
 .hist ul{margin:4px 0 0;padding-left:16px;font-size:12.5px;line-height:1.5;color:var(--tx)}
 .hist .hv0{color:var(--mu);text-decoration:line-through}
 .hist .hmore summary{cursor:pointer;color:var(--ac);font-size:12.5px;padding:8px 0}
+/* v24 – coluna E-mail, larguras ajustáveis, Concluída em e Atraso */
+.rt>.cell.col-a,.row .rt .cell.col-a{display:block!important;font-size:12px;line-height:28px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;padding:0 6px;opacity:.9}
+.rt>.cell.col-a.e{opacity:.4}
+.hc.col-a{text-align:left!important}
+.rt>.cell.col-dn,.rt>.cell.col-at{display:block;font-size:12px;line-height:28px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;padding:0 6px;font-variant-numeric:tabular-nums}
+.rt>.cell.col-at.late{color:var(--red);font-weight:650}
+.rt>.cell.col-at.late.run{font-weight:500;font-style:italic;opacity:.85}
+.rt>.cell.col-at.ok{color:var(--ok)}
+.rt>.hc{position:relative;overflow:hidden;text-overflow:ellipsis;text-align:left;padding-right:10px!important}
+.hc .rz{position:absolute;top:0;bottom:0;right:0;width:9px;cursor:col-resize;z-index:4}
+.hc .rz::after{content:'';position:absolute;top:8px;bottom:8px;right:3px;width:1px;background:var(--bd);transition:background .12s,width .12s}
+.hc:hover .rz::after,.rz:hover::after{background:var(--ac);width:2px}
+body.colrz{cursor:col-resize;user-select:none}
+body.colrz *{cursor:col-resize!important}
+@container main (max-width:900px){.col-dn,.col-at{display:none!important}}
+body:has(#ov.on #modal[data-kind=task]) :is(.col-dn,.col-at){display:none!important}
+@container main (max-width:660px){.rt>.cell.col-a,.rt>.hc.col-a{display:none!important}}

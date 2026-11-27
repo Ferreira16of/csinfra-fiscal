@@ -170,6 +170,7 @@ function match(t){
 const matchTree=t=>match(t)||desc(t.id).some(match);
 
 /* ---------- chips ---------- */
+const mailsTxt=t=>t.assignees.map(mem).filter(Boolean).map(m=>m.email||m.name).join(', ');
 const avs=t=>{const a=t.assignees.map(mem).filter(Boolean);return a.slice(0,3).map(m=>`<span class="av" style="background:${m.color}" title="${esc(m.name)}">${esc(ini(m.name))}</span>`).join('')+(a.length>3?`<span class="av" style="background:#555">+${a.length-3}</span>`:'')};
 const tagChips=(t,max=3)=>{const g=t.tags.map(tagOf).filter(Boolean);return g.slice(0,max).map(x=>`<span class="ac tg2" style="--c:${x.color};background:${x.color}" title="${esc(x.name)}">${esc(x.name)}</span>`).join('')+(g.length>max?`<span class="ac" style="background:#555">+${g.length-max}</span>`:'')};
 const stChip=t=>{const s=stOf(t.status);return `<span class="st ${t.status==='todo'?'st0':''}" style="color:${s.c};border-color:${s.c}">${s.n}</span>`};
@@ -800,7 +801,7 @@ function boardStep(dx,dy){
 function selectAll(){const ids=navIds();if(!ids.length)return;sel=new Set(ids);cur=cur||ids[0];anchor=ids[0];markSel()}
 let ccol=null;
 const CELLS=[['tt','.tt'],['id','.col-id'],['a','.col-a'],['t','.col-t'],['s','.col-s'],['i','.col-i'],['ih','.col-ih'],['d','.col-d'],['dh','.col-dh'],['u','.col-u'],['ds','.col-ds']];
-function cellVisible(row,k){const sel=CELLS.find(c=>c[0]===k)[1],el=row.querySelector(sel);return !!el&&el.getClientRects().length>0}
+function cellVisible(row,k){const d=CELLS.find(c=>c[0]===k);if(!d)return false;const el=row.querySelector(d[1]);return !!el&&el.getClientRects().length>0}
 function visCells(){const row=document.querySelector(`#view [data-row="${cur}"]`);if(!row)return['tt'];return ['tt',...(S.cols?S.cols.order:CELLS.map(c=>c[0]).slice(1))].filter(k=>cellVisible(row,k))}
 function cellMove(d){
   const v=visCells();let i=v.indexOf(ccol||'tt');i=Math.max(0,Math.min(v.length-1,i+d));ccol=v[i];markSel(true);
@@ -1517,27 +1518,30 @@ function render(){
 
 /* ----- lista em árvore (com modo plano para as visões inteligentes) ----- */
 /* ===== colunas da tabela: ordem e visibilidade (preferência só deste usuário/navegador) ===== */
-const COLDEFS=[['a','Resp.',60],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',46],['d','Conclusão',84],['dh','Hora',46],['u','Dur.',60],['ds','Descrição',240],['id','ID',62]];
-const COLNAME={a:'Responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Conclusão (data)',dh:'Conclusão (hora)',u:'Duração',ds:'Descrição',id:'ID'};
+const COLDEFS=[['a','E-mail',200],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',46],['d','Esperada',84],['dh','Hora esp.',66],['dn','Concluída em',124],['at','Atraso',92],['u','Dur.',60],['ds','Descrição',240],['id','ID',62]];
+const COLNAME={a:'E-mail do responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Data esperada (prazo)',dh:'Hora esperada',dn:'Concluída em (data e hora)',at:'Atraso (esperada × conclusão)',u:'Duração',ds:'Descrição',id:'ID'};
 const COLDEF_HIDE=['ds'];
 function colsKey(){return 'cs-cols-'+(S.me||'local')}
 function colsLoad(){
   let o=null;try{o=JSON.parse(localStorage.getItem(colsKey()))}catch(e){}
   const all=COLDEFS.map(c=>c[0]);
-  const order=[...((o&&o.order)||[]).filter(k=>all.includes(k)),...all.filter(k=>!((o&&o.order)||[]).includes(k))];
+  const order=((o&&o.order)||[]).filter(k=>all.includes(k));
+  all.forEach((k,i)=>{if(!order.includes(k)){const p=all.slice(0,i).reverse().find(x=>order.includes(x));order.splice(p?order.indexOf(p)+1:0,0,k)}});
   const hide=o&&Array.isArray(o.hide)?o.hide.filter(k=>all.includes(k)):COLDEF_HIDE.slice();
-  S.cols={order,hide};
+  const w={};if(o&&o.w&&typeof o.w==='object')Object.keys(o.w).forEach(k=>{if(all.includes(k)&&+o.w[k]>=36&&+o.w[k]<=700)w[k]=Math.round(+o.w[k])});
+  S.cols={order,hide,w};
 }
+const colW=k=>{const c=COLDEFS.find(x=>x[0]===k);return (S.cols&&S.cols.w&&S.cols.w[k])||(c?c[2]:80)};
 function colsSave(){try{localStorage.setItem(colsKey(),JSON.stringify(S.cols))}catch(e){}colsCSS()}
 function colsCSS(){
   if(!S.cols)colsLoad();
   let st=document.getElementById('colcss');if(!st){st=document.createElement('style');st.id='colcss';document.head.appendChild(st)}
-  st.textContent=S.cols.order.map((k,i)=>`.col-${k}{order:${i+1}}`).join('')+S.cols.hide.map(k=>`.hc.col-${k},.rt>.cell.col-${k}{display:none!important}`).join('')+COLDEFS.map(c=>`.col-${c[0]}{width:${c[2]}px}`).join('')+`:root{--colsw:${COLDEFS.filter(c=>!S.cols.hide.includes(c[0])).reduce((n,c)=>n+c[2],0)}px}`;
+  st.textContent=S.cols.order.map((k,i)=>`.col-${k}{order:${i+1}}`).join('')+S.cols.hide.map(k=>`.hc.col-${k},.rt>.cell.col-${k}{display:none!important}`).join('')+COLDEFS.map(c=>`.col-${c[0]}{width:${colW(c[0])}px}`).join('')+`:root{--colsw:${COLDEFS.filter(c=>!S.cols.hide.includes(c[0])).reduce((n,c)=>n+colW(c[0]),0)}px}`;
 }
 function colMove(k,d){const o=S.cols.order,i=o.indexOf(k),j=i+d;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,k);colsSave()}
 function colMenu(anchor){
   closeMenu();const m=document.createElement('div');m.id='colmenu';
-  const draw=()=>{m.innerHTML=`<div class="cmh"><b>Colunas</b><button type="button" data-cm="reset" class="ghost">Restaurar padrão</button></div><div class="cmsub">Marque o que quer ver e use ▲ ▼ para mudar a ordem. Vale só para você, neste navegador.</div>`+
+  const draw=()=>{m.innerHTML=`<div class="cmh"><b>Colunas</b><button type="button" data-cm="reset" class="ghost">Restaurar padrão</button></div><div class="cmsub">Marque o que quer ver e use ▲ ▼ para mudar a ordem. Para mudar a largura, arraste a borda direita do título da coluna (duplo clique volta ao padrão). Vale só para você, neste navegador.</div>`+
     S.cols.order.map((k,i)=>`<div class="cmr"><label><input type="checkbox" data-cmv="${k}" ${S.cols.hide.includes(k)?'':'checked'}> ${COLNAME[k]}</label><span><button type="button" data-cmu="${k}" ${i?'':'disabled'} title="Mover para a esquerda">▲</button><button type="button" data-cmd="${k}" ${i<S.cols.order.length-1?'':'disabled'} title="Mover para a direita">▼</button></span></div>`).join('')+`<div class="cmsub" style="margin-top:6px">Dica: também dá para arrastar os títulos da tabela.</div>`};
   draw();document.body.appendChild(m);
   const r=anchor.getBoundingClientRect();m.style.left=Math.max(8,Math.min(r.right-m.offsetWidth,innerWidth-m.offsetWidth-8))+'px';m.style.top=Math.min(r.bottom+6,Math.max(8,innerHeight-m.offsetHeight-8))+'px';
@@ -1547,7 +1551,7 @@ function colMenu(anchor){
   setTimeout(()=>{document.addEventListener('mousedown',off,true);document.addEventListener('keydown',key,true)},0);
   m.addEventListener('click',e=>{
     const t=e.target;
-    if(t.dataset.cm==='reset'){S.cols={order:COLDEFS.map(c=>c[0]),hide:COLDEF_HIDE.slice()};colsSave();draw();render();return}
+    if(t.dataset.cm==='reset'){S.cols={order:COLDEFS.map(c=>c[0]),hide:COLDEF_HIDE.slice(),w:{}};colsSave();draw();render();return}
     if(t.dataset.cmu){colMove(t.dataset.cmu,-1);draw();render();return}
     if(t.dataset.cmd){colMove(t.dataset.cmd,1);draw();render();return}
   });
@@ -1555,6 +1559,22 @@ function colMenu(anchor){
   const f=m.querySelector('input');if(f)f.focus();
 }
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#bCols');if(b){e.stopImmediatePropagation();if(!S.cols)colsLoad();const o=document.getElementById('colmenu');if(o){o.remove();return}colMenu(b)}},true);
+/* redimensionar colunas: arraste a borda direita do título */
+(function(){
+  let st=null;
+  document.addEventListener('mousedown',e=>{
+    const h=e.target.closest&&e.target.closest('.rz[data-rz]');if(!h||e.button!==0)return;
+    e.preventDefault();e.stopPropagation();
+    if(!S.cols)colsLoad();if(!S.cols.w)S.cols.w={};
+    const k=h.dataset.rz,hc=h.parentElement;if(hc)hc.draggable=false;
+    st={k,x:e.clientX,w:colW(k),hc};document.body.classList.add('colrz');
+  },true);
+  document.addEventListener('mousemove',e=>{if(!st)return;e.preventDefault();const w=Math.max(36,Math.min(700,Math.round(st.w+e.clientX-st.x)));S.cols.w[st.k]=w;colsCSS()},true);
+  const end=()=>{if(!st)return;if(st.hc)st.hc.draggable=true;st=null;document.body.classList.remove('colrz');colsSave()};
+  document.addEventListener('mouseup',end,true);
+  document.addEventListener('dblclick',e=>{const h=e.target.closest&&e.target.closest('.rz[data-rz]');if(!h)return;e.preventDefault();e.stopPropagation();if(S.cols&&S.cols.w)delete S.cols.w[h.dataset.rz];colsSave()},true);
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.rz'))e.stopPropagation()},true);
+})();
 /* arrastar os títulos para reordenar */
 let colDrag=null;
 document.addEventListener('dragstart',e=>{const h=e.target.closest&&e.target.closest('.hc[data-col]');if(!h)return;colDrag=h.dataset.col;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','col:'+colDrag)}catch(_){}h.classList.add('cdrag')});
@@ -1568,9 +1588,33 @@ document.addEventListener('drop',e=>{
 function listHeader(n){
   return `<div class="row hdr"><span class="grip" style="visibility:hidden"></span><span class="gut"></span>
    <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Atividade <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span></div>
-   <div class="rt">${COLDEFS.map(c=>`<span class="hc col-${c[0]}" data-col="${c[0]}" draggable="true" title="Arraste para mudar a posição · ${c[1]}">${c[1]}</span>`).join('')}</div></div>`;
+   <div class="rt">${COLDEFS.map(c=>`<span class="hc col-${c[0]}" data-col="${c[0]}" draggable="true" title="Arraste para mudar a posição · ${c[1]}">${c[1]}<i class="rz" data-rz="${c[0]}" title="Arraste para mudar a largura · duplo clique: padrão"></i></span>`).join('')}</div></div>`;
 }
 const fmtFull=d=>d?d.split('-').reverse().join('/'):'';
+/* ===== Concluída em / Atraso (prazo esperado × conclusão real) ===== */
+const pad2=n=>String(n).padStart(2,'0');
+const localIso=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`};
+const fmtSpan=ms=>{let m=Math.max(1,Math.round(ms/60000));const d=Math.floor(m/1440);m-=d*1440;const h=Math.floor(m/60);m-=h*60;
+  return [d?d+' d':'',h?h+' h':'',(!d&&m)?m+' min':''].filter(Boolean).join(' ')||'0 min'};
+function doneCols(t){
+  const done=t.status==='done'&&t.doneAt?+t.doneAt:0;
+  const r={t:'',a:'',c:'e',tip:'Atraso = conclusão real − data/hora esperada (prazo)'};
+  if(done){const d=new Date(done);r.t=`${fmtFull(localIso(done))} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`}
+  if(!t.due||hasRep(t))return r;
+  if(!done&&t.status==='done')return r;
+  const fin=done||Date.now(),hasT=!!t.dueTime;
+  const exp=new Date(t.due+'T'+(hasT?t.dueTime:'23:59')+':00').getTime();
+  if(isNaN(exp))return r;
+  let late=0;
+  if(hasT)late=fin-exp;
+  else{const dd=diffDays(t.due,localIso(fin));late=dd>0?dd*864e5:0}
+  const lab=hasT?fmtSpan(Math.abs(late)):Math.round(Math.abs(late)/864e5)+' d';
+  if(late>0){
+    if(done){r.a='+'+lab;r.c='late';r.tip=`Concluída ${lab} depois do esperado (${fmtFull(t.due)}${hasT?' '+t.dueTime:''})`}
+    else{r.a='+'+lab;r.c='late run';r.tip=`Em aberto — já passou ${lab} do esperado (${fmtFull(t.due)}${hasT?' '+t.dueTime:''})`}
+  }else if(done){r.a='No prazo';r.c='ok';r.tip=hasT&&late<0?`Concluída ${fmtSpan(-late)} antes do esperado`:'Concluída dentro do prazo'}
+  return r;
+}
 function dateCols(t){
   const own=t.start||t.due,leaf=isLeaf(t);
   const sp=own||leaf?null:tspan(t);
@@ -1586,7 +1630,7 @@ function rowHTML(t,depth,flat){
   const ks=flat?[]:kidsOf(t.id),pr=flat?null:prog(t),done=t.status==='done',f=filtering();
   const shown=(f||S.hideDone)?ks.filter(matchTree):ks;
   const open=f||t.open!==false;
-  const dt=dateTxt(t),ds=dateCols(t),blocked=!done&&depsBlocked(t);
+  const dt=dateTxt(t),ds=dateCols(t),dn=doneCols(t),blocked=!done&&depsBlocked(t);
   const rootish=!flat&&(depth===0||t.sec);
   let path='';if(flat){const p=[];let x=t;while(x.parent){x=byId(x.parent);p.unshift(x.title)}if(p.length)path=`<span class="bcs">${esc(p.join(' › '))}</span>`}
   const wait=(t.deps||[]).map(byId).filter(x=>x&&x.status!=='done').map(x=>x.title).join(', ');
@@ -1603,13 +1647,15 @@ function rowHTML(t,depth,flat){
    </div>
    <div class="rt">
     <span class="cell col-id" data-cid="${t.id}" title="ID ${t.id} — clique para copiar">${esc(t.id)}</span>
-    <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
+    <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="${esc(mailsTxt(t)||'Responsáveis')}">${esc(mailsTxt(t))}</span>
     <span class="cell col-t ${t.tags.length?'':'e'}" data-pop="t:${t.id}" title="Etiquetas">${tagChips(t)}</span>
     <span class="cell col-s" data-pop="s:${t.id}" title="Status">${stChip(t)}</span>
     <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Data de início">${ds.i}</span>
     <span class="cell col-ih ${ds.ih?'':'e'}" data-pop="d:${t.id}" title="Hora de início">${ds.ih}</span>
-    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Data de conclusão':'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
-    <span class="cell col-dh ${dueCls(t)} ${ds.dh?'':'e'}" data-pop="d:${t.id}" title="Hora de conclusão">${ds.dh}</span>
+    <span class="cell col-d ${dueCls(t)} ${ds.d?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="${esc((ds.d?'Data esperada (prazo)':'Definir datas')+(hasRep(t)?' — '+repLabel(t):''))}">${ds.d}</span>
+    <span class="cell col-dh ${dueCls(t)} ${ds.dh?'':'e'}" data-pop="d:${t.id}" title="Hora esperada">${ds.dh}</span>
+    <span class="cell col-dn ${dn.t?'':'e'}" title="Quando a atividade foi concluída">${dn.t}</span>
+    <span class="cell col-at ${dn.c}" title="${esc(dn.tip)}">${esc(dn.a)}</span>
     <span class="cell col-u ${ds.u?'':'e'}" data-pop="d:${t.id}" title="Duração (início → conclusão, contando os dois dias)">${ds.u}</span>
     <span class="cell col-ds ${t.desc?'':'e'}" data-descid="${t.id}" title="${esc(t.desc||'Adicionar descrição')}">${esc((t.desc||'').replace(/\s+/g,' ').slice(0,140))}</span>
    </div></div>`;
@@ -2042,7 +2088,7 @@ function guideHTML(){
   return `<div class="steps">
    <div class="step"><b><span class="n">1</span>Adicione rápido</b><p>Use a barra no topo (tecla <kbd>q</kbd>). Escreva do jeito natural — datas, pessoas, etiquetas e prioridade são entendidos:</p>${ex('Enviar SPED amanhã 14h @${exName()} #fiscal !alta')}${ex('Revisar backups toda segunda')}${ex('Reunião com cliente 05/11 10h')}</div>
    <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Atividades podem ter subatividades sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subatividade. Clique no nome para renomear.</p></div>
-   <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>Resp.</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
+   <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>E-mail</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
    <div class="step"><b><span class="n">4</span>Veja do jeito certo</b><p><b>Lista</b> (detalhe) · <b>Quadro</b> (fluxo) · <b>Calendário</b> (prazos) · <b>Cronograma</b> (Gantt com dependências) · <b>Pessoas</b> (carga de trabalho) · <b>Painel</b> (visão executiva).</p></div>
    <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas atividades</b> reúnem todos os projetos. O botão <b>Filtros</b> (acima da lista) filtra o projeto atual.</p></div>
    <div class="step"><b><span class="n">6</span>Acompanhe e reporte</b><p>🔔 mostra alertas. No <b>Painel</b>, use <b>Resumo executivo</b> para gerar o texto de status e enviar por e-mail.</p></div>
