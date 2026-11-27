@@ -1484,3 +1484,6 @@ body:has(#ov.on #modal[data-kind=task]) .row .hv,body:has(#ov.on #modal[data-kin
 .pk2new{color:var(--ac);font-weight:600}.pk2plus{width:22px;text-align:center;font-size:15px;flex-shrink:0}
 .pk2none{padding:14px;color:var(--mu);font-size:13px;text-align:center}
 @media print{#pk2pop{display:none!important}}
+/* v22 – visões Atrasadas/Hoje etc.: o caminho (›) não pode esmagar o nome da atividade */
+.main .bcs{flex:0 3 auto;min-width:0;max-width:34%;overflow:hidden;text-overflow:ellipsis}
+.main:has(.bcs) .tt{flex:0 1 auto;min-width:min(52%,320px)}
