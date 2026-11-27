@@ -1518,8 +1518,8 @@ function render(){
 
 /* ----- lista em árvore (com modo plano para as visões inteligentes) ----- */
 /* ===== colunas da tabela: ordem e visibilidade (preferência só deste usuário/navegador) ===== */
-const COLDEFS=[['a','E-mail',200],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',46],['d','Esperada',84],['dh','Hora esp.',66],['dn','Concluída em',124],['at','Atraso',92],['u','Dur.',60],['ds','Descrição',240],['id','ID',62]];
-const COLNAME={a:'E-mail do responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Data esperada (prazo)',dh:'Hora esperada',dn:'Concluída em (data e hora)',at:'Atraso (esperada × conclusão)',u:'Duração',ds:'Descrição',id:'ID'};
+const COLDEFS=[['a','Resp.',60],['t','Etiquetas',128],['s','Status',96],['i','Início',84],['ih','Hora',46],['d','Esperada',84],['dh','Hora esp.',66],['dn','Concluída em',124],['at','Atraso',92],['u','Dur.',60],['ds','Descrição',240],['id','ID',62]];
+const COLNAME={a:'Responsável',t:'Etiquetas',s:'Status',i:'Início (data)',ih:'Início (hora)',d:'Data esperada (prazo)',dh:'Hora esperada',dn:'Concluída em (data e hora)',at:'Atraso (esperada × conclusão)',u:'Duração',ds:'Descrição',id:'ID'};
 const COLDEF_HIDE=['ds'];
 function colsKey(){return 'cs-cols-'+(S.me||'local')}
 function colsLoad(){
@@ -1528,15 +1528,16 @@ function colsLoad(){
   const order=((o&&o.order)||[]).filter(k=>all.includes(k));
   all.forEach((k,i)=>{if(!order.includes(k)){const p=all.slice(0,i).reverse().find(x=>order.includes(x));order.splice(p?order.indexOf(p)+1:0,0,k)}});
   const hide=o&&Array.isArray(o.hide)?o.hide.filter(k=>all.includes(k)):COLDEF_HIDE.slice();
-  const w={};if(o&&o.w&&typeof o.w==='object')Object.keys(o.w).forEach(k=>{if(all.includes(k)&&+o.w[k]>=36&&+o.w[k]<=700)w[k]=Math.round(+o.w[k])});
+  const w={};if(o&&o.w&&typeof o.w==='object')Object.keys(o.w).forEach(k=>{if((all.includes(k)&&+o.w[k]>=36&&+o.w[k]<=700)||(k==='tt'&&+o.w[k]>=160&&+o.w[k]<=1000))w[k]=Math.round(+o.w[k])});
   S.cols={order,hide,w};
 }
+const TTMIN=160,TTMAX=1000;
 const colW=k=>{const c=COLDEFS.find(x=>x[0]===k);return (S.cols&&S.cols.w&&S.cols.w[k])||(c?c[2]:80)};
 function colsSave(){try{localStorage.setItem(colsKey(),JSON.stringify(S.cols))}catch(e){}colsCSS()}
 function colsCSS(){
   if(!S.cols)colsLoad();
   let st=document.getElementById('colcss');if(!st){st=document.createElement('style');st.id='colcss';document.head.appendChild(st)}
-  st.textContent=S.cols.order.map((k,i)=>`.col-${k}{order:${i+1}}`).join('')+S.cols.hide.map(k=>`.hc.col-${k},.rt>.cell.col-${k}{display:none!important}`).join('')+COLDEFS.map(c=>`.col-${c[0]}{width:${colW(c[0])}px}`).join('')+`:root{--colsw:${COLDEFS.filter(c=>!S.cols.hide.includes(c[0])).reduce((n,c)=>n+colW(c[0]),0)}px}`;
+  st.textContent=S.cols.order.map((k,i)=>`.col-${k}{order:${i+1}}`).join('')+S.cols.hide.map(k=>`.hc.col-${k},.rt>.cell.col-${k}{display:none!important}`).join('')+COLDEFS.map(c=>`.col-${c[0]}{width:${colW(c[0])}px}`).join('')+(S.cols.w&&S.cols.w.tt?`@media(min-width:701px){.row>.main{flex:0 0 ${S.cols.w.tt}px!important;min-width:0}.outline{width:calc(var(--colsw) + ${S.cols.w.tt}px + 60px)!important}}`:'')+`:root{--colsw:${COLDEFS.filter(c=>!S.cols.hide.includes(c[0])).reduce((n,c)=>n+colW(c[0]),0)}px}`;
 }
 function colMove(k,d){const o=S.cols.order,i=o.indexOf(k),j=i+d;if(i<0||j<0||j>=o.length)return;o.splice(i,1);o.splice(j,0,k);colsSave()}
 function colMenu(anchor){
@@ -1566,10 +1567,10 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
     const h=e.target.closest&&e.target.closest('.rz[data-rz]');if(!h||e.button!==0)return;
     e.preventDefault();e.stopPropagation();
     if(!S.cols)colsLoad();if(!S.cols.w)S.cols.w={};
-    const k=h.dataset.rz,hc=h.parentElement;if(hc)hc.draggable=false;
-    st={k,x:e.clientX,w:colW(k),hc};document.body.classList.add('colrz');
+    const k=h.dataset.rz,hc=h.parentElement.classList.contains('hc')?h.parentElement:null;if(hc)hc.draggable=false;
+    st={k,x:e.clientX,w:k==='tt'?Math.round(h.parentElement.getBoundingClientRect().width):colW(k),hc};document.body.classList.add('colrz');
   },true);
-  document.addEventListener('mousemove',e=>{if(!st)return;e.preventDefault();const w=Math.max(36,Math.min(700,Math.round(st.w+e.clientX-st.x)));S.cols.w[st.k]=w;colsCSS()},true);
+  document.addEventListener('mousemove',e=>{if(!st)return;e.preventDefault();const w=st.k==='tt'?Math.max(TTMIN,Math.min(TTMAX,Math.round(st.w+e.clientX-st.x))):Math.max(36,Math.min(700,Math.round(st.w+e.clientX-st.x)));S.cols.w[st.k]=w;colsCSS()},true);
   const end=()=>{if(!st)return;if(st.hc)st.hc.draggable=true;st=null;document.body.classList.remove('colrz');colsSave()};
   document.addEventListener('mouseup',end,true);
   document.addEventListener('dblclick',e=>{const h=e.target.closest&&e.target.closest('.rz[data-rz]');if(!h)return;e.preventDefault();e.stopPropagation();if(S.cols&&S.cols.w)delete S.cols.w[h.dataset.rz];colsSave()},true);
@@ -1587,7 +1588,7 @@ document.addEventListener('drop',e=>{
 },true);
 function listHeader(n){
   return `<div class="row hdr"><span class="grip" style="visibility:hidden"></span><span class="gut"></span>
-   <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Atividade <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span></div>
+   <div class="main"><span class="hc" style="padding-left:24px;text-align:left">Atividade <span style="font-weight:400;text-transform:none;letter-spacing:0">· ${n} item(ns)</span></span><i class="rz rzm" data-rz="tt" title="Arraste para mudar a largura · duplo clique: automático"></i></div>
    <div class="rt">${COLDEFS.map(c=>`<span class="hc col-${c[0]}" data-col="${c[0]}" draggable="true" title="Arraste para mudar a posição · ${c[1]}">${c[1]}<i class="rz" data-rz="${c[0]}" title="Arraste para mudar a largura · duplo clique: padrão"></i></span>`).join('')}</div></div>`;
 }
 const fmtFull=d=>d?d.split('-').reverse().join('/'):'';
@@ -1647,7 +1648,7 @@ function rowHTML(t,depth,flat){
    </div>
    <div class="rt">
     <span class="cell col-id" data-cid="${t.id}" title="ID ${t.id} — clique para copiar">${esc(t.id)}</span>
-    <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="${esc(mailsTxt(t)||'Responsáveis')}">${esc(mailsTxt(t))}</span>
+    <span class="cell col-a ${t.assignees.length?'':'e'}" data-pop="a:${t.id}" title="Responsáveis">${avs(t)}</span>
     <span class="cell col-t ${t.tags.length?'':'e'}" data-pop="t:${t.id}" title="Etiquetas">${tagChips(t)}</span>
     <span class="cell col-s" data-pop="s:${t.id}" title="Status">${stChip(t)}</span>
     <span class="cell col-i ${ds.i?'':'e'} ${ds.agg?'agg':''}" data-pop="d:${t.id}" title="Data de início">${ds.i}</span>
@@ -2088,7 +2089,7 @@ function guideHTML(){
   return `<div class="steps">
    <div class="step"><b><span class="n">1</span>Adicione rápido</b><p>Use a barra no topo (tecla <kbd>q</kbd>). Escreva do jeito natural — datas, pessoas, etiquetas e prioridade são entendidos:</p>${ex('Enviar SPED amanhã 14h @${exName()} #fiscal !alta')}${ex('Revisar backups toda segunda')}${ex('Reunião com cliente 05/11 10h')}</div>
    <div class="step"><b><span class="n">2</span>Organize em níveis</b><p>Atividades podem ter subatividades sem limite. Arraste pelo <b>⋮⋮</b>: borda de cima/baixo = mesmo nível, meio = vira subatividade. Clique no nome para renomear.</p></div>
-   <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>E-mail</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
+   <div class="step"><b><span class="n">3</span>Edite sem abrir o painel</b><p>Na lista, clique direto em <b>Resp.</b>, <b>Etiquetas</b>, <b>Status</b> ou <b>Prazo</b>. Quer tudo de uma vez? Botão <b>⤢ abrir</b> (ou Espaço).</p></div>
    <div class="step"><b><span class="n">4</span>Veja do jeito certo</b><p><b>Lista</b> (detalhe) · <b>Quadro</b> (fluxo) · <b>Calendário</b> (prazos) · <b>Cronograma</b> (Gantt com dependências) · <b>Pessoas</b> (carga de trabalho) · <b>Painel</b> (visão executiva).</p></div>
    <div class="step"><b><span class="n">5</span>Foque no que importa</b><p>Na lateral, <b>Hoje</b>, <b>Próximos 7 dias</b>, <b>Atrasadas</b> e <b>Minhas atividades</b> reúnem todos os projetos. O botão <b>Filtros</b> (acima da lista) filtra o projeto atual.</p></div>
    <div class="step"><b><span class="n">6</span>Acompanhe e reporte</b><p>🔔 mostra alertas. No <b>Painel</b>, use <b>Resumo executivo</b> para gerar o texto de status e enviar por e-mail.</p></div>
