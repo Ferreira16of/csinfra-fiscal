@@ -1487,3 +1487,11 @@ body:has(#ov.on #modal[data-kind=task]) .row .hv,body:has(#ov.on #modal[data-kin
 /* v22 – visões Atrasadas/Hoje etc.: o caminho (›) não pode esmagar o nome da atividade */
 .main .bcs{flex:0 3 auto;min-width:0;max-width:34%;overflow:hidden;text-overflow:ellipsis}
 .main:has(.bcs) .tt{flex:0 1 auto;min-width:min(52%,320px)}
+/* v23 – histórico da atividade */
+.hist{border:1px solid var(--bd);border-radius:10px;background:var(--bg2);padding:4px 12px;max-height:320px;overflow:auto;margin-bottom:6px}
+.hist .hi{padding:8px 0;border-bottom:1px solid var(--bd)}.hist .hi:last-child{border-bottom:0}
+.hist .hh{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:12.5px}
+.hist .hh small{color:var(--mu);white-space:nowrap}
+.hist ul{margin:4px 0 0;padding-left:16px;font-size:12.5px;line-height:1.5;color:var(--tx)}
+.hist .hv0{color:var(--mu);text-decoration:line-through}
+.hist .hmore summary{cursor:pointer;color:var(--ac);font-size:12.5px;padding:8px 0}

@@ -605,3 +605,46 @@ end $$;
 -- values ('Seu Nome', 'seu.email@empresa.com.br', 'admin', 'invited', true, '#5b8cff')
 -- on conflict (lower(email)) where email is not null do update
 --   set role = 'admin', access_enabled = true, status = 'invited';
+
+-- Histórico por atividade (painel lateral): quem criou e quem alterou, com data/hora
+create or replace function public.audit_link() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.audit_log(table_name, row_id, action, old_row, new_row)
+  values (tg_table_name,
+          coalesce((to_jsonb(new)->>'task_id'), (to_jsonb(old)->>'task_id')),
+          tg_op,
+          case when tg_op = 'DELETE' then to_jsonb(old) end,
+          case when tg_op = 'INSERT' then to_jsonb(new) end);
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end $$;
+drop trigger if exists audit_task_assignees on public.task_assignees;
+create trigger audit_task_assignees after insert or delete on public.task_assignees for each row execute function public.audit_link();
+drop trigger if exists audit_task_tags on public.task_tags;
+create trigger audit_task_tags after insert or delete on public.task_tags for each row execute function public.audit_link();
+
+create index if not exists audit_log_row_idx on public.audit_log (row_id, at desc);
+
+create or replace function public.task_history(p_task text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare t record; items jsonb; cre jsonb;
+begin
+  select * into t from public.tasks where id = p_task;
+  if not found or not public.can_see_project(t.project_id) then
+    return jsonb_build_object('cre', null, 'items', '[]'::jsonb);
+  end if;
+  select jsonb_build_object('at', t.created_at, 'by', coalesce((select m.name from public.members m where m.user_id = t.created_by limit 1), ''))
+    into cre;
+  select coalesce(jsonb_agg(s.x order by s.at desc), '[]'::jsonb) into items from (
+    select a.at,
+           jsonb_build_object('at', a.at, 'uid', a.user_id,
+             'by', coalesce((select m.name from public.members m where m.user_id = a.user_id limit 1), ''),
+             'tbl', a.table_name, 'act', a.action, 'old', a.old_row, 'new', a.new_row) as x
+    from public.audit_log a
+    where a.row_id = p_task and a.table_name in ('tasks','task_assignees','task_tags')
+    order by a.at desc limit 400) s;
+  return jsonb_build_object('cre', cre, 'items', items);
+end $$;
+revoke all on function public.task_history(text) from public, anon;
+grant execute on function public.task_history(text) to authenticated;

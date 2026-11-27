@@ -195,3 +195,7 @@ Projetos que já existiam **não mudam**. Para aplicar a regra no banco, rode de
 
 Para o ponto laranja funcionar para todos, rode de novo o `supabase_setup.sql` (SQL Editor → colar → Run). Ele troca o gatilho das tarefas para registrar **quem** mexeu por último, inclusive ao criar. Mudar apenas a ordem (arrastar) não conta como alteração.
 O ponto some quando você abre o painel da atividade. Não precisa republicar a função `invite-user`.
+
+## E10 — Histórico por atividade (painel lateral)
+No fim do painel da atividade aparece o **Histórico**: quem criou, quem alterou, data e hora, e o que mudou (nome, status, prazo, prioridade, responsáveis, etiquetas etc.).
+Ele usa o `audit_log` e a função `task_history`. Para bancos já existentes, rode o bloco "Histórico por atividade" no fim do `supabase_setup.sql` (já aplicado no projeto controle-tarefas). Alterações feitas antes dessa atualização não aparecem.

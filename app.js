@@ -390,9 +390,54 @@ function openTaskBase(id){
   <label>Comentários (${t.comments.length}) — atalho: c</label>
   <div>${t.comments.map(c=>`<div class="cmt"><b>${esc(c.by||'Você')}</b> <small style="color:var(--mu)">${new Date(c.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small> <button class="ghost" data-cdel="${c.id}" style="float:right;padding:0 6px">✕</button><div style="white-space:pre-wrap;margin-top:3px">${esc(c.text)}</div></div>`).join('')}</div>
   <textarea id="m_comment" rows="2" placeholder="Escreva um comentário — Enter envia, ⇧+Enter quebra a linha"></textarea>
+  ${CLOUD?'<label>Histórico</label><div id="m_hist" class="hist"><div class="hint">Carregando…</div></div>':''}
   <div class="acts"><span><button id="m_del" style="color:var(--red)">Excluir</button> <button id="m_mail">✉ Avisar responsáveis</button> <button id="m_link" title="Copiar link desta atividade">🔗 Link</button></span><span><button id="m_x">Fechar</button> <button class="pri" id="m_ok">Salvar</button></span></div>`;
   $('#ov').classList.add('on');
-  hydrateImgs();
+  hydrateImgs();try{loadHist(id)}catch(x){}
+}
+/* ===== Histórico da atividade (painel) ===== */
+const HF_DATE=v=>{if(!v)return'—';const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(v));return m?`${m[3]}/${m[2]}/${m[1]}`:String(v)};
+const HF_TXT=v=>{v=String(v==null?'':v);return v.length>60?v.slice(0,57)+'…':v};
+function histChanges(it){
+  const o=it.old||{},n=it.new||{},out=[];
+  if(it.tbl==='task_assignees'){const m=S.members.find(x=>x.id===(n.member_id||o.member_id));const nm=m?m.name:'(pessoa removida)';return[it.act==='INSERT'?`Adicionou o responsável <b>${esc(nm)}</b>`:`Removeu o responsável <b>${esc(nm)}</b>`]}
+  if(it.tbl==='task_tags'){const g=S.tags.find(x=>x.id===(n.tag_id||o.tag_id));const nm=g?g.name:'(etiqueta removida)';return[it.act==='INSERT'?`Adicionou a etiqueta <b>${esc(nm)}</b>`:`Removeu a etiqueta <b>${esc(nm)}</b>`]}
+  if(it.act==='INSERT')return['Criou a atividade'];
+  if(it.act==='DELETE')return['Excluiu a atividade'];
+  const ch=(k,lab,f=v=>v==null||v===''?'—':HF_TXT(v))=>{if(JSON.stringify(o[k]??null)!==JSON.stringify(n[k]??null))out.push(`${lab}: <span class="hv0">${esc(f(o[k]))}</span> → <b>${esc(f(n[k]))}</b>`)};
+  ch('title','Nome');
+  if((o.description||'')!==(n.description||''))out.push('Editou a descrição');
+  ch('status','Status',v=>(ST.find(s=>s.id===v)||{n:v||'—'}).n);
+  ch('priority','Prioridade',v=>PR[v]||'—');
+  ch('start_date','Início',HF_DATE);ch('start_time','Hora de início');
+  ch('due_date','Prazo',HF_DATE);ch('due_time','Hora do prazo');
+  if((o.repeat_freq||'')!==(n.repeat_freq||'')||(o.repeat_every||'')!==(n.repeat_every||''))out.push(n.repeat_freq?'Alterou a repetição':'Removeu a repetição');
+  ch('estimate_h','Estimativa (h)');ch('spent_h','Tempo gasto (h)');
+  if(!!o.is_milestone!==!!n.is_milestone)out.push(n.is_milestone?'Marcou como marco':'Desmarcou como marco');
+  if(!!o.is_section!==!!n.is_section)out.push(n.is_section?'Transformou em seção':'Deixou de ser seção');
+  if((o.parent_id||'')!==(n.parent_id||'')){const p=n.parent_id&&byId(n.parent_id);out.push(n.parent_id?`Moveu para dentro de <b>${esc(p?HF_TXT(p.title):'outra atividade')}</b>`:'Moveu para o nível principal')}
+  if((o.project_id||'')!==(n.project_id||''))out.push('Moveu para outro projeto');
+  if(!o.timer_started_at!==!n.timer_started_at)out.push(n.timer_started_at?'Iniciou o cronômetro':'Parou o cronômetro');
+  return out;
+}
+function histRender(d,id){
+  const box=$('#m_hist');if(!box||editing!==id)return;
+  const groups=[];
+  const push=(at,by,uid,lines)=>{if(!lines.length)return;const ts=Date.parse(at);const g=groups[groups.length-1];
+    if(g&&g.by===by&&g.uid===uid&&Math.abs(g.ts-ts)<=90000){g.lines.push(...lines);g.ts=Math.min(g.ts,ts)}else groups.push({ts,at,by,uid,lines:[...lines]})};
+  let hasIns=false;
+  (d.items||[]).forEach(it=>{if(it.tbl==='tasks'&&it.act==='INSERT')hasIns=true;push(it.at,it.by,it.uid,histChanges(it))});
+  if(d.cre&&d.cre.at&&!hasIns)groups.push({ts:Date.parse(d.cre.at),at:d.cre.at,by:d.cre.by,uid:null,lines:['Criou a atividade']});
+  groups.sort((a,b)=>b.ts-a.ts);
+  if(!groups.length){box.innerHTML='<div class="hint">Nenhuma alteração registrada ainda.</div>';return}
+  const one=g=>`<div class="hi"><div class="hh"><b>${esc(g.by||'Alguém')}${g.uid&&g.uid===myUid()?' <small>(você)</small>':''}</b><small>${new Date(g.at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></div><ul>${g.lines.map(l=>`<li>${l}</li>`).join('')}</ul></div>`;
+  const first=groups.slice(0,12),rest=groups.slice(12);
+  box.innerHTML=first.map(one).join('')+(rest.length?`<details class="hmore"><summary>Ver mais ${rest.length} registro(s)</summary>${rest.map(one).join('')}</details>`:'');
+}
+async function loadHist(id){
+  const box=$('#m_hist');if(!box)return;
+  try{const d=await sbFetch('/rest/v1/rpc/task_history',{method:'POST',body:{p_task:id}});histRender(d||{},id)}
+  catch(e){const b=$('#m_hist');if(b&&editing===id)b.innerHTML='<div class="hint">Não foi possível carregar o histórico'+(e&&e.status===404?' (falta aplicar a atualização do banco — veja o guia).':'.')+'</div>'}
 }
 function collect(){
   const t=byId(editing);if(!t||!$('#m_title')||modalRO)return;
